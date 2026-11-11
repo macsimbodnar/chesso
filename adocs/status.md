@@ -7,44 +7,40 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-11, by hand.
 
-## 2026-11-11 21:00: S124's screen done, F1 and F2 kept, F3 dropped; P1 running; S102 phase 1 delivered
+## 2026-11-11 22:50: P1 kept mop-up; S338 done; S124's candidate being built
 
-**S124's screen ended 20:44** (`S124-ALL-DONE`). F1 and F2 kept; **F3 dropped by the tablebase guard**: its fit moved
-four of F1's and F2's cells by one unit, raising the guard's loss by 0.0000086 +/- 0.0000010. The candidate is
-`endgame_scale 45 0 9 29 81 114 86 128 123 19 128 128 128` at K 1.3248 (`fits/f1_f2/full`). The step file's
-"2026-11-11: the screen's reading" has the table. `../chesso-s124p2` may be committed in again.
+**P1 ended 22:40, `S124-P1-KEPT`.** Mop-up `mopup_mg = {96, 149, 0}`, `mopup_eg = {15, 13, 6}`. Fresh starts
+converted: head 759, the candidate 862 of 984, exact one-sided p 1.5e-23, no class the other way. KBNvK still
+converts 63 of 184. The step file's "2026-11-11: P1's reading" has the table. Evidence in
+`../chesso-s124spsa/.tuning/s124/p1/`.
 
-**Running: P1, mop-up's SPSA**, started 20:50 from `../chesso-s124spsa` at `54c892d`, PID 60757, log
-`../chesso-s124spsa/.tuning/s124/p1.log`. About 4 h. A watcher is armed with four exits: `S124-P1-(DONE|FAILED)`, the
-PID's death, a 9 h ceiling. The verdict is the line above `S124-P1-TEST-DONE`; the candidate's two lines are in
-`.tuning/s124/p1/final.txt`.
+**S124's candidate is F1, F2 and mop-up**: `endgame_scale 45 0 9 29 81 114 86 128 123 19 128 128 128` (K 1.3248,
+`../chesso-s124p2/.tuning/s124/screen/fits/f1_f2/full`), F3 dropped by the guard.
 
-**S102 phase 1 is delivered, staged in `../chesso-s102p1`, not landed.** Bench 4707943 both builds, INV-6 and objdiff
-identical, 58 and 59 of 60. Its fast check found no blocker and two lows.
-- **One red, the owner's (DEC-344 (9), DEC-356):** `test_tuner_gradient`'s clamp case reads 1.29e-6 at 1211 against
-  1e-6 and `CLAMP_PUSH`'s script answers no push. Options read in `adocs/data/S102_clamp_options.txt` (in that
-  worktree). The coordinator recommends B1, the step scaled per column by its largest coefficient: green at 1.72e-7,
-  the script answers +50, no bound, metric or row moves, 36 of 36 plants red.
-- **Running:** one Opus 5.5 agent there fixes the two lows (delivery A, `.tuning/coord/S102/S102_phase1_A.diff`) and
-  builds B1 as a separate delta (`S102_phase1_B1_delta.diff`). **Nothing of S102 lands before the owner rules on B1.**
-- The loop-end ruling holds: the fast check confirmed every S102 parameter keeps its check in the main case.
+**S338 is done (`plan_done/`), this commit.** `test_mutant_anchors` validates the 264 mutants against the tree in
+0.1 s; a mutation run excludes it by label. Gate on the idle machine: 61 of 61 in both builds, format clean, bench
+4707943. **S339 is filed**, filler: the mutation tool scores a skipped test as a kill, and two crashes.
 
-**S102's follow-up is delivered (21:17):** delivery A (`S102_phase1_A.diff`, sha256 `1003329c...`) fixes the two lows
-and re-anchors mutant PT08, which S102's sixth argument to `outside_pawn_terms` had broken unseen (accepted by the
-coordinator; kill re-read). B1 is the delta `S102_phase1_B1_delta.diff` (sha256 `2a2556d9...`): clamp case 1.72e-7 at
-141 with `CLAMP_PUSH` +50, gradient case 1.44e-7 (x6.94), group case x34 -> x10, every pair's script picks the same
-pair, 18 of 18 planted errors red and a planted case in the tree. A plus the delta reproduces the staged tree.
-At landing: two rows for `S102_clamp_options.*` in `adocs/data/README.md`, and B1's text takes its DEC id.
+**Running: S124's candidate build**, one Opus 5.5 agent in `../chesso-s124p2`: the paste, every golden by its script,
+the owner's stops read first (DEC-344 (9)), the K re-read, the SPRT script pre-registered. No timing while it builds.
 
-**Running: S338**, filed and started 21:20, filler (DEC-171): a fast test that validates every mutant's anchor
-against the tree. One Opus 5.5 agent in the main tree, no `src/`, behind P1.
+**S102 phase 1: delivered, staged in `../chesso-s102p1`, not landed, waiting on the owner's ruling on B1.**
+- Delivery A (`.tuning/coord/S102/S102_phase1_A.diff`, sha256 `1003329c...`): phase 1, the two fast-check lows fixed,
+  PT08 re-anchored. Its one red is `test_tuner_gradient`'s clamp case, 1.29e-6 at 1211 against 1e-6, the owner's
+  (DEC-344 (9), DEC-356).
+- B1 (`S102_phase1_B1_delta.diff`, sha256 `2a2556d9...`): the finite-difference step scaled per column. Clamp case
+  1.72e-7 with `CLAMP_PUSH` +50, gradient case x6.94 under its bound, every pair's script picks its pair, 18 of 18
+  planted errors red. A plus the delta reproduces the staged tree. Readings: `adocs/data/S102_clamp_options.txt` and
+  `S102_b1_reading.txt` in that worktree.
+- At landing: rebase onto S124's candidate, two rows for `S102_clamp_options.*` in `adocs/data/README.md`, B1's text
+  takes its DEC id, and `test_mutant_anchors` must read green there.
 
 **Next, in order:**
-1. P1's reading. Then one agent builds S124's candidate in `../chesso-s124p2`: F1 and F2's cells, mop-up if P1 keeps
-   it, goldens by their scripts, the specs wording.
-2. The cost (`S124_phase1_cost.sh` at the candidate), `gate_extra` (last `GATE-EXTRA-DONE` 2026-11-05, due by
-   2026-11-12), then one `{0, 5}` SPRT of the survivors. 12 to 20 h. Nothing compiles while it plays.
-3. S102 phase 1's landing after the owner's ruling, rebased onto S124's candidate if that landed.
+1. S124's candidate: its fast check, `gate_extra` (last `GATE-EXTRA-DONE` 2026-11-05, due by 2026-11-12), the Debug
+   self-play (DEC-141), the cost (`S124_phase1_cost.sh` at the candidate's masks), then the one `{0, 5}` SPRT.
+   12 to 20 h at the worst. Nothing compiles while it plays.
+2. S339, filler, agent-only, when no timed run holds the machine.
+3. S102's landing after the owner's ruling, then its screen (phase 2).
 
 **For the owner, asked 2026-11-11, nothing blocks on it:** the drift point of 2026-11-01 read +293.62 +/- 17.15
 against `1680439` before S101 and S122 landed; S267's gate needs 232 and the path to the mark was priced at 282.

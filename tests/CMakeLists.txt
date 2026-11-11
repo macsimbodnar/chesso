@@ -633,10 +633,33 @@ set_tests_properties(test_spsa_probe PROPERTIES LABELS "fast" TIMEOUT 120)
 # one of those resolves in under a second. Registered on DEC-118's argument: the
 # moment somebody next needs this tool is the moment they are adding a pruning
 # rule and want to know their new test bites (DEC-141 clause 2). 31 cases,
-# ~3.8 s.
+# ~3.8 s; 33 since S338 added the run's exclusion of the label below and the
+# check that the entry below keeps `fast` beside it, 5.5 s with every core held.
+# Its class is named because the file holds a second one that a mutation run
+# must not run, and an entry naming none would run both.
 add_test(NAME test_mutation_check
-         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_mutation_check.py)
+         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_mutation_check.py MutationCheckTest)
 set_tests_properties(test_mutation_check PROPERTIES LABELS "fast" TIMEOUT 60)
+
+# S338: the real list, tools/mutants/, against this tree's src/ -- every anchor
+# exactly once, by the tool's own load_mutants and validate, nothing built and
+# no mutant applied. S102 moved an anchor under PT08 and both gates stayed
+# green, because the entry above reads a sandbox and nothing read the real
+# list; the tool would have refused every mutation run over the directory. A
+# red names the mutant, its file, the count and the anchor, and the fix is a
+# re-anchor, never a deletion.
+#
+# `mutant_list` is what keeps it out of a mutation run, which excludes that
+# label: a mutant applied removes its own anchor, and this test was red under
+# 261 of the 264 mutants the day it landed. The class reads its own
+# registration from this file's live calls, comments dropped: every entry
+# running test_mutation_check.py names exactly one class, every class has one,
+# and every entry running this class carries `mutant_list`. That this entry
+# also keeps `fast` is checked by the entry above, which runs whatever happens
+# to this one. 4 cases, 0.16 s in ctest with every core held, stdlib only.
+add_test(NAME test_mutant_anchors
+         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_mutation_check.py MutantAnchorsTest)
+set_tests_properties(test_mutant_anchors PROPERTIES LABELS "fast;mutant_list" TIMEOUT 60)
 
 # S233, DEC-220: tools/ledger.py, which is now the only author of plan.md's
 # cost section. Two things in it can break where nothing else would notice. Its

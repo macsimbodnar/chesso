@@ -80,6 +80,12 @@ invocation above reads the MAIN tree's tools/mutants while the fixture's own
 copy is never opened. The header names the path that was read and whether the
 tree holding it has it clean, because the fixture's sha does not describe it.
 
+The suite that judges a mutant is the label's tests less those labelled
+`mutant_list` (S338): the one test carrying it holds this list's anchors to the
+src/ beside it, so a mutant applied would turn it red on its own anchor. That
+test is in the fast label everywhere else, which is what makes a broken anchor
+red in the commit that broke it rather than at the next run of this tool.
+
 Release only. The root CMakeLists adds -Wall -Wextra -Werror everywhere and
 turns the unused-* warnings off in Debug alone, so a mutant that deletes the
 last use of a local does not compile in Release -- which is a fact about the
@@ -105,6 +111,14 @@ BENCH_TIMEOUT_S = 900
 
 DONE_MARKER = "MUTATION-RUN-DONE"
 FAILED_MARKER = "MUTATION-RUN-FAILED"
+
+# The label of the tests that read this list rather than run the engine:
+# tests/test_mutation_check.py's MutantAnchorsTest, S338, which holds every
+# anchor to the src/ beside it. Every ctest call here excludes it. With a mutant
+# applied that test finds the mutant's own anchor gone, and it was red under
+# 261 of the 264 mutants of the day it landed -- each would score killed by a
+# test that never ran the engine.
+LIST_LABEL = "mutant_list"
 
 # Doctest's own reporter strings, both in tests/doctest/doctest/doctest.h: the
 # case header is "TEST CASE:  " with two spaces, and a failed assertion ends
@@ -207,43 +221,49 @@ def validate(mutants, worktree):
     own commit: an ambiguous anchor would mutate a site nobody chose and a
     missing one would measure nothing. Ids are never reused, so a duplicate is a
     mistake in the list rather than a second reading of the same bug.
+
+    Every line names the mutant file beside the id, and a count line quotes the
+    anchor: the fast suite runs this on every gate (S338), and its red has to
+    say where the re-anchor goes and what text it is looking for.
     """
     problems = []
     seen = {}
     for mut in mutants:
         mid = mut["id"]
+        where = f"{mid} in {mut['source']}"
         if mid in seen:
-            problems.append(f"{mid}: duplicate id, also in {seen[mid]}")
+            problems.append(f"{where}: duplicate id, also in {seen[mid]}")
             continue
         seen[mid] = mut["source"]
 
         if mut["expected"] not in ("killed", "equivalent"):
-            problems.append(f"{mid}: expected={mut['expected']!r}, "
+            problems.append(f"{where}: expected={mut['expected']!r}, "
                             "not 'killed' or 'equivalent'")
 
         rel = mut["file"]
         if not rel.startswith("src/") or ".." in rel.split("/"):
-            problems.append(f"{mid}: file {rel} is outside src/")
+            problems.append(f"{where}: file {rel} is outside src/")
             continue
 
         path = os.path.join(worktree, rel)
         if not os.path.isfile(path):
-            problems.append(f"{mid}: no such file {rel} in the worktree")
+            problems.append(f"{where}: no such file {rel} in the worktree")
             continue
         with open(path) as handle:
             text = handle.read()
 
         if not mut["pairs"]:
-            problems.append(f"{mid}: no (old, new) pair")
+            problems.append(f"{where}: no (old, new) pair")
         for index, (old, new) in enumerate(mut["pairs"]):
             if old == new:
-                problems.append(f"{mid}: pair {index} replaces its anchor "
+                problems.append(f"{where}: pair {index} replaces its anchor "
                                 "with itself")
                 continue
             count = text.count(old)
             if count != 1:
-                problems.append(f"{mid}: pair {index} anchor occurs {count} "
-                                f"times in {rel}, needs exactly 1")
+                problems.append(f"{where}: pair {index} anchor occurs {count} "
+                                f"times in {rel}, needs exactly 1\n"
+                                f"    anchor {old!r}")
     if problems:
         raise Refused("mutant list rejected:\n  " + "\n  ".join(problems))
 
@@ -468,7 +488,7 @@ def bench(engine, worktree, oracle):
 
 def ctest(build_dir, label, log_path):
     code, output = run(["ctest", "--test-dir", build_dir, "-L", label,
-                        "--output-on-failure"],
+                        "-LE", LIST_LABEL, "--output-on-failure"],
                        log_path=log_path, timeout=CTEST_TIMEOUT_S)
     # The LAST summary line, not the first: --output-on-failure prints a failing
     # test's own output before ctest's summary, and a test binary that drives

@@ -1940,3 +1940,40 @@ Resumed 2026-11-11 18:45 from `../chesso-s124p2` at `c496403` after the shutdown
   S126 frees every cell and its own verdict reads them.
 - **P1 runs next** (below, "The coordinator's run"): started 2026-11-11 20:50 from `../chesso-s124spsa` at `54c892d`,
   PID 60757, setup green (bench 4707943 both, the eval check's worst 1.667 against 2, ROOM 4838).
+
+## 2026-11-11: P1's reading, the coordinator
+
+`S124_p1.py all` from `../chesso-s124spsa` at `54c892d`, 20:47 to 22:40, 1 h 53 m against the 3.7 to 4.1 h estimated:
+conversions shortened the games, about 42 s an iteration from the tenth on. `S124-P1-KEPT`, `S124-P1-DONE`. Log
+`../chesso-s124spsa/.tuning/s124/p1.log`; trajectory, both vectors and binaries' sha256 an iteration under
+`.tuning/s124/p1/run/`; the test's records under `.tuning/s124/p1/test/`. They go into `adocs/data/` with the candidate.
+
+- **The candidate, theta after the 150th update, clamped and rounded:** `mopup_mg = {96, 149, 0}`,
+  `mopup_eg = {15, 13, 6}` (theta 96.39, 149.16 | 14.84, 12.82, 6.25; the corner's middlegame half frozen at 0). The
+  ROOM clamp bound nowhere.
+- **The kept rule, DEC-358:** over the 984 fresh starts head alone converts 10 and the candidate alone 113, exact
+  one-sided p 1.545e-23; no class reads the other way (every p(fewer) 1).
+
+| class | set | starts | head | candidate | head alone | candidate alone |
+|---|---|---|---|---|---|---|
+| KRvK | fresh | 200 | 157 | 199 | 0 | 42 |
+| KQvK | fresh | 200 | 200 | 200 | 0 | 0 |
+| KRBvK | fresh | 200 | 191 | 200 | 0 | 9 |
+| KRNvK | fresh | 200 | 189 | 200 | 0 | 11 |
+| KBNvK | fresh | 184 | 22 | 63 | 10 | 51 |
+| KBBvK | in sample | 126 | 102 | 126 | 0 | 24 |
+| all fresh | | 984 | 759 | 862 | 10 | 113 |
+
+- The candidate's plies to mate over the converted: 21.6 mean, 20 median, 94 the longest; KBBvK 34.3 against head's
+  52.9.
+- **KBNvK is still not converted: 63 of 184, 0.342.** Its other ends: the fifty-move rule 107, stalemate 11, threefold
+  3. The corner weight ended at 6 with its middlegame half frozen, and K was fixed at 150 with no early stop, so the
+  run says nothing about what a longer one or a freed half would reach. A lead, not built: its own step if taken,
+  or S129's tables, which answer the ending exactly.
+- **Iteration 0 is most of the move:** theta- at the negative perturbation converted 128 of 221 against 191 at the
+  positive one, y -60.58 plies, and theta stepped from 0 to 59.5 and 7.4. From iteration 1 on the batch converted 185
+  to 201 of 221 on both sides and y stayed within a few plies.
+- **The accepts' mop-up clause is answered by this reading**: won lone-king positions, labelled won by the tables at a
+  zeroed clock, self-played at 100000 nodes a move under the laws, the bound 100 plies stated before the run. It
+  converts five of the six classes at 0.995 or more and KBNvK at 0.342, said as it is.
+- **The family's candidate is F1, F2 and mop-up.** Next: the paste, the cost, the SPRT.

@@ -2683,7 +2683,7 @@ binary rather than a count, because a kill by one golden alone is a weak one
 workstation, 2026-09-10** (41 since S192's fast check added `M34`, whose row is
 92 s, and 47 since S207 added `M35` and `M36`, S208 `M37` and `M38`, and S215
 `M39` and `M40`): about 85 s a row, being a ccache rebuild, the bench
-and one serial run of the fast label. Three rows run long because the mutant
+and one serial run of the fast label, less the `mutant_list` label (below). Three rows run long because the mutant
 makes the engine search more, `M22` worst at 442 s. One row on its own is
 **168 s** measured, the baseline included — `--only M26` — which is what a
 completing step pays under DEC-141 clause 2. Nothing runs it automatically; run
@@ -2703,10 +2703,12 @@ Per-mutant build and ctest logs, and a `results.tsv` of the whole table, land in
 `tests/test_mutation_check.py` is the tool's own gate, in the fast suite: a
 throwaway git repository, a four-line `src/x.cpp` beside a committed `tests/`,
 `adocs/`, root `CMakeLists.txt` and `.gitignore` to dirty, and `cmake`, `ctest`
-and the engine as stubs on PATH. Thirty-one cases — 1.6 s when S196 wrote the first
-twenty-four on an idle machine, 6.9 s on 2026-09-22 with a match on every core
-— and it is what catches an anchor counted wrong, a revert that leaves a mutant
-behind, a verdict on the wrong branch or a missing marker. Each was observed
+and the engine as stubs on PATH. Thirty-three cases, its class
+`MutationCheckTest` — 1.6 s when S196 wrote the first twenty-four on an idle
+machine, 6.9 s at thirty-one on 2026-09-22 with a match on every core, 8.6 s at
+thirty-two and 5.5 s at thirty-three on 2026-11-11 with every core held — and it
+is what catches an anchor counted wrong, a revert that leaves a mutant behind, a
+verdict on the wrong branch or a missing marker. Each was observed
 red under a cut to the guard it names before it was kept -- the tool held to
 its own rule (DEC-141). Three of them come from S196's own fast check and are
 worth knowing before you edit the loop: a mutant whose pairs interact can fail
@@ -2721,7 +2723,71 @@ its exit-code branch removed, which blamed the label for a ctest that never
 started; the status narrowed back to `src/`, which measured a tree whose
 `tests/` was not the one its header claimed; the `list` line dropped; and the
 count read from the first summary line in the log instead of the last, which
-alone broke three cases.
+alone broke three cases. S338's two went red on a plant each: the run's
+`-LE mutant_list` absent, and the anchors entry's labels cut to `mutant_list`
+alone.
+
+**`test_mutant_anchors` holds the real list to the tree, in the fast suite
+(S338).** The file's second class, `MutantAnchorsTest`, reads `tools/mutants/`
+with the tool's own `load_mutants` and `validate` against the `src/` beside it.
+It imports them rather than running the tool, because `main` refuses the main
+tree and wants a clean commit and a green baseline, none of which bears on an
+anchor; it builds nothing and applies nothing. Four cases, 0.15 to 0.16 s
+in ctest with every core held. It is red when a mutant file does not load or
+defines none, the directory holds no mutant file, an id repeats, an `expected`
+is neither verdict, a file is outside `src/` or missing from it, a mutant has no
+pair or a pair that changes nothing,
+and when an anchor matches no line or more than one. Each of the validator's
+reds names the mutant and its file, and an anchor's its count and text too:
+
+```
+M22_castling_rights_on_capture in /home/max/ws/chesso/tools/mutants/board.py: pair 0 anchor occurs 0 times in src/bitboard.cpp, needs exactly 1
+    anchor 'board->castling & castling_rights[move.from] & castling_rights[move.to]);'
+```
+
+**The fix is a re-anchor, never a deletion**: the pair takes the text the tree
+now holds at that site, and the mutant keeps what it breaks. A mutant file that
+does not compile or raises while loading is a Python traceback ending at its
+own line. S102 is why it exists:
+giving `outside_pawn_terms` a sixth argument left `PT08`'s anchor in
+`tools/mutants/S118_pawn_cache.py` matching nothing, the tool would have
+refused every run over the directory, and both gates stayed green, because
+nothing in them read the real list. A candidate that moves an anchor now goes
+red in its own fast gate, a screen's included, and its re-anchor lands with it.
+
+What it does not cover. **A mutant that validates and is no longer killed is
+still the mutation run's to find** -- a test that stopped biting, or an anchor
+that still matches once at a site whose meaning moved. So is a mutant that no
+longer compiles, and one whose first pair makes its second ambiguous, which
+`apply_mutant` refuses at run time (`P01` in the driver's gate). It reads
+`tools/mutants/` only, never the two evidence copies under `adocs/data/`.
+
+**A mutation run leaves it out.** A mutant applied removes its own anchor, so
+inside a run this test is red -- under 261 of the 264 mutants the day it landed
+-- and each would score killed by a test that never ran the engine. Its ctest
+entry carries the label `mutant_list` beside `fast`, and every ctest call the
+tool makes adds `-LE mutant_list`, so a run's baseline count is the fast
+label's less one. The 2026-09-04 review's own driver,
+`adocs/data/2026-09-04_test_review/run.py`, is evidence and is not edited: it
+runs `ctest -L fast` with no exclusion, and re-run on a tree after S338 it
+would credit `test_mutant_anchors` with nearly every kill.
+
+**The registration is checked as cmake reads it.** `MutantAnchorsTest` reads
+the live calls in `tests/CMakeLists.txt`, comments dropped, line and bracket:
+every `add_test` whose command mentions `test_mutation_check.py`, whatever the
+interpreter, has to name exactly one class of the file after it and nothing
+else, every class has to have such an entry, and every entry running
+`MutantAnchorsTest` has to carry `mutant_list` in the labels its last live
+`set_tests_properties` leaves it. Labels set through `set_property` are refused
+rather than read. An entry naming no class, a `-v` or a `Class.method` would run
+this class under `fast` alone; a commented-out `set_tests_properties` is no
+registration. Its first form read the raw text with two regexes, and S338's
+fast check found four such registrations it passed green. The fixture case
+`test_the_registration_guard_reads_what_cmake_reads` plants those four and four
+more into a registration the guard passes; the first form passed six of the
+eight. That the anchors entry keeps `fast` is checked by
+`MutationCheckTest`, because an anchors entry without it stops running, and
+its own guard with it.
 
 ## Format
 

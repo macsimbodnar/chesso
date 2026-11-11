@@ -29,10 +29,19 @@ WILL_NOT_COMPILE, which is the -Werror class the two `(void)` mutants exist
 for. So the four squares of the verdict table -- suite red, suite green
 with a moved signature, suite green with a still signature declared equivalent,
 suite green with a still signature not declared -- are each reachable by one
-mutant, and that is what the cases below drive.
+mutant, and that is what the cases below drive. Every call the stub takes is
+logged with its arguments, so a case can read what the tool asked ctest for.
+
+AND THE REAL LIST, S338. MutantAnchorsTest is the one class here that reads
+tools/mutants/ and src/ rather than a sandbox: every anchor of every mutant has
+to match exactly once in the tree this file sits in. Each class runs under its
+own ctest entry, named in it, because that class must stay out of the suite a
+mutation run judges by and this one must not.
 """
 
+import importlib.util
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -65,6 +74,7 @@ FIXTURE_FILES = {
 }
 
 CTEST_RED = r"""#!/bin/sh
+echo "$*" >> "$CTEST_ARGS_LOG"
 # One label exists here. Any other gets what the real ctest gives a label no
 # test carries: a project line, "No tests were found!!!", no summary line at
 # all, and a zero exit -- which is the green an empty suite fakes.
@@ -228,6 +238,8 @@ class Sandbox:
         write_exec(os.path.join(self.stubs, "ctest"), CTEST_RED)
 
         self.src = os.path.join(self.worktree, "src", "x.cpp")
+        # Every ctest call the tool makes, one line of arguments each.
+        self.ctest_args = os.path.join(self.root, "ctest_args")
 
     @staticmethod
     def git(cwd, *args):
@@ -245,6 +257,7 @@ class Sandbox:
         env = dict(os.environ)
         env["PATH"] = self.stubs + os.pathsep + env["PATH"]
         env["MUT_SRC"] = self.src
+        env["CTEST_ARGS_LOG"] = self.ctest_args
         return subprocess.Popen(
             [sys.executable, TOOL, mutants, target or self.worktree, *extra],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env)
@@ -253,6 +266,7 @@ class Sandbox:
         env = dict(os.environ)
         env["PATH"] = self.stubs + os.pathsep + env["PATH"]
         env["MUT_SRC"] = self.src
+        env["CTEST_ARGS_LOG"] = self.ctest_args
         proc = subprocess.run(
             [sys.executable, TOOL, mutants, target or self.worktree, *extra],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
@@ -727,6 +741,35 @@ class MutationCheckTest(unittest.TestCase):
         self.assertNotIn("mutation score", proc.stdout)
         self.assertEqual(last_line(proc.stdout), "MUTATION-RUN-FAILED")
 
+    def test_the_suite_that_judges_a_mutant_leaves_out_the_list_readers(self):
+        """S338: MutantAnchorsTest below reads this list against src/, so with
+        a mutant applied it finds that mutant's anchor gone and goes red -- under
+        261 of the 264 mutants of the day it landed, each of which would then
+        score killed by a test that never ran the engine. The baseline is
+        excluded too, so its count is the count of the suite that judges."""
+        proc = self.box.run(self.box.mutant_file(KILLED))
+        self.assertEqual(proc.returncode, 0, proc.stdout)
+        with open(self.box.ctest_args) as handle:
+            calls = handle.read().splitlines()
+        # The baseline and the one mutant: without both, nothing below ran.
+        self.assertEqual(len(calls), 2, calls)
+        for call in calls:
+            self.assertIn("-L fast -LE mutant_list", call)
+
+    def test_the_anchors_entry_runs_under_fast_and_its_own_label(self):
+        """S338's fast check: an anchors entry that loses `fast` stops running,
+        and MutantAnchorsTest's own guard stops with it, so the gate reads green
+        while nothing holds the anchors. This class runs under `fast` whatever
+        happens to that entry, so the check on its labels lives here."""
+        with open(CMAKE_LISTS) as handle:
+            entries = file_entries(handle.read())
+        anchors = [entry for entry in entries
+                   if entry["after"] == [ANCHORS_CLASS]]
+        self.assertTrue(anchors, f"no live entry runs {ANCHORS_CLASS}")
+        for entry in anchors:
+            self.assertEqual(sorted(entry["labels"]), ["fast", "mutant_list"],
+                             entry["name"])
+
     def test_results_tsv_is_written_under_the_build_directory(self):
         proc = self.box.run(self.box.mutant_file(KILLED))
         self.assertEqual(proc.returncode, 0, proc.stdout)
@@ -736,6 +779,329 @@ class MutationCheckTest(unittest.TestCase):
             body = handle.read()
         self.assertIn("BASELINE", body)
         self.assertRegex(body, r"K01_killed\t.*\tkilled\t")
+
+
+MUTANTS = os.path.join(ROOT, "tools", "mutants")
+CMAKE_LISTS = os.path.join(ROOT, "tests", "CMakeLists.txt")
+ANCHORS_CLASS = "MutantAnchorsTest"
+
+# Read as cmake reads it, because S338's fast check beat a regex over the raw
+# text four ways: a commented-out call read as live, and three entries running
+# this file that the regex never saw -- a `-v`, a ${Python3_EXECUTABLE}, a
+# Class.method.
+CMAKE_BRACKET_COMMENT_RE = re.compile(r"#\[(=*)\[")
+CMAKE_CALL_RE = re.compile(r"\b(add_test|set_tests_properties|set_property)\s*\(",
+                           re.I)
+CMAKE_TOKEN_RE = re.compile(r'"((?:\\.|[^"\\])*)"|([^\s()"]+)')
+ADD_TEST_KEYWORDS = ("CONFIGURATIONS", "WORKING_DIRECTORY", "COMMAND_EXPAND_LISTS")
+
+
+def cmake_live(text):
+    """The text with every comment blanked, line and bracket, outside strings."""
+    out = []
+    i, quoted = 0, False
+    while i < len(text):
+        char = text[i]
+        if quoted:
+            if char == "\\":
+                out.append(text[i:i + 2])
+                i += 2
+                continue
+            quoted = char != '"'
+        elif char == '"':
+            quoted = True
+        elif char == "#":
+            bracket = CMAKE_BRACKET_COMMENT_RE.match(text, i)
+            if bracket:
+                close = "]" + bracket.group(1) + "]"
+                end = text.find(close, bracket.end())
+                end = len(text) if end < 0 else end + len(close)
+            else:
+                end = text.find("\n", i)
+                end = len(text) if end < 0 else end
+            out.append(" ")
+            i = end
+            continue
+        out.append(char)
+        i += 1
+    return "".join(out)
+
+
+def cmake_calls(text):
+    """(command, its arguments) for every live call that registers a test or
+    sets a property on one, arguments unquoted."""
+    live = cmake_live(text)
+    calls = []
+    for match in CMAKE_CALL_RE.finditer(live):
+        i, depth, quoted = match.end(), 1, False
+        while i < len(live) and depth:
+            char = live[i]
+            if quoted:
+                if char == "\\":
+                    i += 1
+                quoted = char != '"'
+            elif char == '"':
+                quoted = True
+            elif char in "()":
+                depth += 1 if char == "(" else -1
+            i += 1
+        body = live[match.end():i - 1]
+        args = [token.group(1) if token.group(1) is not None else token.group(2)
+                for token in CMAKE_TOKEN_RE.finditer(body)]
+        calls.append((match.group(1).lower(), args))
+    return calls
+
+
+def file_entries(text):
+    """Every live add_test whose command mentions this file: its name, the
+    arguments after the file (None when no argument is the file itself), its
+    LABELS as the last set_tests_properties setting them leaves them, and
+    whether a set_property touches its labels."""
+    calls = cmake_calls(text)
+    labels, by_set_property = {}, set()
+    for command, args in calls:
+        if command == "set_tests_properties" and "PROPERTIES" in args:
+            split = args.index("PROPERTIES")
+            pairs = args[split + 1:]
+            for key, value in zip(pairs[::2], pairs[1::2]):
+                if key == "LABELS":
+                    for name in args[:split]:
+                        labels[name] = value.split(";")
+        elif command == "set_property" and "LABELS" in args:
+            by_set_property.update(args)
+    entries = []
+    for command, args in calls:
+        if command != "add_test" or not any("test_mutation_check" in arg
+                                            for arg in args):
+            continue
+        if args[0] == "NAME":
+            name = args[1]
+            run = args[args.index("COMMAND") + 1:] if "COMMAND" in args else []
+            for keyword in ADD_TEST_KEYWORDS:
+                if keyword in run:
+                    run = run[:run.index(keyword)]
+        else:
+            name, run = args[0], args[1:]
+        at = [index for index, arg in enumerate(run)
+              if arg.endswith("test_mutation_check.py")]
+        entries.append(dict(name=name,
+                            after=run[at[0] + 1:] if at else None,
+                            labels=labels.get(name, []),
+                            set_property=name in by_set_property))
+    return entries
+
+
+def test_classes():
+    return sorted(name for name, value in globals().items()
+                  if isinstance(value, type)
+                  and issubclass(value, unittest.TestCase))
+
+
+def registration_problems(text, classes, list_label):
+    """What keeps MutantAnchorsTest out of the suite a mutation run judges by,
+    and every class of this file running at all. Empty when both hold."""
+    entries = file_entries(text)
+    if not entries:
+        return ["no live add_test runs test_mutation_check.py"]
+    problems = []
+    named = set()
+    for entry in entries:
+        name, after = entry["name"], entry["after"]
+        if after is None or len(after) != 1 or after[0] not in classes:
+            problems.append(f"{name} runs the file with arguments {after}, "
+                            f"not one class of {classes}")
+            continue
+        named.add(after[0])
+        if entry["set_property"]:
+            problems.append(f"{name} has labels from set_property, which this "
+                            "guard does not read; use set_tests_properties")
+        if after[0] == ANCHORS_CLASS and list_label not in entry["labels"]:
+            problems.append(f"{name} runs {ANCHORS_CLASS} with labels "
+                            f"{entry['labels']}, without {list_label!r}, so a "
+                            "mutation run would judge by it")
+    for missing in sorted(set(classes) - named):
+        problems.append(f"{missing} has no entry of its own, so nothing runs it")
+    return problems
+
+
+# The registration the guard has to pass, a comment that is no registration
+# included, and the plants it has to refuse: (old, new, what the red says).
+REGISTRATION = """\
+# add_test(NAME retired COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_mutation_check.py)
+add_test(NAME test_mutation_check
+         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_mutation_check.py MutationCheckTest)
+set_tests_properties(test_mutation_check PROPERTIES LABELS "fast" TIMEOUT 60)
+
+add_test(NAME test_mutant_anchors
+         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_mutation_check.py MutantAnchorsTest)
+set_tests_properties(test_mutant_anchors PROPERTIES LABELS "fast;mutant_list" TIMEOUT 60)
+"""
+ANCHORS_PROPERTIES = ('set_tests_properties(test_mutant_anchors PROPERTIES '
+                      'LABELS "fast;mutant_list" TIMEOUT 60)')
+REGISTRATION_PLANTS = {
+    "the labels commented out, a live fast-only line below": (
+        ANCHORS_PROPERTIES,
+        "# " + ANCHORS_PROPERTIES + "\nset_tests_properties(test_mutant_anchors "
+        'PROPERTIES LABELS "fast" TIMEOUT 60)',
+        "without 'mutant_list'"),
+    "a later live call overriding the labels": (
+        ANCHORS_PROPERTIES,
+        ANCHORS_PROPERTIES + "\nset_tests_properties(test_mutant_anchors "
+        'PROPERTIES LABELS "fast")',
+        "without 'mutant_list'"),
+    "an entry naming no class": (
+        "test_mutation_check.py MutationCheckTest)",
+        "test_mutation_check.py)",
+        "test_mutation_check runs the file with arguments []"),
+    "an entry passing -v": (
+        ANCHORS_PROPERTIES,
+        ANCHORS_PROPERTIES + "\nadd_test(NAME x COMMAND python3 "
+        "${CMAKE_CURRENT_SOURCE_DIR}/test_mutation_check.py -v)\n"
+        'set_tests_properties(x PROPERTIES LABELS "fast" TIMEOUT 60)',
+        "runs the file with arguments ['-v']"),
+    "an entry through ${Python3_EXECUTABLE} under fast alone": (
+        ANCHORS_PROPERTIES,
+        ANCHORS_PROPERTIES + "\nadd_test(NAME x COMMAND ${Python3_EXECUTABLE} "
+        "${CMAKE_CURRENT_SOURCE_DIR}/test_mutation_check.py MutantAnchorsTest)\n"
+        'set_tests_properties(x PROPERTIES LABELS "fast" TIMEOUT 60)',
+        "x runs MutantAnchorsTest with labels ['fast'], without 'mutant_list'"),
+    "an entry naming Class.method": (
+        ANCHORS_PROPERTIES,
+        ANCHORS_PROPERTIES + "\nadd_test(NAME x COMMAND python3 "
+        "${CMAKE_CURRENT_SOURCE_DIR}/test_mutation_check.py "
+        "MutantAnchorsTest.test_every_mutant_validates_against_this_tree)\n"
+        'set_tests_properties(x PROPERTIES LABELS "fast" TIMEOUT 60)',
+        "x runs the file with arguments "
+        "['MutantAnchorsTest.test_every_mutant_validates_against_this_tree']"),
+    "labels from set_property": (
+        ANCHORS_PROPERTIES,
+        ANCHORS_PROPERTIES + "\nset_property(TEST test_mutant_anchors "
+        "PROPERTY LABELS fast)",
+        "labels from set_property"),
+    "a class with no entry": (
+        "add_test(NAME test_mutation_check\n         COMMAND python3 "
+        "${CMAKE_CURRENT_SOURCE_DIR}/test_mutation_check.py MutationCheckTest)",
+        "",
+        "MutationCheckTest has no entry of its own"),
+}
+
+
+def import_tool():
+    """The tool as a module, so its loader and validator are the ones called.
+
+    Imported rather than run: main() refuses the main tree and wants a clean
+    commit and a green baseline before it validates anything, and none of those
+    bears on whether an anchor still matches the tree it sits in.
+    """
+    sys.dont_write_bytecode = True  # no tools/__pycache__ left by a gate run
+    spec = importlib.util.spec_from_file_location("mutation_check", TOOL)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def validate_list(tool, mutants_dir, tree):
+    """(the mutants read, validate's refusal or None) -- main()'s two calls
+    before it writes a byte. A file that does not load raises out of here with
+    its own path and line in the traceback, which is the red for that kind."""
+    mutants = tool.load_mutants([mutants_dir])
+    try:
+        tool.validate(mutants, tree)
+    except tool.Refused as refused:
+        return mutants, str(refused)
+    return mutants, None
+
+
+class MutantAnchorsTest(unittest.TestCase):
+    """S338: the real list in tools/mutants/ against the src/ beside it.
+
+    The class above gates the driver on a sandbox and never opens the real
+    list, so on 2026-11-11 S102 gave `outside_pawn_terms` a sixth argument, the
+    anchor of PT08 in tools/mutants/S118_pawn_cache.py matched no line, the
+    validator would have refused every mutation run over the directory, and
+    both gates were green. This class turns that red in the commit that does it.
+
+    It builds nothing and applies nothing. A mutant that validates and is no
+    longer killed is still the mutation run's to find.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tool = import_tool()
+
+    def test_every_mutant_validates_against_this_tree(self):
+        mutants, refusal = validate_list(self.tool, MUTANTS, ROOT)
+        # The precondition: an empty list validates. Every mutant file in the
+        # directory has to have given the loader at least one mutant.
+        files = sorted(os.path.join(MUTANTS, name)
+                       for name in os.listdir(MUTANTS) if name.endswith(".py"))
+        self.assertTrue(files, f"no mutant file in {MUTANTS}")
+        read = sorted({mut["source"] for mut in mutants})
+        self.assertEqual(read, files, "the loader's files are not the "
+                         f"directory's: none read from "
+                         f"{sorted(set(files) - set(read))}, read from outside "
+                         f"it {sorted(set(read) - set(files))}")
+        if refusal:
+            self.fail(f"{refusal}\n\nThe fix is a re-anchor: give the pair "
+                      "named the text this tree now holds at that site, in the "
+                      "mutant file named, and keep what the mutant breaks. A "
+                      "mutant is never deleted to clear this (S338).")
+
+    def test_a_red_names_the_mutant_its_file_the_anchor_and_the_count(self):
+        """What turns a red into a re-anchor rather than a search: the id, the
+        mutant file, the source file, the count and the anchor's own text."""
+        tree = tempfile.mkdtemp(prefix="chesso-mutant-anchors.")
+        self.addCleanup(shutil.rmtree, tree, True)
+        os.makedirs(os.path.join(tree, "src"))
+        with open(os.path.join(tree, "src", "x.cpp"), "w") as handle:
+            handle.write(SOURCE)
+        plants = os.path.join(tree, "mutants", "plants.py")
+        os.makedirs(os.path.dirname(plants))
+        with open(plants, "w") as handle:
+            handle.write(AMBIGUOUS + MISSING)
+
+        mutants, refusal = validate_list(self.tool, os.path.dirname(plants), tree)
+        self.assertEqual(len(mutants), 2)
+        self.assertIsNotNone(refusal)
+        for mid, count, anchor in (("A01_ambiguous", 2, "int twice"),
+                                   ("A02_missing", 0, "int guard_three = 3;")):
+            with self.subTest(mutant=mid):
+                self.assertIn(f"{mid} in {plants}: pair 0 anchor occurs "
+                              f"{count} times in src/x.cpp, needs exactly 1\n"
+                              f"    anchor {anchor!r}", refusal)
+
+    def test_a_mutation_run_leaves_this_class_out(self):
+        """A mutant applied removes its own anchor, so this class is red inside
+        every mutation run. What keeps it out of the suite a run judges by is
+        read here from the live calls in tests/CMakeLists.txt: every entry that
+        runs this file names exactly one class and nothing else, every class
+        has one, and every entry running this class carries the label the tool
+        excludes. That its entry also carries `fast` is MutationCheckTest's to
+        check, since this class stops running when that label goes."""
+        with open(CMAKE_LISTS) as handle:
+            cmake = handle.read()
+        problems = registration_problems(cmake, test_classes(),
+                                         self.tool.LIST_LABEL)
+        if problems:
+            self.fail(f"{CMAKE_LISTS}:\n  " + "\n  ".join(problems))
+
+    def test_the_registration_guard_reads_what_cmake_reads(self):
+        """S338's fast check beat the first form of the guard above four ways,
+        each putting this class back into a mutation run's suite under `fast`
+        while the guard stayed green. Each is planted here into a registration
+        the guard passes, with the two other ways a label can change and a
+        class left without an entry."""
+        classes = test_classes()
+        label = self.tool.LIST_LABEL
+        with self.subTest(plant="none"):
+            self.assertEqual(registration_problems(REGISTRATION, classes, label),
+                             [])
+        for plant, (old, new, red) in REGISTRATION_PLANTS.items():
+            with self.subTest(plant=plant):
+                self.assertEqual(REGISTRATION.count(old), 1)
+                problems = registration_problems(
+                    REGISTRATION.replace(old, new), classes, label)
+                self.assertTrue(any(red in line for line in problems), problems)
 
 
 if __name__ == "__main__":
