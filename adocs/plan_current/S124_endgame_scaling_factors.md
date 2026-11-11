@@ -1913,3 +1913,30 @@ full round 2.
 - Readings: `../chesso-s124p2/.tuning/s124/screen/read/`.
 - **The resume:** `all` reuses every decided fit and every round with `best:`. F3's round 2 re-runs. The command is in
   `adocs/status.md`'s handover.
+
+## 2026-11-11: the screen's reading, the coordinator
+
+Resumed 2026-11-11 18:45 from `../chesso-s124p2` at `c496403` after the shutdown, governor `powersave` (DEC-195);
+`all` read F1 and F2 as decided and re-ran F3 from its full fit's round 2. `S124-ALL-DONE` at 20:44. Readings:
+`../chesso-s124p2/.tuning/s124/screen/read/F1.txt`, `F2.txt`, `F3.txt`; they go into `adocs/data/` with the candidate.
+
+| part | cells | d, held out, at K refit | m | quarters | guard, tablebase-labelled loss | outcome |
+|---|---|---|---|---|---|---|
+| F1 | P=0 d<=0, P=0 d=1, OCB_PURE P<=2 | +0.0036800 | 0.0000282 | +0.003676 to +0.003722 | -0.0339 +/- 0.0005 | kept |
+| F2 | P=0 d>=2, P=1 and P=2 all d | +0.0018510 at K 1.3248 | 0.0000209 | +0.001829 to +0.001859 | -0.0068595 +/- 0.0002704 | kept |
+| F3 | OCB_PURE P=3-4, OCB_PURE P>=5, OCB_ROOK | +0.0003910 at K 1.3367 | 0.0000126 | +0.000380 to +0.000397 | +0.0000086 +/- 0.0000010 | **dropped: refused by the guard** |
+
+- **The candidate is F1 and F2**: `endgame_scale 45 0 9 29 81 114 86 128 123 19 128 128 128`, the decided fit
+  `fits/f1_f2/full`, K 1.3248.
+- **F3 is dropped as pre-registered, and what refused it is stated so nobody reads more into it.** F3's own three
+  cells move no guard row (no row of five men or fewer). Its fit frees F1's and F2's cells again (amendment 6), and
+  four of them moved by one unit of 128: `81 114 86 .. 123` to `80 113 85 .. 122`. That move raises the
+  tablebase-labelled loss by 0.0000086, 8.6 of its errors by game and so past the rule's 1.645, and about a
+  thousandth of what F2 lowered it by. Amendment 3 wrote this case down before any fit ("earlier survivors refit with
+  it are guarded") and the smoke had already shown it, so the rule stands as written and F3's fit
+  (`endgame_scale .. 50 77 103`) ships nowhere. Not re-read with F1's and F2's cells frozen: that would be a rule
+  chosen after its result.
+- **For S126:** F3's three cells read d +0.000391 held out on the games' labels and no tablebase row checks them.
+  S126 frees every cell and its own verdict reads them.
+- **P1 runs next** (below, "The coordinator's run"): started 2026-11-11 20:50 from `../chesso-s124spsa` at `54c892d`,
+  PID 60757, setup green (bench 4707943 both, the eval check's worst 1.667 against 2, ROOM 4838).

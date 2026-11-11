@@ -7,27 +7,34 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-11, by hand.
 
-## 2026-11-11 19:15: resumed after the shutdown; S124's screen on F3, S102 phase 1 behind it
+## 2026-11-11 21:00: S124's screen done, F1 and F2 kept, F3 dropped; P1 running; S102 phase 1 delivered
 
-**Running: S124's screen**, resumed 18:45 from `../chesso-s124p2` (`c496403`, clean), PID 8705, nice 10. `all` skipped
-F1 and F2 and re-runs F3's round 2. A watcher is armed with four exits: `S124-ALL-(DONE|FAILED)`, the PID's death, an
-8 h ceiling. Governor `powersave`, recorded and not set (DEC-195).
-- **Never commit or reset in `../chesso-s124p2` before the marker.**
+**S124's screen ended 20:44** (`S124-ALL-DONE`). F1 and F2 kept; **F3 dropped by the tablebase guard**: its fit moved
+four of F1's and F2's cells by one unit, raising the guard's loss by 0.0000086 +/- 0.0000010. The candidate is
+`endgame_scale 45 0 9 29 81 114 86 128 123 19 128 128 128` at K 1.3248 (`fits/f1_f2/full`). The step file's
+"2026-11-11: the screen's reading" has the table. `../chesso-s124p2` may be committed in again.
 
-**Running: S102 phase 1**, one fresh Opus 5.5 agent in `../chesso-s102p1` (branch `s102p1` at `42f2aa7`, staged, not
-committed), from the step file's "2026-11-06: phase 1 paused for a shutdown". No fit, match or timing; instruction
-counts only. Deliverable `.tuning/coord/S102/S102_phase1.diff`.
-- **Ruled by the coordinator:** the endgame factor case's non-vacuity loops may end at `ENDGAME_SCALE_END`, on three
-  conditions: the reason at the site, every one of S102's 24 parameters keeps an equal non-vacuity and
-  finite-difference check elsewhere, and the step file states it as a test correction. Checked at the fast check.
-- A test red only by its clock under the screen's load is re-run by the coordinator unloaded.
+**Running: P1, mop-up's SPSA**, started 20:50 from `../chesso-s124spsa` at `54c892d`, PID 60757, log
+`../chesso-s124spsa/.tuning/s124/p1.log`. About 4 h. A watcher is armed with four exits: `S124-P1-(DONE|FAILED)`, the
+PID's death, a 9 h ceiling. The verdict is the line above `S124-P1-TEST-DONE`; the candidate's two lines are in
+`.tuning/s124/p1/final.txt`.
+
+**S102 phase 1 is delivered, staged in `../chesso-s102p1`, not landed.** Bench 4707943 both builds, INV-6 and objdiff
+identical, 58 and 59 of 60. Its fast check found no blocker and two lows.
+- **One red, the owner's (DEC-344 (9), DEC-356):** `test_tuner_gradient`'s clamp case reads 1.29e-6 at 1211 against
+  1e-6 and `CLAMP_PUSH`'s script answers no push. Options read in `adocs/data/S102_clamp_options.txt` (in that
+  worktree). The coordinator recommends B1, the step scaled per column by its largest coefficient: green at 1.72e-7,
+  the script answers +50, no bound, metric or row moves, 36 of 36 plants red.
+- **Running:** one Opus 5.5 agent there fixes the two lows (delivery A, `.tuning/coord/S102/S102_phase1_A.diff`) and
+  builds B1 as a separate delta (`S102_phase1_B1_delta.diff`). **Nothing of S102 lands before the owner rules on B1.**
+- The loop-end ruling holds: the fast check confirmed every S102 parameter keeps its check in the main case.
 
 **Next, in order:**
-1. P1, mop-up's SPSA (about 4 h, ceiling 9 h, node-budgeted), from `../chesso-s124spsa` at `54c892d`; the command is
-   in S124's step file, "The coordinator's run".
-2. The cost (`S124_phase1_cost.sh` at the candidate), the candidate's paste, `gate_extra` (last `GATE-EXTRA-DONE`
-   2026-11-05, weekly run due by 2026-11-12), then one `{0, 5}` SPRT of the survivors. 12 to 20 h.
-3. S102 phase 1's fast check and landing, rebased if S124's candidate lands first.
+1. P1's reading. Then one agent builds S124's candidate in `../chesso-s124p2`: F1 and F2's cells, mop-up if P1 keeps
+   it, goldens by their scripts, the specs wording.
+2. The cost (`S124_phase1_cost.sh` at the candidate), `gate_extra` (last `GATE-EXTRA-DONE` 2026-11-05, due by
+   2026-11-12), then one `{0, 5}` SPRT of the survivors. 12 to 20 h. Nothing compiles while it plays.
+3. S102 phase 1's landing after the owner's ruling, rebased onto S124's candidate if that landed.
 
 **For the owner, asked 2026-11-11, nothing blocks on it:** the drift point of 2026-11-01 read +293.62 +/- 17.15
 against `1680439` before S101 and S122 landed; S267's gate needs 232 and the path to the mark was priced at 282.
