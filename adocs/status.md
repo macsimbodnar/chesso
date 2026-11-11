@@ -5,9 +5,66 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-11-11, by hand.
+Updated: 2026-11-12, by hand.
 
-## 2026-11-11 22:50: P1 kept mop-up; S338 done; S124's candidate being built
+## 2026-11-12 00:55: S124's candidate is built and checked; its SPRT waits for a foreign load to end
+
+**S124's candidate is staged in `../chesso-s124p2` (HEAD `7214ce5`), not committed.** Delivery
+`.tuning/coord/S124/S124_candidate.diff`, sha256 `ecca2b17...`, 38 files; under `src/` three array lines and a comment.
+`chesso bench` 4707943 -> **4587846**. The step file there, "2026-11-11: phase 2b, the candidate", has every golden.
+
+**Two owner's stops fired (DEC-344 (9)); nothing was moved for either.** The SPRT plays the staged tree in DEC-334's
+form and the owner rules only on H1.
+- Mate-carry ceiling `C_mate7_depth11`: 10 against 4 on S124's grid (one cell, stride 1 at 2000000 nodes, 10 of 39
+  lines short). `test_mate_carry` is green at its landed budgets; S170's new budgets are not applied.
+- `test_tuner_gradient`'s bound: 1.69336e-6 at parameter 1002, red. DEC-316's script answers no pair and CLAMP_PUSH's
+  no push. B1 (S102's per-column step, with the owner) was not applied.
+
+**Seven tests red at the candidate, the same in both builds: the gradient case and six fixtures written around the old
+evaluation.** `test_engine` first-mate (KRR v K reports its mate at 12, the parent at 9), `test_evaluation` "removing a
+piece" (mop-up's share past `POSITIONAL_ROOM`), `test_search`'s two planted-bound cases (600 and 500 around the old
+585), `test_en_passant_key`'s precondition (-96 against < -200), `test_audit_design`'s first case, and
+`test_datagen_repetition`'s precondition. Options and the agent's recommendation for each are in the step file under
+"Reds left". **Not repaired before the verdict**: on H0 the bisection's parts read different reds. After an H1, one
+agent repairs them, with the fast check's low (the new mop-up case's precondition `> 3` should read `>= 4`).
+
+**Checked on the candidate, 2026-11-12:**
+- Fast check, one Opus agent, read-only: nothing blocks the run. The paste equals the screen's fit and P1's final; no
+  assertion removed but three re-added with their new values; the SPRT script's guards, markers and arithmetic hold.
+  The gates were read on binaries 49 minutes older than `src/evaluation.cpp`'s last write, so `bench` is read again
+  on the binary the script rebuilds.
+- `STAGES="debug sanitize clang" tools/gate_extra.sh` (`.tuning/coord/S124/gate_extra_cand/`): each stage red on the
+  known tests and on nothing else; no sanitizer report; clang compiles the candidate.
+  `test_datagen_repetition` is green under clang's library, red under GCC's.
+- Debug self-play (DEC-141), 8 games at 4+0.04: 0 `Assertion`, 0 disconnects; the Debug `bench` 4587846.
+- Cost, `adocs/data/S124_cost_masks.sh` (`.tuning/coord/S124/cost_masks.log`), instructions, five interleaved runs,
+  node counts the parent's on all four builds: **the candidate +1.969 % on `bench`, +1.955 % on `bench 16`**; the
+  factor alone +1.112 %, mop-up alone +0.970 %. Spread under 1800 instructions in 1e10. Taken with a foreign load on
+  the machine; the counts are per process and the spread says they held.
+
+**The weekly `tools/gate_extra.sh` on `7214ce5` ended `GATE-EXTRA-FAILED: clang`, 2026-11-12 00:09**
+(`.tuning/gate_extra_2026-11-11.log`). Prose, citations, debug, sanitize and perft ok. Clang with `-Werror` refuses
+`mopup_terms` and `scaled_taper` as not needed while the family sits at its identity; every commit since phase 1's
+landing on 2026-11-06 is so, the MacBook's build of them included. **S340 is filed**, filler (DEC-171), second in
+Open: it lands when S124's SPRT releases the machine, whatever the verdict. Not fixed first, because the
+pre-registered script holds REF's `src/` to the screened tree's byte for byte. The last `GATE-EXTRA-DONE` stays
+2026-11-05; the next full run follows S340.
+
+**Waiting, not on the owner: a foreign load.** Another session's `go test ./internal/watch/ -run TestSoak` (a 2 h
+soak, started 00:38, heavy disk I/O) is running. No A/A and no SPRT starts while it does (MACHINE; the script's abort
+rule). A watcher waits for its exit.
+
+**Next, in order:**
+1. **The A/A, 1000 games (DEC-143), about 28 minutes**: the kernel moved 7.2.6 -> 7.2.15 since the last one, and
+   every pre-registration since S083 named the kernel in "the same machine". `CAND=7214ce5 REF=7214ce5 AA=1
+   ROUNDS=500 ./fastchess.sh`. The reading rule is in S124's step file, written before the run.
+2. **S124's one `{0, 5}` SPRT**, `adocs/data/S124_sprt.sh` in `../chesso-s124p2`: 12 to 20 h at the worst, cap 41900
+   games, watcher ceiling 40 h. Nothing compiles while it plays.
+3. S340, then on H1 the reds' repair and the owner's ruling on the two stops; on H0 the bisection (A mop-up, B F1,
+   C F2).
+4. S339, filler. S102's landing after the owner's ruling on B1, then its screen (phase 2).
+
+## 2026-11-11 22:50: P1 kept mop-up; S338 done; S124's candidate was being built
 
 **P1 ended 22:40, `S124-P1-KEPT`.** Mop-up `mopup_mg = {96, 149, 0}`, `mopup_eg = {15, 13, 6}`. Fresh starts
 converted: head 759, the candidate 862 of 984, exact one-sided p 1.5e-23, no class the other way. KBNvK still
@@ -21,9 +78,6 @@ converts 63 of 184. The step file's "2026-11-11: P1's reading" has the table. Ev
 0.1 s; a mutation run excludes it by label. Gate on the idle machine: 61 of 61 in both builds, format clean, bench
 4707943. **S339 is filed**, filler: the mutation tool scores a skipped test as a kill, and two crashes.
 
-**Running: S124's candidate build**, one Opus 5.5 agent in `../chesso-s124p2`: the paste, every golden by its script,
-the owner's stops read first (DEC-344 (9)), the K re-read, the SPRT script pre-registered. No timing while it builds.
-
 **S102 phase 1: delivered, staged in `../chesso-s102p1`, not landed, waiting on the owner's ruling on B1.**
 - Delivery A (`.tuning/coord/S102/S102_phase1_A.diff`, sha256 `1003329c...`): phase 1, the two fast-check lows fixed,
   PT08 re-anchored. Its one red is `test_tuner_gradient`'s clamp case, 1.29e-6 at 1211 against 1e-6, the owner's
@@ -34,13 +88,6 @@ the owner's stops read first (DEC-344 (9)), the K re-read, the SPRT script pre-r
   `S102_b1_reading.txt` in that worktree.
 - At landing: rebase onto S124's candidate, two rows for `S102_clamp_options.*` in `adocs/data/README.md`, B1's text
   takes its DEC id, and `test_mutant_anchors` must read green there.
-
-**Next, in order:**
-1. S124's candidate: its fast check, `gate_extra` (last `GATE-EXTRA-DONE` 2026-11-05, due by 2026-11-12), the Debug
-   self-play (DEC-141), the cost (`S124_phase1_cost.sh` at the candidate's masks), then the one `{0, 5}` SPRT.
-   12 to 20 h at the worst. Nothing compiles while it plays.
-2. S339, filler, agent-only, when no timed run holds the machine.
-3. S102's landing after the owner's ruling, then its screen (phase 2).
 
 **For the owner, asked 2026-11-11, nothing blocks on it:** the drift point of 2026-11-01 read +293.62 +/- 17.15
 against `1680439` before S101 and S122 landed; S267's gate needs 232 and the path to the mark was priced at 282.
