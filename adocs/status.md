@@ -29,6 +29,16 @@ identical, 58 and 59 of 60. Its fast check found no blocker and two lows.
   builds B1 as a separate delta (`S102_phase1_B1_delta.diff`). **Nothing of S102 lands before the owner rules on B1.**
 - The loop-end ruling holds: the fast check confirmed every S102 parameter keeps its check in the main case.
 
+**S102's follow-up is delivered (21:17):** delivery A (`S102_phase1_A.diff`, sha256 `1003329c...`) fixes the two lows
+and re-anchors mutant PT08, which S102's sixth argument to `outside_pawn_terms` had broken unseen (accepted by the
+coordinator; kill re-read). B1 is the delta `S102_phase1_B1_delta.diff` (sha256 `2a2556d9...`): clamp case 1.72e-7 at
+141 with `CLAMP_PUSH` +50, gradient case 1.44e-7 (x6.94), group case x34 -> x10, every pair's script picks the same
+pair, 18 of 18 planted errors red and a planted case in the tree. A plus the delta reproduces the staged tree.
+At landing: two rows for `S102_clamp_options.*` in `adocs/data/README.md`, and B1's text takes its DEC id.
+
+**Running: S338**, filed and started 21:20, filler (DEC-171): a fast test that validates every mutant's anchor
+against the tree. One Opus 5.5 agent in the main tree, no `src/`, behind P1.
+
 **Next, in order:**
 1. P1's reading. Then one agent builds S124's candidate in `../chesso-s124p2`: F1 and F2's cells, mop-up if P1 keeps
    it, goldens by their scripts, the specs wording.
