@@ -58,10 +58,11 @@ a red the two errors had hidden: `test_tuner_gradient`'s factor case, 4.70e-6 ov
 implements its own way. **S341 is filed in `plan_current/`**, filler, and starts after S124's verdict. The MacBook's
 `ctest -L fast` reads that red until then.
 
-**S339 is done (`plan_done/`), 01:45.** A ctest row that did not run is no kill and the baseline's are named; two
-crashes on a malformed mutant are refusals by name. Each red seen first, 38 cases, gate 61 of 61 in both builds, one
-fast check with nothing real. **S342 is filed**, filler, last before the parked steps: four further crashes on
-malformed entries, none reachable from the list as it stands.
+**S339 and S342 are done (`plan_done/`), 01:45 and 02:05.** The mutation tool: a ctest row that did not run is no
+kill and the baseline's are named; a malformed pair or entry of any shape is refused by name before the baseline; an
+`unmeasured` row says why. Every red seen first, 40 cases, gate 61 of 61 in both builds each time, one fast check
+each with nothing real. Two shapes known and left, no step filed, neither reachable from the list: a file whose own
+`M` is not iterable, and an empty-string `id`.
 
 **Waiting, not on the owner: a foreign load.** Another session's `go test ./internal/watch/ -run TestSoak` (a 2 h
 soak, started 00:38, heavy disk I/O) is running. No A/A and no SPRT starts while it does (MACHINE; the script's abort

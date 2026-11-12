@@ -2682,8 +2682,12 @@ only listed row is `(Not Run)` is `unmeasured`, as a ctest that failed to run
 is. Before S339 the tool read each of them as an assertion: on a fixture where
 one test skips, a mutant that changed nothing scored `killed`.
 `test_bare_fen_relay` skips that way when no python imports python-chess, so on
-such a machine every mutant would have read killed by it. A baseline with a
-test that did not run says so on the line after its green one, naming it; the
+such a machine every mutant would have read killed by it. A row left
+`unmeasured` by its suite says why in its note, in the table's "not what the
+list expects" lines and the TSV, since S342: `[no test asserted: test_x
+(Timeout)]` or `[... (Not Run)]` for its only listed rows, `[ctest exited 1 and
+listed no test]`, or the tool's own ceiling. A baseline with a `(Skipped)` or
+`(Disabled)` test says so on the line after its green one, naming it; the
 driver's gate prints this for its skipped test:
 
 ```
@@ -2691,7 +2695,9 @@ baseline did not run: test_skips (Skipped) -- a test that did not run kills no m
 ```
 
 The count on the green line is ctest's own: it includes a skipped test and
-leaves out a disabled one.
+leaves out a disabled one. A baseline with a `(Not Run)` row is never green:
+ctest exits 8 for it, so the run is refused as red, naming the test --
+`the unmutated worktree is red: 1 of 2 failed (test_gone)`.
 
 **`expected="equivalent"` is a declaration, never an inference.** Equivalent
 mutants are undecidable in general, so a person argues it in the mutant file and
@@ -2734,12 +2740,12 @@ Per-mutant build and ctest logs, and a `results.tsv` of the whole table, land in
 `tests/test_mutation_check.py` is the tool's own gate, in the fast suite: a
 throwaway git repository, a four-line `src/x.cpp` beside a committed `tests/`,
 `adocs/`, root `CMakeLists.txt` and `.gitignore` to dirty, and `cmake`, `ctest`
-and the engine as stubs on PATH. Thirty-eight cases, its class
+and the engine as stubs on PATH. Forty cases, its class
 `MutationCheckTest` — 1.6 s when S196 wrote the first twenty-four on an idle
 machine, 6.9 s at thirty-one on 2026-09-22 with a match on every core, 8.6 s at
 thirty-two and 5.5 s at thirty-three on 2026-11-11 with every core held, 12.7 s
 alone at thirty-eight on 2026-11-12 at a load of 9.5 on 12 threads and 17 to
-18 s inside the gate's `ctest -j12` — and it
+18 s inside the gate's `ctest -j12`, and 14.1 s alone at forty the same day at a load of 3.3 — and it
 is what catches an anchor counted wrong, a revert that leaves a mutant behind, a
 verdict on the wrong branch or a missing marker. Each was observed
 red under a cut to the guard it names before it was kept -- the tool held to
@@ -2763,7 +2769,10 @@ baseline with a skipped or a disabled test read `killed`, and so did one whose
 only listed row was `(Not Run)`; a kill beside a skipped test listed that test
 among what caught it; and five malformed pairs and an own-`m` entry with no
 pairs each ended in a traceback, the pair with a number for its replacement
-only after the baseline had run.
+only after the baseline had run. S342's two went red on the tool as it stood:
+twelve malformed entries each ended in a traceback, six of them after the
+baseline, and an `unmeasured` row from a lone `(Timeout)`, a lone `(Not Run)`
+or a ctest that listed nothing carried no note.
 
 **`test_mutant_anchors` holds the real list to the tree, in the fast suite
 (S338).** The file's second class, `MutantAnchorsTest`, reads `tools/mutants/`
@@ -2772,7 +2781,8 @@ It imports them rather than running the tool, because `main` refuses the main
 tree and wants a clean commit and a green baseline, none of which bears on an
 anchor; it builds nothing and applies nothing. Four cases, 0.15 to 0.16 s
 in ctest with every core held. It is red when a mutant file does not load or
-defines none, the directory holds no mutant file, an id repeats, an `expected`
+defines none, an entry is malformed (below), the directory holds no mutant
+file, an id repeats, an `expected`
 is neither verdict, a file is outside `src/` or missing from it, a mutant has no
 pair, a pair that is not two strings or a pair that changes nothing,
 and when an anchor matches no line or more than one. Each of the validator's
@@ -2792,8 +2802,19 @@ each was a traceback naming neither mutant nor file: a pair that is not an
 either side -- reads `<id> in <file>: pair <n> is not an (old, new) pair of
 strings: <the pair>`, and in a file that brings its own `m`, as the two
 evidence copies under `adocs/data/` do, an entry that gives no pairs reads
-``<id> in <file>: an entry from the file's own `m` gives no pairs``. S102 is why
-it exists:
+``<id> in <file>: an entry from the file's own `m` gives no pairs``. Since
+S342 every entry passes one shape check as it is loaded, and the rest of the
+malformed shapes are refused the same way, before the baseline: an own-`m`
+entry that leaves out `id`, `file`, `klass` or `note` reads ``gives no
+<field>``; one that is not a mapping reads `a <type>, not a mapping of a
+mutant's fields`; an `id`, `file`, `klass` or `note` that is not a string, from
+either `m`, reads `<field> is not a string: <value>`, and an `origin` that is
+neither None nor a string and own-`m` pairs that are not a list or tuple are
+refused alike. An entry with no usable id is named by its index in its file,
+`entry <n> in <file>`, counted from 0. Before S342 each was a `KeyError`,
+`ValueError`, `AttributeError` or `TypeError`, a missing `klass` or `note` and
+a non-text `id`, `klass`, `note` or `origin` only after the baseline had run.
+S102 is why this test exists:
 giving `outside_pawn_terms` a sixth argument left `PT08`'s anchor in
 `tools/mutants/S118_pawn_cache.py` matching nothing, the tool would have
 refused every run over the directory, and both gates stayed green, because

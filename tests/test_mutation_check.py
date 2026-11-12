@@ -503,6 +503,64 @@ m("O02_own_m", "src/x.cpp", "sandbox", "an entry from the file's own m",
   ("int guard_one = 1;", "int guard_one = 1;  // MUTANT_SEEN"))
 """
 
+# S342: an entry in a shape the tool cannot use, and the line its refusal
+# starts with, {path} being the mutant file. A whole entry stands first in each
+# file, so an entry named by its index is named by its place and not by a 0
+# nothing else could be. Before S342 the missing `file` and `id`, and a `file`
+# that is not a string, died in validate on a KeyError or an AttributeError; a
+# list entry that is not a mapping died in normalise; a missing `klass` or
+# `note`, and an `id`, `klass`, `note` or `origin` that is not a string, passed
+# validate and died after the baseline had run.
+GOOD_ENTRY = ('dict(id="O03_good", file="src/x.cpp", klass="sandbox", '
+              'note="a whole entry", pairs=[("int guard_one = 1;", '
+              '"int guard_one = 1;  // MUTANT_SEEN")])')
+BAD_PAIR = '("int guard_two = 2;", "int guard_two = 2;  // quiet")'
+OWN_M_LIST = """
+M = [
+    {good},
+    {bad},
+]
+"""
+OWN_M_GIVES_NO = "an entry from the file's own `m` gives no"
+MALFORMED_ENTRIES = {
+    "own m, no file": (
+        OWN_M_LIST, f'dict(id="O04_bad", klass="sandbox", note="n", pairs=[{BAD_PAIR}])',
+        f"O04_bad in {{path}}: {OWN_M_GIVES_NO} file"),
+    "own m, no id": (
+        OWN_M_LIST, f'dict(file="src/x.cpp", klass="sandbox", note="n", pairs=[{BAD_PAIR}])',
+        f"entry 1 in {{path}}: {OWN_M_GIVES_NO} id"),
+    "own m, no klass": (
+        OWN_M_LIST, f'dict(id="O04_bad", file="src/x.cpp", note="n", pairs=[{BAD_PAIR}])',
+        f"O04_bad in {{path}}: {OWN_M_GIVES_NO} klass"),
+    "own m, no note": (
+        OWN_M_LIST, f'dict(id="O04_bad", file="src/x.cpp", klass="sandbox", pairs=[{BAD_PAIR}])',
+        f"O04_bad in {{path}}: {OWN_M_GIVES_NO} note"),
+    "own m, not a mapping": (
+        OWN_M_LIST, f'("O04_bad", "src/x.cpp", "sandbox", "n", [{BAD_PAIR}])',
+        "entry 1 in {path}: a tuple, not a mapping of a mutant's fields"),
+    "own m, a file that is not a string": (
+        OWN_M_LIST, f'dict(id="O04_bad", file=5, klass="sandbox", note="n", pairs=[{BAD_PAIR}])',
+        "O04_bad in {path}: file is not a string: 5"),
+    "own m, pairs that are not a list": (
+        OWN_M_LIST, 'dict(id="O04_bad", file="src/x.cpp", klass="sandbox", note="n", pairs=5)',
+        "O04_bad in {path}: pairs is not a list of (old, new) pairs: 5"),
+    "m, a file that is not a string": (
+        KILLED + "{bad}", f'm("Q02_bad", 5, "sandbox", "n", {BAD_PAIR})',
+        "Q02_bad in {path}: file is not a string: 5"),
+    "m, an id that is not a string": (
+        KILLED + "{bad}", f'm(7, "src/x.cpp", "sandbox", "n", {BAD_PAIR})',
+        "entry 1 in {path}: id is not a string: 7"),
+    "m, a klass that is not a string": (
+        KILLED + "{bad}", f'm("Q02_bad", "src/x.cpp", 5, "n", {BAD_PAIR})',
+        "Q02_bad in {path}: klass is not a string: 5"),
+    "m, a note that is not a string": (
+        KILLED + "{bad}", f'm("Q02_bad", "src/x.cpp", "sandbox", 5, {BAD_PAIR})',
+        "Q02_bad in {path}: note is not a string: 5"),
+    "m, an origin that is not a string": (
+        KILLED + "{bad}", f'm("Q02_bad", "src/x.cpp", "sandbox", "n", {BAD_PAIR}, origin=5)',
+        "Q02_bad in {path}: origin is neither None nor a string: 5"),
+}
+
 
 def last_line(text):
     lines = [line for line in text.splitlines() if line.strip()]
@@ -597,6 +655,35 @@ class MutationCheckTest(unittest.TestCase):
         self.assertNotIn("baseline green", proc.stdout)
         self.assertEqual(self.box.worktree_dirty(), "")
         self.assertEqual(last_line(proc.stdout), "MUTATION-RUN-FAILED")
+
+    def test_a_malformed_entry_refused_by_name_before_the_baseline(self):
+        """S339's implementer and fast check, beyond that step: an entry
+        missing a field, or giving one the tool cannot use, died in a traceback
+        naming neither entry nor file, some of them only after the baseline had
+        run. Each is refused by the entry's id, or its index where it has no
+        usable id, and its file, before ctest is called once. The whole entry
+        the own-`m` files carry first loads and runs, so what is refused is the
+        entry after it."""
+        given = self.box.run(self.box.mutant_file(
+            OWN_M_LIST.replace("{good},", GOOD_ENTRY + ",").replace("{bad},", "")))
+        self.assertEqual(given.returncode, 0, given.stdout)
+        self.assertRegex(given.stdout, r"O03_good\s+yes\s+1/1\s+\S+\s+killed")
+
+        for shape, (body, entry, refusal) in MALFORMED_ENTRIES.items():
+            with self.subTest(shape=shape):
+                if os.path.exists(self.box.ctest_args):
+                    os.remove(self.box.ctest_args)
+                path = self.box.mutant_file(
+                    body.replace("{good}", GOOD_ENTRY).replace("{bad}", entry))
+                proc = self.box.run(path)
+                self.assertNotEqual(proc.returncode, 0)
+                self.assertIn(refusal.replace("{path}", path), proc.stdout)
+                self.assertNotIn("Traceback", proc.stdout)
+                self.assertNotIn("baseline green", proc.stdout)
+                self.assertFalse(os.path.exists(self.box.ctest_args),
+                                 "ctest was called before the refusal")
+                self.assertEqual(self.box.worktree_dirty(), "")
+                self.assertEqual(last_line(proc.stdout), "MUTATION-RUN-FAILED")
 
     def test_main_tree_refused(self):
         """`git checkout --` in the tree somebody works in reverts their work."""
@@ -828,6 +915,32 @@ class MutationCheckTest(unittest.TestCase):
         self.assertEqual(last_line(proc.stdout),
                          "MUTATION-RUN-FAILED: a verdict differs "
                          "from what the mutant list expects")
+
+    def test_an_unmeasured_row_says_why_in_its_note(self):
+        """S339's fast check: a row left unmeasured by its suite carried no
+        note, where one left so by its build or its bench says why, so the
+        table and the TSV could not tell a ceiling from a test that never ran
+        from a ctest that ran nothing. S342."""
+        for mutant, mid, why in (
+                (TIMEOUT_ONLY, "T01_timeout_only",
+                 "no test asserted: test_x (Timeout)"),
+                (NOT_RUN, "N01_not_run", "no test asserted: test_gone (Not Run)"),
+                (CTEST_BROKEN, "C01_ctest_broken",
+                 "ctest exited 1 and listed no test")):
+            with self.subTest(mutant=mid):
+                proc = self.box.run(self.box.mutant_file(mutant))
+                self.assertRegex(proc.stdout,
+                                 rf"{mid}\s+yes\s+\S+\s+\S+\s+unmeasured")
+                self.assertRegex(proc.stdout,
+                                 rf"(?m)^  {mid}: unmeasured, expected killed "
+                                 rf"-- .*{re.escape('[' + why + ']')}$")
+                tsv = os.path.join(self.box.worktree, "build", "mutation",
+                                   "results.tsv")
+                with open(tsv) as handle:
+                    row = [line.rstrip("\n").split("\t") for line in handle
+                           if line.startswith(mid + "\t")]
+                self.assertEqual(len(row), 1)
+                self.assertIn(f"[{why}]", row[0][11])
 
     def test_a_mutant_that_does_not_compile_is_stillborn(self):
         """The -Werror class: a mutant that orphans a local does not build in

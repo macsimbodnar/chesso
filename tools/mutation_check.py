@@ -104,6 +104,7 @@ import signal
 import subprocess
 import sys
 import time
+from collections.abc import Mapping
 
 BUILD_TIMEOUT_S = 600
 CTEST_TIMEOUT_S = 3600
@@ -206,23 +207,50 @@ def load_mutants(paths):
             source = handle.read()
         exec(compile(source, path, "exec"), namespace)  # noqa: S102
 
-        entries = collected
-        if not entries:
-            entries = [normalise(entry, path) for entry in namespace.get("M", [])]
+        # The tool's own `m`'s entries pass the shape check too: an `m` call
+        # can hand any value to any field.
+        entries = [normalise(entry, path, index) for index, entry
+                   in enumerate(collected or namespace.get("M", []))]
         if not entries:
             raise Refused("no mutant defined in " + path)
         mutants.extend(entries)
     return mutants
 
 
-def normalise(entry, path):
-    """An entry from a file that brought its own `m`, given this tool's fields."""
+TEXT_FIELDS = ("id", "file", "klass", "note")
+
+
+def normalise(entry, path, index):
+    """One entry of a mutant file, checked for shape and given this tool's fields.
+
+    Every entry is refused here by name, before the baseline, when a field is
+    missing or of a type the run cannot use. Before S339 and S342 each such
+    entry died in a traceback naming neither it nor its file -- a KeyError, a
+    ValueError, an AttributeError -- and a missing or non-text `klass` or
+    `note`, and a non-text `id` or `origin`, only after the baseline had run.
+    An entry with no usable id is named by its index in its file.
+    """
+    if not isinstance(entry, Mapping):
+        raise Refused(f"entry {index} in {path}: a {type(entry).__name__}, "
+                      "not a mapping of a mutant's fields")
     out = dict(entry)
-    if out.get("pairs") is None:
-        # The one field this tool cannot default; it was a KeyError here that
-        # named no file.
-        raise Refused(f"{out.get('id', '(no id)')} in {path}: an entry from "
-                      "the file's own `m` gives no pairs")
+    mid = out.get("id")
+    where = f"{mid if isinstance(mid, str) else 'entry ' + str(index)} in {path}"
+    # Only a file's own `m` can leave a key out: the tool's takes each of them
+    # positionally. A None for the pairs counts as left out, as S339 had it.
+    missing = [field for field in TEXT_FIELDS + ("pairs",) if field not in out
+               or (field == "pairs" and out[field] is None)]
+    if missing:
+        raise Refused(f"{where}: an entry from the file's own `m` gives no "
+                      + ", ".join(missing))
+    problems = [f"{field} is not a string: {out[field]!r}"
+                for field in TEXT_FIELDS if not isinstance(out[field], str)]
+    if not isinstance(out.get("origin"), (str, type(None))):
+        problems.append(f"origin is neither None nor a string: {out['origin']!r}")
+    if not isinstance(out["pairs"], (list, tuple)):
+        problems.append(f"pairs is not a list of (old, new) pairs: {out['pairs']!r}")
+    if problems:
+        raise Refused(f"{where}: " + "; ".join(problems))
     out.setdefault("expected", "killed")
     out.setdefault("origin", None)
     out["source"] = path
@@ -534,7 +562,16 @@ def ctest(build_dir, label, log_path):
     # Run)` one; beside an `asserted` one neither does, and DEC-165 is why.
     asserted = any(how != "Timeout" for _, how in ran)
     inconclusive = code is None or (code != 0 and not asserted)
-    return dict(code=code, failed=failed, total=total, tests=ran,
+    # The note an inconclusive row carries (S342): a ceiling, a test that never
+    # ran and a ctest that ran nothing call for different re-runs.
+    if code is None:
+        why = f"ctest hit this tool's {CTEST_TIMEOUT_S}s ceiling"
+    elif rows:
+        why = "no test asserted: " + ", ".join(f"{name} ({how})"
+                                               for name, how in rows)
+    else:
+        why = f"ctest exited {code} and listed no test"
+    return dict(code=code, failed=failed, total=total, tests=ran, why=why,
                 skipped=[(name, how) for name, how in rows
                          if how in CTEST_DID_NOT_RUN],
                 asserted=asserted, inconclusive=inconclusive,
@@ -852,6 +889,7 @@ def main(argv=None):
                     # can recover: the hang is the mutant's, so a quiet machine
                     # reproduces it exactly. DEC-165.
                     row["unmeasured"] = True
+                    row["note"] += f"  [{result['why']}]"
         finally:
             revert_mutant(worktree, mut)
             require_clean_fixture(worktree, f"after reverting {mut['id']}")
