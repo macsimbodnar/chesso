@@ -388,19 +388,20 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 ## Open
 
 1. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
-2. S340  filler (DEC-171): the tree builds under clang with `-Werror` whatever S124's family ships, its identity included; found red by the weekly `gate_extra` on `7214ce5`, lands as soon as S124's SPRT releases the machine
-3. S339  filler (DEC-171): the mutation tool never scores a test that did not run as a kill, and refuses a malformed mutant by name instead of crashing
-4. S102  outpost and space terms in the evaluation, one family
-5. S266  a complexity term moves the endgame score toward or away from zero, never past it, by how likely the stronger side is to convert, never flipping its sign
-6. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
-7. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
-8. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
-9. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-10. S030  move_t drops the moving piece and becomes 16 bits
-11. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
-12. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
-13. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
-14. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
-15. S311  **parked, DEC-342** — a comment rule in `AGENTS.md` and `tools/comment_budget.py`, which reports what breaks it and proves a comment edit left the code identical
-16. S312  **parked, DEC-342** — the log-shaped comment blocks become what the code cannot say, with current values, read old against new
-17. S313  **parked, DEC-342** — five steps after S312, comment tokens per step are measured again and the cleanup's verdict recorded, zero included
+2. S340  **paused by S341** -- filler (DEC-171): the tree builds under clang with `-Werror` whatever S124's family ships, its identity included; the fix is landed, the clang stage's green waits on S341
+3. S341  filler (DEC-171), blocks S340: the fast label is green under clang with libc++ -- no pinned golden rests on a population the standard library's own shuffle or distribution drew; `test_tuner_gradient` reads 4.70e-6 there; starts after S124's verdict
+4. S339  filler (DEC-171): the mutation tool never scores a test that did not run as a kill, and refuses a malformed mutant by name instead of crashing
+5. S102  outpost and space terms in the evaluation, one family
+6. S266  a complexity term moves the endgame score toward or away from zero, never past it, by how likely the stronger side is to convert, never flipping its sign
+7. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
+8. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
+9. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
+10. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+11. S030  move_t drops the moving piece and becomes 16 bits
+12. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
+13. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
+14. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
+15. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
+16. S311  **parked, DEC-342** — a comment rule in `AGENTS.md` and `tools/comment_budget.py`, which reports what breaks it and proves a comment edit left the code identical
+17. S312  **parked, DEC-342** — the log-shaped comment blocks become what the code cannot say, with current values, read old against new
+18. S313  **parked, DEC-342** — five steps after S312, comment tokens per step are measured again and the cleanup's verdict recorded, zero included

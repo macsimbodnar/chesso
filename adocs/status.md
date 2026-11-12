@@ -50,6 +50,14 @@ Open: it lands when S124's SPRT releases the machine, whatever the verdict. Not 
 pre-registered script holds REF's `src/` to the screened tree's byte for byte. The last `GATE-EXTRA-DONE` stays
 2026-11-05; the next full run follows S340.
 
+**S340's fix is landed, 01:20, and S340 is paused by S341.** `[[maybe_unused]]` on `mopup_terms` and
+`scaled_taper`, `No functional change`: 61 of 61 in both gated builds, bench 4707943, `tools/search_bench.py`
+identical at depths 9 and 12, both bisection shapes compile under clang. Clang now compiles the whole tree and reads
+a red the two errors had hidden: `test_tuner_gradient`'s factor case, 4.70e-6 over 5696 rows under libc++ against
+6.27e-7 over 5717 under GCC. Likely cause, unverified: `placements()` draws with `std::shuffle`, which each library
+implements its own way. **S341 is filed in `plan_current/`**, filler, and starts after S124's verdict. The MacBook's
+`ctest -L fast` reads that red until then.
+
 **Waiting, not on the owner: a foreign load.** Another session's `go test ./internal/watch/ -run TestSoak` (a 2 h
 soak, started 00:38, heavy disk I/O) is running. No A/A and no SPRT starts while it does (MACHINE; the script's abort
 rule). A watcher waits for its exit.
@@ -60,7 +68,7 @@ rule). A watcher waits for its exit.
    ROUNDS=500 ./fastchess.sh`. The reading rule is in S124's step file, written before the run.
 2. **S124's one `{0, 5}` SPRT**, `adocs/data/S124_sprt.sh` in `../chesso-s124p2`: 12 to 20 h at the worst, cap 41900
    games, watcher ceiling 40 h. Nothing compiles while it plays.
-3. S340, then on H1 the reds' repair and the owner's ruling on the two stops; on H0 the bisection (A mop-up, B F1,
+3. S341 (which completes S340), then on H1 the reds' repair and the owner's ruling on the two stops; on H0 the bisection (A mop-up, B F1,
    C F2).
 4. S339, filler. S102's landing after the owner's ruling on B1, then its screen (phase 2).
 

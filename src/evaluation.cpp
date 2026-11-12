@@ -2072,8 +2072,10 @@ static inline int mopup_counts(const board_t* board,
 
 
 // Mop-up's share of stage one's pair, and its trace entries, White's count
-// less Black's as every linear term records it.
-static inline void mopup_terms(const board_t* board, score_t* sum)
+// less Black's as every linear term records it. Unneeded in the engine library
+// while mop-up's weights are all zero, its identity; clang says so unless told.
+[[maybe_unused]] static inline void mopup_terms(const board_t* board,
+                                                score_t* sum)
 {
   int counts[MOPUP_FEATURE_COUNT];
   const int side = mopup_counts(board, counts);
@@ -2093,8 +2095,11 @@ static inline void mopup_terms(const board_t* board, score_t* sum)
 // E1's share, one division by 24 F, as src/evaluation.hpp writes it. The pick
 // is one expression for both libraries, so the line the trace build's identity
 // checks is the line the shipped engine runs; the trace build only records both
-// candidates beside it.
-static inline int scaled_taper(const board_t* board, score_t pair, int phase)
+// candidates beside it. Unneeded in the engine library while every cell's
+// factor is F, its identity; clang says so unless told.
+[[maybe_unused]] static inline int scaled_taper(const board_t* board,
+                                                score_t pair,
+                                                int phase)
 {
   const int e1 = board->material + eg_value(pair);
   const int cell = (e1 == 0) ? ENDGAME_CELL_NONE

@@ -84,6 +84,15 @@ compiler as `CC` and `CXX`, which a directory that already exists ignores; the
 stage passes it as `-DCMAKE_C_COMPILER` and `-DCMAKE_CXX_COMPILER` and then
 refuses a cache that holds anything but clang.
 
+**A second thing clang refuses and GCC does not** (S340): a `static` function
+whose only callers sit under an `if constexpr` that is false in the engine
+library. S124's endgame family at its identity left `mopup_terms()` and
+`scaled_taper()` so, behind `mopup_live` and `endgame_scale_live`, and clang
+stopped on `-Wunneeded-internal-declaration` in both directories. The form for
+it is `[[maybe_unused]]` on the definition, with a comment saying which build
+may not need the function, as `pawn_entry_of()` already had; no flag is added
+or turned off.
+
 **The flags a Release unit compiles with**, as the build directory's
 `compile_commands.json` shows them: `-O3 -DNDEBUG` (CMake's own Release flags),
 `-std=gnu++20` (`CMAKE_CXX_STANDARD 20` in `CMakeLists.txt`, extensions left on),
