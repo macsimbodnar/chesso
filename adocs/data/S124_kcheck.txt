@@ -1,0 +1,16 @@
+S124 kcheck, 2026-11-11T23:22:50+01:00, tree /home/max/ws/chesso-s124p2 at 7214ce5
+1190 parameters compared, 1190 identical to the emitted header
+K at the identity (the screen's K_0): 1.2171, reproduced by the screen's tuner
+K refit at the candidate's constants: 1.3270 (S124_k_refit 1.3270), one round (constants fixed)
+corpus /home/max/ws/chesso/.tuning/s122/prepared/corpus.tsv, the tuner's ternary search on its training rows; read on /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.qs.validation
+
+part outcome  m          screen d    K part   d at K part  d at K cand  rows      
+F1   kept     0.0000282  +0.0036800  1.2647   +0.0040597   +0.0042324   1384182   
+F2   kept     0.0000209  +0.0018510  1.3248   +0.0022292   +0.0022341   1384182   
+F3   dropped  0.0000126  +0.0003910  1.3367   +0.0004487   +0.0004430   1384182   (a reading)
+
+beside, deciding nothing: mop-up, F2's decided vector against the candidate at K 1.3270: d -0.0000681
+
+GUARD pass the candidate (F1, F2 and mop-up) against the landed tree, both at the candidate's K 1.3270: the tablebase-labelled loss moves -0.0419144 +/- 0.0005233 by game (29985 games, 292418 rows); refused past +1.645 errors
+beside, deciding nothing: the candidate against the landed tree, both at K_0 1.2171: the tablebase-labelled loss moves -0.0375166 +/- 0.0005035 by game (29985 games, 292418 rows), past +1.645 errors no
+S124-KCHECK-DONE

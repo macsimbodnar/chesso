@@ -1,0 +1,801 @@
+# S124 part A's tree: every golden mop-up alone moves, each by its script (DEC-142), the owner's stops read first, and
+# the unmoved ones read. 2026-11-12, worktree chesso-s124p2 at 7214ce5 plus the staged part A, uncommitted: P1's six
+# (adocs/data/S124_p1_final.txt, sha256 63b6e1fb..., not refit) in src/evaluation.cpp, every endgame_scale cell at F as
+# landed. Bench 4707943 -> 4586026 in both builds. Part A's binaries frozen before the readings
+# (.tuning/s124/pa/bin/, sha256 first 16: a5b6bc74cb1855b8 chesso, 487cbd27b50d15e9 tune chesso, cf87aa92a9f8c681
+# libchesso_engine.a, b48957dd3f5e272c libchesso_engine_trace.a); the parent's are the run's reference build,
+# ../chesso-s124p2/.ref-builds/7214ce5/build/src/ (bench 4707943), and for the tune build achesso 739a537's (7214ce5
+# plus S340's [[maybe_unused]], bench 4707943). A throwaway export of part A (git archive 7214ce5 plus part A's
+# src/evaluation.cpp, not a worktree) carried the six S091 mutants, S149's guard, B04 and MW02, one at a time, each
+# file restored and checked after; the floors swept through adocs/data/S136_overlay_run.py. No fit, match, SPRT,
+# datagen or timing: K is not refit for part A, so the margin is read at K_0 and at the family's refit both.
+# Not on achesso: this describes part A's tree, and nothing of it ships before part A's verdict.
+#
+# THE OWNER'S STOPS (DEC-344 (9)), read first: NONE FIRES. EXACT_FLOOR 157 holds (167 shipping, 155 weakened, the parent
+# 166 and 156); MATE_IN_THREE_FLOOR 11 holds (12 shipping, 11 weakened, S083's shape); no mate-carry ceiling rises with
+# part A's grid (section 2) and no S170 budget moves; test_tuner_gradient green, its gradient case 8.60555e-07 at 984,
+# DEC-316's pair and DEC-356's pair each reproducing (section 5).
+#
+# WHAT MOVED: the anchors (rook 585 -> 820, cheap 578 -> 813, queen 1023 -> 1358, Kh7 -573 -> -706, the quiet evasion
+# -521 -> -710, the lazy bound 303 -> 538), S124's coverage block (the corner pair, ineligible, replaced from the corpus),
+# the aborted-line cell (line 244 at 150000 -> line 101 at 40000), part A's grid added to test_mate_carry's command. Red,
+# not re-derived: first-mate (its second position), "removing a piece moves the score", the two planted-bound cases.
+
+== 1. The paste
+== git diff --cached --stat -- src
+ src/evaluation.cpp | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+== the three arrays: endgame_scale {128 x 13} as landed; mopup_mg {96, 149, 0}; mopup_eg {15, 13, 6}, adocs/data/S124_p1_final.txt's two lines
+== /home/max/ws/chesso/.tuning/verify_fit.py adocs/data/S124_screen_f1_f2_fit.hpp --root ../chesso-s124p2 (against the screen's fit: its cells not pasted, P1's mop-up in place of its zeros)
+1190 parameters compared, 1176 identical to the emitted header
+  MISMATCH mopup_mg: 2 of 3 values differ from the emitted header
+  MISMATCH mopup_eg: 3 of 3 values differ from the emitted header
+  MISMATCH endgame_scale: 9 of 13 values differ from the emitted header
+== chesso bench, build and build-tune: 4586026 and 4586026 (4707943 both at 7214ce5)
+== adocs/data/S124_sprt.sh's guards, a dry copy (the bracketed block removed, the exec an echo), on the staged tree:
+landing-check: every scale factor at F and mop-up at zero
+DRY-RUN-WOULD-EXEC env -u CAND ... REF=7214ce5 ... ./fastchess.sh
+
+== 2. The owner's stops (.tuning/s124/pa/stops.sh)
+== S156 part A: S136_overlay_run.py S156_mined_floor_sweep.py src/evaluation.cpp -- --ref HEAD --floor 157 --jobs 12
+318 positions, depth 10, ref HEAD
+
+  overlaid src/evaluation.cpp from /home/max/ws/chesso-s124p2
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     167          171            0   21.4s
+          2     166          172            0   20.3s
+          1     155          160            0   19.3s
+          0     155          160            0   19.2s
+
+  floor 157, asserted by tests/test_mate_breadth.cpp
+    shipping value 167, weakened-guard value 155, gap 12
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_3vo0wpdp/tests/test_mate_breadth.cpp:364: MESSAGE: mined set at depth 10: 155 exact, 160 right sign, 0 wrong sign
+    logged: the mined set reads 155 exact at depth 10, under the 157 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down
+rc 0
+
+== S154 floor part A: S136_overlay_run.py S154_floor_margin_sweep.py src/evaluation.cpp -- floor --jobs 12
+RfpMinPly swept at HEAD, RfpMaxDepth held at its shipping value.
+The declared minimum is relaxed to 0 in a throwaway worktree: S251 made it 3,
+so a shipping binary refuses 2, 1 and 0 and answers with its default instead.
+82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+
+  overlaid src/evaluation.cpp from /home/max/ws/chesso-s124p2
+  RfpMinPly=5            m2 26/26 on-time 26 d0  m3 19/24 d5  m4  2/16 d4  m5  1/16 d8  short 0  sign 0
+                         m3 #######.##.###.######..#  churn -  14377205 nodes
+  RfpMinPly=4            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  2/16 d4  m5  1/16 d8  short 0  sign 0
+                         m3 #######.##.###.######..#  churn 0  13888673 nodes
+  RfpMinPly=3            m2 26/26 on-time 26 d0  m3 12/24 d7  m4  3/16 d6  m5  1/16 d5  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 7  11111279 nodes
+  RfpMinPly=2            m2 26/26 on-time 17 d1  m3 12/24 d6  m4  3/16 d7  m5  1/16 d4  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 0  11231432 nodes
+  RfpMinPly=1            m2 21/26 on-time 16 d6  m3 11/24 d6  m4  1/16 d5  m5  2/16 d8  short 0  sign 0
+                         m3 .#.##...#....#.####.#..#  churn 1  11722050 nodes
+  RfpMinPly=0            m2 21/26 on-time 16 d6  m3 11/24 d6  m4  1/16 d5  m5  2/16 d8  short 0  sign 0
+                         m3 .#.##...#....#.####.#..#  churn 0  11722050 nodes
+
+  floor, 18.9s
+rc 0
+
+== S154 red part A: S136_overlay_run.py S154_floor_margin_sweep.py src/evaluation.cpp -- red --jobs 12
+  overlaid src/evaluation.cpp from /home/max/ws/chesso-s124p2
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    /tmp/S154_sweep_w98176i4/tests/test_engine.cpp:5949: ERROR: CHECK( exact_by_distance[2] == total_by_distance[2] ) is NOT correct!
+    [doctest] assertions: 3590 | 3569 passed | 21 failed |
+
+  red, 24.5s
+rc 0
+
+== the S170 grid: adocs/data/S124_partA_sweep_s170.txt (S203_case_sweep.sh, one process a case, on part A's frozen chesso)
+== --ceilings, the thirteen grids tests/test_mate_carry.cpp names
+The short-line ceiling per case: the worst cell of the recorded grid at
+the stride the case itself carries. tests/test_mate_carry.cpp holds these.
+case                        ceiling
+A_mate8_shallow                   2
+B_mate6_shallow                  13
+C_mate7_depth11                   4
+D_mate_minus6_depth10             1
+E_mate_minus9                     3
+F_mate6_inherited_no_line         3
+rc 0
+== --ceilings, the thirteen plus part A's
+The short-line ceiling per case: the worst cell of the recorded grid at
+the stride the case itself carries. tests/test_mate_carry.cpp holds these.
+case                        ceiling
+A_mate8_shallow                   2
+B_mate6_shallow                  13
+C_mate7_depth11                   4
+D_mate_minus6_depth10             1
+E_mate_minus9                     3
+F_mate6_inherited_no_line         3
+rc 0
+== --ceilings, part A's alone
+The short-line ceiling per case: the worst cell of the recorded grid at
+the stride the case itself carries. tests/test_mate_carry.cpp holds these.
+case                        ceiling
+A_mate8_shallow                   1
+B_mate6_shallow                   3
+C_mate7_depth11                   0
+D_mate_minus6_depth10             0
+E_mate_minus9                     3
+F_mate6_inherited_no_line         0
+rc 0
+== adocs/data/S170_pick_budgets.sh adocs/data/S170_cases.tsv adocs/data/S124_partA_sweep_s170.txt (stderr; the TSV to a scratch file)
+A_mate8_shallow            stride 1  nodes 300000   -> nodes 300000   (1 lines, 0 short)
+B_mate6_shallow            stride 1  nodes 100000   -> nodes 100000   (9 lines, 0 short)
+C_mate7_depth11            stride 1  nodes 100000   -> nodes 100000   (3 lines, 0 short)
+no cell with a mate line for D_mate_minus6_depth10 at stride 1
+E_mate_minus9              stride 1  nodes 300000   -> nodes 300000   (12 lines, 3 short)
+F_mate6_inherited_no_line  stride 2  nodes 300000   -> nodes 300000   (3 lines, 0 short)
+rc 1
+   -> the TSV the picker writes equals adocs/data/S170_cases.tsv byte for byte: no budget moves; D has no cell with a mate line at stride 1 (the picker's rc 1), as on S122's grid
+
+== 3. S192_anchors.py, the extended model with 7214ce5's anchors: at 7214ce5's weights (git archive 7214ce5 src tests), then part A's tree
+weights from src/eval_tables.hpp + src/evaluation.cpp
+stage two clamped at +/-275, LAZY_EVAL_MARGIN in src/search_params.hpp
+pawn on e2             evaluate 107 vs 107 OK             positional    50 tempo    0 mobility    0 safety   -27  E1   134 cell -
+knight on b1           evaluate 283 vs 283 OK             positional   -95 tempo    0 mobility    7 safety     0  E1   272 cell -
+bishop on c1           evaluate 353 vs 353 OK             positional   -32 tempo    0 mobility   33 safety     0  E1   316 cell -
+rook on d1             evaluate 585 vs 585 OK, cheap 578 vs 578 OK positional    59 tempo    0 mobility   32 safety   -25  E1   583 cell -
+queen on d1            evaluate 1023 vs 1023 OK           positional   -91 tempo    0 mobility   99 safety    32  E1   791 cell -
+bare kings cancel      evaluate 0 vs 0 OK                 positional     0 tempo    0 mobility    0 safety     0  E1     0 cell -
+black in check, Re8    evaluate 247 vs 247 OK             positional   -53 tempo    0 mobility   40 safety   -37  E1   -88 cell -
+black a rook down, Kh7 evaluate -573 vs -573 OK           positional    46 tempo    0 mobility   38 safety   -30  E1   578 cell -
+
+  after Ke1-d1           evaluate   552  -> root  -552
+  after Ke1-d2           evaluate   521  -> root  -521
+  after Ke1-f1           evaluate   585  -> root  -585
+  after Ke1-f2           evaluate   545  -> root  -545
+white in check, Re8    quiesce -521 vs -521 OK
+
+10 of 10 reproduced
+rc 0
+-- part A:
+weights from src/eval_tables.hpp + src/evaluation.cpp
+stage two clamped at +/-275, LAZY_EVAL_MARGIN in src/search_params.hpp
+pawn on e2             evaluate 107 vs 107 OK             positional    50 tempo    0 mobility    0 safety   -27  E1   134 cell -
+knight on b1           evaluate 283 vs 283 OK             positional   -95 tempo    0 mobility    7 safety     0  E1   272 cell -
+bishop on c1           evaluate 353 vs 353 OK             positional   -32 tempo    0 mobility   33 safety     0  E1   316 cell -
+rook on d1             evaluate 820 vs 585 MISMATCH, cheap 813 vs 578 MISMATCH positional   294 tempo    0 mobility   32 safety   -25  E1   719 cell -
+queen on d1            evaluate 1358 vs 1023 MISMATCH     positional   244 tempo    0 mobility   99 safety    32  E1   927 cell -
+bare kings cancel      evaluate 0 vs 0 OK                 positional     0 tempo    0 mobility    0 safety     0  E1     0 cell -
+black in check, Re8    evaluate 247 vs 247 OK             positional   -53 tempo    0 mobility   40 safety   -37  E1   -88 cell -
+black a rook down, Kh7 evaluate -706 vs -573 MISMATCH     positional   179 tempo    0 mobility   38 safety   -30  E1   666 cell -
+
+  after Ke1-d1           evaluate   739  -> root  -739
+  after Ke1-d2           evaluate   710  -> root  -710
+  after Ke1-f1           evaluate   842  -> root  -842
+  after Ke1-f2           evaluate   805  -> root  -805
+white in check, Re8    quiesce -710 vs -521 MISMATCH
+
+5 of 10 reproduced
+rc 1
+-- part A, the script's anchors set to the values above:
+weights from src/eval_tables.hpp + src/evaluation.cpp
+stage two clamped at +/-275, LAZY_EVAL_MARGIN in src/search_params.hpp
+pawn on e2             evaluate 107 vs 107 OK             positional    50 tempo    0 mobility    0 safety   -27  E1   134 cell -
+knight on b1           evaluate 283 vs 283 OK             positional   -95 tempo    0 mobility    7 safety     0  E1   272 cell -
+bishop on c1           evaluate 353 vs 353 OK             positional   -32 tempo    0 mobility   33 safety     0  E1   316 cell -
+rook on d1             evaluate 820 vs 820 OK, cheap 813 vs 813 OK positional   294 tempo    0 mobility   32 safety   -25  E1   719 cell -
+queen on d1            evaluate 1358 vs 1358 OK           positional   244 tempo    0 mobility   99 safety    32  E1   927 cell -
+bare kings cancel      evaluate 0 vs 0 OK                 positional     0 tempo    0 mobility    0 safety     0  E1     0 cell -
+black in check, Re8    evaluate 247 vs 247 OK             positional   -53 tempo    0 mobility   40 safety   -37  E1   -88 cell -
+black a rook down, Kh7 evaluate -706 vs -706 OK           positional   179 tempo    0 mobility   38 safety   -30  E1   666 cell -
+
+  after Ke1-d1           evaluate   739  -> root  -739
+  after Ke1-d2           evaluate   710  -> root  -710
+  after Ke1-f1           evaluate   842  -> root  -842
+  after Ke1-f2           evaluate   805  -> root  -805
+white in check, Re8    quiesce -710 vs -710 OK
+
+10 of 10 reproduced
+rc 0
+
+== 4. Coverage blocks, each by its program over S083's corpus (.tuning/s124/pa/cov.sh), on part A's build/
+== first run, the landed fixture: S121, S123, S125 and S101 reproduce; S124's does not
+== S121_coverage_rows, candidate, S121_COVERAGE_DATA = S083's corpus
+landed block: 19 pairs, 0 not eligible
+reproduces the landed block: yes, pair for pair and in order (38 picked rows, 38 landed)
+rc 0
+== S123_coverage_rows, candidate, S123_COVERAGE_DATA = S083's corpus
+landed block: 4 pairs, 0 not eligible
+reproduces the landed block: yes, pair for pair and in order (8 picked rows, 8 landed)
+rc 0
+== S125_coverage_rows, candidate, S125_COVERAGE_DATA = S083's corpus
+landed block: 2 pairs, 0 not eligible
+reproduces the landed block: yes, pair for pair and in order (4 picked rows, 4 landed)
+rc 0
+== S101_coverage_rows, candidate, S101_COVERAGE_DATA = S083's corpus
+landed block: 6 pairs, 0 not eligible
+reproduces the landed block: yes, pair for pair and in order (12 picked rows, 12 landed)
+rc 0
+== S124_coverage_rows, candidate, S124_COVERAGE_DATA = S083's corpus
+INELIGIBLE landed pair 3: 8/8/8/2N1K3/2B5/4k3/8/8 b - - 6 55
+landed block: 9 pairs, 1 not eligible
+reproduces the landed block: NO (18 picked rows, 18 landed)
+rc 1
+-- S124's block, as the program picks it on part A:
+18 rows the rule picks, for tests/test_eval_positions.hpp:
+    // S124 coverage, closes mopup_mg[0] mopup_eg[0] mopup_mg[1] mopup_eg[1]
+    "4k3/r7/8/8/8/8/4K3/8 w - - 0 2",
+    "8/4k3/8/8/8/8/R7/4K3 b - - 0 2",
+    // S124 coverage, closes endgame_scale[1]
+    "1r2k3/N7/8/8/8/8/4K3/8 w - - 1 2",
+    "8/4k3/8/8/8/8/n7/1R2K3 b - - 1 2",
+    // S124 coverage, closes mopup_mg[2] mopup_eg[2]
+    "K7/8/8/1N2k3/8/7B/8/8 w - - 1 65",
+    "8/8/7b/8/1n2K3/8/8/k7 b - - 1 65",
+    // S124 coverage, closes endgame_scale[5]
+    "8/2p5/8/2P3K1/3P4/7r/8/5k2 w - - 0 70",
+    "5K2/8/7R/3p4/2p3k1/8/2P5/8 b - - 0 70",
+    // S124 coverage, closes endgame_scale[11]
+    "6k1/5p1p/pB4pP/4Pp2/PP6/8/2b2KP1/8 w - - 0 34",
+    "8/2B2kp1/8/pp6/4pP2/Pb4Pp/5P1P/6K1 b - - 0 34",
+    // S124 coverage, closes endgame_scale[4]
+    "8/2k5/5K2/4N3/8/2p5/2P5/8 b - - 0 68",
+    "8/2p5/2P5/8/4n3/5k2/2K5/8 w - - 0 68",
+    // S124 coverage, closes endgame_scale[9]
+    "5b2/8/2P5/3BK2k/8/8/8/8 b - - 0 49",
+    "8/8/8/8/3bk2K/2p5/8/5B2 w - - 0 49",
+    // S124 coverage, closes endgame_scale[12]
+    "8/4R1pk/8/4P3/5Bbp/P1K5/4r3/8 b - - 0 64",
+    "8/4R3/p1k5/5bBP/4p3/8/4r1PK/8 w - - 0 64",
+    // S124 coverage, closes endgame_scale[10]
+    "8/5pk1/B3p3/3pb1p1/1P6/6P1/5P2/6K1 w - - 0 50",
+    "6k1/5p2/6p1/1p6/3PB1P1/b3P3/5PK1/8 b - - 0 50",
+== after S124's corner pair replaced: S124's block reproduces
+== S124_coverage_rows, candidate, S124_COVERAGE_DATA = S083's corpus
+landed block: 9 pairs, 0 not eligible
+reproduces the landed block: yes, pair for pair and in order (18 picked rows, 18 landed)
+rc 0
+
+== 5. The fixture's goldens on part A's final fixture (.tuning/s124/pa/pre.sh)
+== test_tuner_gradient (build/tests/test_tuner_gradient, every case)
+tests/test_tuner_gradient.cpp:704: MESSAGE: worst relative error 8.60555e-07 at parameter 984
+tests/test_tuner_gradient.cpp:850: MESSAGE: endgame factor: worst relative error 6.27485e-07 at parameter 739 of 482, over 5717 rows
+tests/test_tuner_gradient.cpp:1109: MESSAGE: clamp case: worst relative error 9.58911e-08 at parameter 640
+tests/test_tuner_gradient.cpp:1718: MESSAGE: adam hold: runs apart 5.68434e-13, travelled 1793.63
+tests/test_tuner_gradient.cpp:1718: MESSAGE: adagrad hold: runs apart 6.25278e-13, travelled 1512.76
+tests/test_tuner_gradient.cpp:2382: MESSAGE: group: worst relative error 1.3981e-07 at parameter 1193
+[doctest] test cases:     21 |     21 passed | 0 failed | 0 skipped
+[doctest] assertions: 131055 | 131055 passed | 0 failed |
+== S101_gradient_rows (DEC-316's pair)
+tests/test_eval_positions.hpp: 124 rows, marker found, 104 rows before it
+base, 104 rows: parameter 984 analytic +2.824164e-05, the rule wants at least 8.472493e-05
+candidate 1  |g| 2.771e-05  -  1k3B2/8/8/8/8/8/8/4K3 b - - 0 1
+candidate 2  |g| 2.771e-05  -  1k3N2/8/8/8/8/8/8/4K3 b - - 0 1
+candidate 3  |g| 2.827e-05  -  1r2k2r/2P3P1/8/8/8/4K3/8/8 w k - 1 2
+candidate 4  |g| 2.771e-05  -  1r2k2r/8/8/8/3BB3/4K3/8/8 w k - 1 2
+candidate 5  |g| 9.488e-05  PICK  1r2k2r/R3P2R/8/8/8/8/8/4K3 w k - 1 2
+5 eligible pairs tried
+pick, for tests/test_eval_positions.hpp:
+    "1r2k2r/R3P2R/8/8/8/8/8/4K3 w k - 1 2",
+    "4k3/8/8/8/8/8/r3p2r/1R2K2R b K - 1 2",
+the case's relative error at parameter 984, h 0.01, no part of the rule:
+  base: 2.94971e-06, analytic +2.824164e-05, numeric +2.824173e-05, difference 8.330e-11
+  with the pair: 8.60564e-07, analytic +9.488194e-05, numeric +9.488202e-05, difference 8.165e-11
+reproduces the landed pair: yes
+===============================================================================
+[doctest] test cases:  1 |  1 passed | 0 failed | 0 skipped
+[doctest] assertions: 83 | 83 passed | 0 failed |
+[doctest] Status: SUCCESS!
+rc 0
+== S124_factor_gradient_rows (DEC-356's pair)
+base: 5715 rows; the case's worst 3.4757e-06 at 726, next 5.91782e-07 at 739
+round 1: TARGET 726, base |g| 1.983401e-09, the rule wants 5.950203e-09
+  pick after 157 eligible pairs (candidate 233 of 11339): |g| 1.295079e-07
+    8/8/8/3r4/8/1k6/8/K3R3 w - - 0 1
+    k3r3/8/1K6/8/3R4/8/8/8 b - - 0 1
+  the case with 5717 rows: worst 6.27485e-07 at 739 (|g| 1.811e-08), next 4.15295e-07 at 676
+picked 2 rows
+PICK 8/8/8/3r4/8/1k6/8/K3R3 w - - 0 1
+PICK k3r3/8/1K6/8/3R4/8/8/8 b - - 0 1
+reproduces the landed pair (tests/test_endgame_positions.hpp's factor_gradient_rows): yes
+===============================================================================
+[doctest] test cases:    1 |    1 passed | 0 failed | 0 skipped
+[doctest] assertions: 5955 | 5955 passed | 0 failed |
+[doctest] Status: SUCCESS!
+rc 0
+== S083_tuner_preconditions both
+clamp: 124 fixture rows, LAZY_EVAL_MARGIN 275; at the built constants the largest |stage two| is 174.4 (the case "sits clear" needs < 274.0)
+ push  bound   bound at       next   kink dist   fd worst    clamped       rest  rule
+  +10      0        0.0      144.4      130.59   1.11e-07         -1         -1  binds on none or all; 
+  +20      0        0.0      137.2      137.82   1.76e-07         -1         -1  binds on none or all; 
+  +30      0        0.0      207.2       67.82   2.05e-07         -1         -1  binds on none or all; fd past 2e-7; 
+  +40      4      280.4      257.5        2.18   9.59e-08          0    0.00278  ok  <- CHOSEN
+  +50      6      360.4      225.4       49.64      3e-07          0    0.00186  fd past 2e-7; 
+  +60      8      440.4      256.8        0.36   2.05e-07          0    0.00139  a row within 1 cp of the kink; fd past 2e-7; 
+  +70     12      520.4      258.2       13.98   2.18e-07          0   0.000928  fd past 2e-7; 
+  +80     16      600.4      268.1        6.79      3e-07          0   0.000589  fd past 2e-7; 
+  +90     22      680.4      269.0        0.79   2.54e-07          0   0.000428  a row within 1 cp of the kink; fd past 2e-7; 
+ +100     24      760.4      263.2       11.76   4.13e-07          0   0.000435  fd past 2e-7; 
+ +110     32      840.4      274.4        0.59      3e-07          0   0.000614  a row within 1 cp of the kink; fd past 2e-7; 
+ +120     39      920.4      267.7        7.28   2.05e-07          0   0.000482  fd past 2e-7; 
+ +130     40     1000.4      257.4       12.72   4.13e-07          0    0.00047  fd past 2e-7; 
+ +140     42     1080.4      263.7        2.42   1.13e-06          0   0.000447  fd past 2e-7; 
+ +150     47     1160.4      262.3        0.59   2.05e-07          0     0.0004  a row within 1 cp of the kink; fd past 2e-7; 
+ +160     48     1240.4      264.5        7.27   3.26e-07          0   0.000391  fd past 2e-7; 
+ +170     51     1320.4      268.7        6.33      3e-07          0   0.000368  fd past 2e-7; 
+ +180     54     1400.4      269.5        4.18   3.17e-07          0    0.00138  fd past 2e-7; 
+ +190     56     1480.4      274.0        0.95   2.05e-07          0    0.00133  a row within 1 cp of the kink; fd past 2e-7; 
+ +200     62     1560.4      264.8        4.32    4.7e-06          0     0.0012  fd past 2e-7; 
+clamp: the rule picks +40, every row 2.18 from the kink; the case carries +40
+walk: 128 gauge-fixture rows, 300 epochs, K 1.0
+  adam at lr 1
+    smallest plain walk 0.7604 (material/table rook); runs apart 5.68e-13; plain travelled 1793.6
+  adagrad at lr 3
+    smallest plain walk 1.3224 (material/table rook); runs apart 6.25e-13; plain travelled 1512.8
+walk: every plain shift clears the case's floor 0.01
+rc 0
+== S310_adagrad_step (ADAGRAD_HOLD_STEP)
+S310: the case's fixture 128 rows, less DEC-316's pair 126; 1190 parameters; bound 1e-06, QUIET 1e-09
+
+== the shipped constants, the case's fixture, 128 rows: apart by epoch
+  step      25      50     100     150     200     250     300     400     500     600     700     800     900    1000    1100    1200
+     1   7e-13   8e-13   1e-12   1e-12   5e-13   7e-13   6e-13   9e-13   1e-12   2e-12   3e-12   2e-12   2e-12   8e-13   1e-12   8e-13
+     2   8e-13   9e-13   1e-12   2e-12   2e-12   3e-12   3e-12   1e-12   2e-12   7e-13   6e-13   1e-12   9e-13   1e-12   6e-13   8e-13
+     3   1e-12   8e-13   1e-12   3e-13   7e-13   5e-13   6e-13   6e-13   7e-13   8e-13   5e-13   1e-12   9e-13   7e-13   1e-12   1e-12
+     4   2e-12   3e-12   9e-13   1e-12   2e-12   2e-12   2e-12   2e-12   2e-12   3e-12   3e-12   3e-12   3e-12   3e-12   3e-12   3e-12
+     5   2e-12   1e-12   9e-13   1e-12   2e-12   7e-13   9e-13   1e-12   1e-12   2e-12   1e-12   2e-12   2e-12   2e-12   1e-12   1e-12
+     6   1e-12   6e-13   8e-13   7e-13   8e-13   6e-13   1e-12   1e-12   1e-12   3e-11   6e-12   2e-12   6e-12   4e-12   3e-12   4e-12
+     7   6e-13   1e-12   6e-13   1e-12   6e-13   6e-12   1e-12   2e-12   3e-12   4e-12   5e-12   2e-12   8e-12   3e-12   3e-12   3e-12
+     8   5e-12   9e-13   2e-12   6e-12   5e-12   2e-12   6e-12   4e-12   7e-12   3e-12   9e-13   6e-12   2e-12   6e-12   3e-12   2e-12
+     9   1e-07   5e-09   4e-09   6e-09   2e-09   2e-09   3e-09   1e-09   1e-09   1e-09   1e-09   1e-09   1e-09   1e-09   1e-09   9e-10
+    10   5e-13   2e-12   4e-12   6e-13   6e-13   5e-12   9e-13   8e-12   9e-13   4e-12   2e-12   5e-12   4e-12   2e-12   7e-12   2e-12
+    12   5e-09   2e-09   7e-10   2e-09   2e-10   3e-10   1e-10   5e-10   7e-10   7e-10   1e-10   4e-10   2e-10   1e-10   1e-10   2e-10
+    15   2e-10   1e-05   5e-06   3e-06   2e-06   2e-06   8e-06   7e-05   1e-06   6e-07   6e-07   2e-06   6e-07   8e-07   5e-07   8e-07
+    20   5e-12   4e-11   2e-02   1e+02   2e+02   1e+02   8e+01   5e+01   2e+01   3e+00   5e+00   3e+00   3e+00   3e+00   3e+00   3e+00
+    30   1e-11   2e-09   3e-09   3e-09   7e-09   6e-08   3e-07   8e-04   3e+02   5e+00   2e+00   1e+00   1e+00   1e+00   1e+00   2e+00
+adam 1   2e-12   2e-12   9e-13   6e-13   9e-13   1e-12   6e-13   1e-12   9e-13   1e-12   9e-13   1e-12   2e-12   1e-12   1e-12   1e-12
+
+== the shipped constants, the fixture less DEC-316's pair, 126 rows: apart by epoch
+  step      25      50     100     150     200     250     300     400     500     600     700     800     900    1000    1100    1200
+     1   2e-12   9e-13   1e-12   6e-13   8e-13   9e-13   7e-13   1e-12   1e-12   2e-12   1e-12   7e-13   6e-13   8e-13   2e-12   9e-13
+     2   1e-12   1e-12   2e-12   3e-12   4e-12   9e-12   3e-12   1e-12   2e-12   1e-12   1e-12   2e-12   2e-12   1e-12   1e-12   1e-12
+     3   1e-12   6e-13   7e-13   6e-13   1e-12   1e-12   1e-12   9e-13   1e-12   1e-12   9e-13   1e-12   1e-12   8e-13   2e-12   1e-12
+     4   1e-12   1e-12   1e-12   6e-13   1e-12   1e-12   2e-12   9e-13   1e-12   1e-12   1e-12   7e-13   1e-12   1e-12   1e-12   1e-12
+     5   5e-13   2e-12   5e-13   6e-13   6e-13   3e-12   2e-12   1e-12   1e-12   2e-12   2e-12   3e-12   2e-12   3e-12   3e-12   3e-12
+     6   8e-13   3e-13   9e-13   1e-12   9e-13   2e-12   2e-12   2e-12   8e-13   4e-12   1e-12   9e-13   4e-12   4e-12   3e-12   2e-12
+     7   2e-12   7e-13   8e-13   2e-12   4e-12   2e-11   1e-11   9e-13   1e-11   6e-10   3e-08   1e-06   7e-05   2e+00   3e-01   3e-01
+     8   8e-13   5e-13   5e-13   2e-12   8e-13   3e-12   1e-12   4e-12   8e-12   1e-11   2e-12   8e-12   1e-11   1e-11   8e-12   9e-12
+     9   3e-12   7e-13   7e-13   2e-12   1e-12   1e-12   1e-12   2e-12   2e-12   3e-12   7e-12   8e-12   7e-12   2e-12   2e-12   3e-12
+    10   3e-06   2e-05   3e-06   8e-07   3e-07   2e-07   2e-07   2e-07   1e-05   3e-06   5e-06   2e-06   2e-07   9e-07   2e-07   5e-07
+    12   1e-12   1e-12   1e-11   3e-12   7e-13   9e-13   2e-12   2e-12   4e-12   2e-12   3e-12   2e-12   2e-12   2e-12   3e-12   6e-12
+    15   2e-10   9e-06   9e-07   8e-07   7e-03   6e-04   4e-04   2e-04   2e-04   9e-05   3e-04   9e-05   1e-04   7e-05   1e-04   7e-05
+    20   3e-11   2e-10   4e-01   2e+01   1e+00   7e-01   3e+01   1e+02   5e+01   3e+01   2e+01   2e+01   2e+01   2e+01   2e+01   9e+00
+    30   2e-12   4e-11   3e-12   1e-12   2e-12   5e-12   3e-12   2e-10   5e+00   4e+01   2e+02   2e+00   2e+00   2e+00   4e+00   6e+00
+adam 1   5e-13   1e-12   1e-12   5e-13   8e-13   9e-13   1e-12   8e-13   7e-13   2e-12   8e-13   1e-12   2e-12   2e-12   1e-12   1e-12
+
+== the family, worst apart at any read through epoch 1200; a, the case's fixture; b, less DEC-316's pair
+  step   a ship    a +-1    a +-3   a +-10   b ship    b +-1    b +-3   b +-10     worst    >Q |   at 300     walk   travel      hold  min walk
+     1  2.9e-12  1.7e-11  1.1e-11  1.4e-11  1.6e-12  1.3e-11  1.3e-11  1.2e-11  1.71e-11     0 | 5.68e-13   1.1563   1138.4  8.10e-15    0.0313
+     2  4.5e-12  6.3e-12  5.1e-12  5.2e-12  9.3e-12  6.3e-12  4.7e-12  7.6e-12  9.32e-12     0 | 2.61e-12   1.4053   1431.8  6.44e-15    0.2493
+     3  1.3e-12  5.9e-11  4.9e-12  5.2e-12  1.8e-12  4.7e-12  3.0e-12  5.4e-12  5.86e-11     0 | 6.25e-13   1.3224   1512.8  5.11e-15    0.2806
+     4  7.8e-12  7.3e-12  7.1e-12  7.9e-10  1.6e-12  5.0e-12  4.7e-12  3.6e-12  7.90e-10     0 | 1.71e-12   1.0782   1550.9  5.11e-15    0.7827
+     5  2.2e-12  3.8e-11  6.5e-10  3.2e-11  3.0e-12  3.3e-11  8.5e-11  4.6e-12  6.50e-10     0 | 8.81e-13   0.9788   1581.4  9.33e-15    0.5833
+     6  1.3e-10  1.3e-05  1.7e-08  6.6e-05  4.5e-12  1.6e-11  7.0e-12  2.4e+00  2.41e+00    17 | 1.25e-12   1.0524   1599.1  4.88e-15    0.4828
+     7  1.0e-11  1.5e-06  3.4e-10  2.5e-01  3.6e+00  1.1e+01  6.1e+00  6.6e+00  1.12e+01    28 | 1.19e-12   1.0086   1620.9  6.00e-15    0.3429
+     8  7.1e-12  8.7e-10  1.2e-09  3.3e-10  1.3e-11  2.4e-10  3.7e-10  2.8e-10  1.15e-09     1 | 5.97e-12   0.9361   1644.9  4.88e-15    0.3316
+     9  1.0e-07  2.6e-09  1.0e-08  1.1e-07  1.2e-11  4.4e-09  4.7e-08  4.2e-09  1.09e-07    13 | 3.19e-09   0.6705   1666.8  6.00e-15    0.2641
+    10  7.6e-12  2.3e-07  4.3e-08  2.3e-07  1.8e-05  3.3e-03  1.5e-06  1.9e-04  3.28e-03    24 | 9.09e-13   0.6222   1682.8  5.55e-15    0.2401
+    12  4.5e-09  9.9e-06  8.8e-05  2.4e-01  1.3e-11  2.6e+00  2.7e+01  4.3e-01  2.70e+01    47 | 1.46e-10   0.6439   1710.5  8.22e-15    0.4733
+    15  7.2e-05  1.9e+02  1.1e+02  2.2e+02  6.7e-03  1.9e+02  1.5e+02  6.5e+01  2.17e+02    94 | 7.58e-06   1.2300   1744.4  9.55e-15    0.6578
+    20  1.5e+02  2.9e+02  3.7e+02  3.3e+02  1.5e+02  8.4e+02  7.6e+02  9.9e+02  9.92e+02    98 | 8.47e+01   1.7688   1787.4  1.27e-14    0.1736
+    30  7.7e+02  7.2e+02  1.1e+03  8.7e+02  2.3e+02  1.0e+03  1.1e+03  1.1e+03  1.10e+03    93 | 3.25e-07   0.6231   3182.5  5.11e-15    0.0108
+first step past QUIET, by member:        9 6 6 6 7 7 7 6
+
+onset 6; half 3; the rule picks 3, the case carries 3
+at 3 on the case's fixture: apart 6.25e-13 at epoch 300, worst 1.25e-12 through 1200; every read of the family at most 5.86e-11, 4.2 decades under the bound; smallest plain walk 1.3224, 132 times its floor; travelled 1512.8; holds at most 5.11e-15
+rc 0
+PRE-DONE
+
+== 6. truncation_positions: truncation_scan --data <S083's corpus> --min 2.8 (part A's build/tools), S083_truncation_pick.py: the landed four, unmoved
+6226944 rows scanned, 108767 past 2.0, 105 past 2.8000, worst 2.875000, each row's taperings' loss; the largest difference 3.690165, 0 past their own bound
+rc 0
+105 hits, 28 distinct FENs at the maximum 2.875000, phases 5..23, targets 5.00, 11.00, 17.00, 23.00
+2.875000	phase  5	b	5k2/pp3p2/5P2/7p/P6P/3Bb1P1/2PrN3/4K3 b - - 0 32
+2.875000	phase 11	w	8/6bk/1p2p1p1/4p2p/5r2/P6P/2R2BP1/1r1B1K1R w - - 6 38
+2.875000	phase 17	b	2r4k/4np1p/3q1n2/pB1p1P2/P2P4/5Q2/6PP/R4RK1 b - - 0 25
+2.875000	phase 23	w	r1b2rk1/ppp1ppbp/2nq2p1/8/N1B1P3/5N2/PPP2PPP/R1BQ1RK1 w - - 0 10
+    "5k2/pp3p2/5P2/7p/P6P/3Bb1P1/2PrN3/4K3 b - - 0 32",
+    "8/6bk/1p2p1p1/4p2p/5r2/P6P/2R2BP1/1r1B1K1R w - - 6 38",
+    "2r4k/4np1p/3q1n2/pB1p1P2/P2P4/5Q2/6PP/R4RK1 b - - 0 25",
+    "r1b2rk1/ppp1ppbp/2nq2p1/8/N1B1P3/5N2/PPP2PPP/R1BQ1RK1 w - - 0 10",
+rc 0
+
+== 7. capture_mates: S230_mine_r01_row.py depths over adocs/data/S230_table_fens.txt, shipped and the six S091 mutants (.tuning/s124/pa/mut.py, the export)
+== shipped rc 0
+- - - - - 5 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - 4 - 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+== C02 rc 0
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - 4 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - 5 5 5 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+== C05 rc 0
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - 4 - 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - 5 5 - 5 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+== C06 rc 0
+- - - - - 5 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - 4 - 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+== C07 rc 0
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - 4 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+== R01 rc 0
+- - - - - 5 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - 4 - 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - 5 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+== R02 rc 0
+- - - - - 5 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - 5 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - - - 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - 5 5 - 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+CAPMATES-DONE
+   -> by the case's rule (the row's depth the lowest of its shipped profile, its label the mutants that lose it there): rows 1 to 4 at 8, 8, 10, 12, labels C02 C05 C07, none, R02, R02 -- unmoved; the shipped profiles equal S122's recorded ones row for row
+
+== the killer slots of 'a search fills the ordering tables', adocs/data/S122_killer_slots.cpp: part A, the parent, S149's guard
+-- partA
+depth  5 best 1 killers_0 1 killers_1 0 duplicated 0
+depth  6 best 1 killers_0 3 killers_1 2 duplicated 1
+depth  7 best 1 killers_0 4 killers_1 3 duplicated 1
+depth  8 best 1 killers_0 5 killers_1 4 duplicated 0
+depth  9 best 1 killers_0 7 killers_1 6 duplicated 4
+depth 10 best 1 killers_0 9 killers_1 8 duplicated 5
+depth 11 best 1 killers_0 11 killers_1 9 duplicated 4
+depth 12 best 1 killers_0 13 killers_1 12 duplicated 8
+-- parent
+depth  5 best 1 killers_0 1 killers_1 0 duplicated 0
+depth  6 best 1 killers_0 3 killers_1 2 duplicated 1
+depth  7 best 1 killers_0 4 killers_1 3 duplicated 1
+depth  8 best 1 killers_0 5 killers_1 4 duplicated 0
+depth  9 best 1 killers_0 7 killers_1 6 duplicated 4
+depth 10 best 1 killers_0 9 killers_1 8 duplicated 5
+depth 11 best 1 killers_0 11 killers_1 9 duplicated 4
+depth 12 best 1 killers_0 13 killers_1 12 duplicated 8
+-- s149_guard
+depth  6 best 1 killers_0 3 killers_1 2 duplicated 0
+depth  7 best 1 killers_0 4 killers_1 3 duplicated 0
+depth  8 best 1 killers_0 5 killers_1 4 duplicated 0
+depth  9 best 1 killers_0 7 killers_1 6 duplicated 0
+depth 10 best 1 killers_0 9 killers_1 8 duplicated 0
+depth 11 best 1 killers_0 10 killers_1 9 duplicated 0
+depth 12 best 1 killers_0 16 killers_1 14 duplicated 0
+KILLERS-DONE
+   -> depth 9 unmoved: 8 duplicates none, 9 duplicates 4, the guard none at 6 to 12; part A's counts are the parent's at every depth
+
+== 8. mate_probcut_hides: adocs/data/S277_mine_mate_row.py's six stages, guard mode (DEC-238); B04 of tools/mutants/S113_probcut.py on the export (the per-candidate sweep rows are in .tuning/s124/pa/probcut/)
+B04 libraries built, src/search.cpp restored
+269 candidates -> /home/max/ws/chesso-s124p2/.tuning/s124/pa/probcut/candidates.fen
+rc 0
+swept 7..10 at SeMultiCut 1 -> /home/max/ws/chesso-s124p2/.tuning/s124/pa/probcut/shipped.txt
+rc 0
+swept 7..10 at SeMultiCut 1 -> /home/max/ws/chesso-s124p2/.tuning/s124/pa/probcut/open.txt
+rc 0
+4 of 269 candidates separate the two sweeps -> /home/max/ws/chesso-s124p2/.tuning/s124/pa/probcut/separators.fen
+rc 0
+guard mode (DEC-238): the mutant's multicut changes the tree on 4 of 4 positions in 2 s -> /home/max/ws/chesso-s124p2/.tuning/s124/pa/probcut/fires_guard.txt, /home/max/ws/chesso-s124p2/.tuning/s124/pa/probcut/fires_guard.fen
+rc 0
+  distance moved, not taken by the rule: d9 #4 -> #5	r7/3p2kp/4p1p1/2p5/p1N1PQ2/P7/B1P3K1/5R2 w - - 0 34
+  distance moved, not taken by the rule: d8 #5 -> #6	1rr3k1/5p1Q/p7/q2ppbPp/3P4/P3RP2/2P4P/2K3NR b - - 0 25
+  distance moved, not taken by the rule: d10 #5 -> #7	2b3nQ/5kP1/p1p1p3/2bpB3/4p1p1/1P6/2P2PP1/1K1R4 w - - 0 27
+  d10	#6	run 1	120315 nodes	21 ms	shipped [d10]	open [none]	mutant fires [d7 d8 d9 d10]	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+
+take: 7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+  depth 10, mate in 6, shipped [d10], guard dropped [none], 120315 nodes, 21 ms
+  witness: guard mode (DEC-238), the rule firing on the mutant's build at [d7 d8 d9 d10]
+rc 0
+PROBCUT-DONE
+   -> the rule takes S101's row, the landed one, at depth 10, mate in 6: unmoved
+
+== 9. test_mate_pv's aborted-line cell: adocs/data/S294_fallback_cell.py sweep and pick, MW02 applied to the export (mutation_check's own apply)
+applied MW02_aborted_line_no_fallback to the export's src/chesso.cpp; sweep shipped rc 0; the first mw02 sweep refused to start, its copied binary without the execute bit:
+== (re-run) mw02_chesso made executable: shutil.copyfile had dropped the mode
+sweep mw02 rc 0
+separates    1 budgets  20000..20000  2r2k2/6RR/4P1p1/p4p2/3K1P2/P5r1/8/8 w - - 3 48
+separates    4 budgets  30000..60000  4r1k1/R2b3p/1B1p2p1/P2PpP2/7Q/3q1PP1/6PK/8 w - - 2 36
+2 of 318 positions separate
+pick  4r1k1/R2b3p/1B1p2p1/P2PpP2/7Q/3q1PP1/6PK/8 w - - 2 36  go nodes 40000  (run 30000..60000, 4 budgets, margin 10000 nodes below and 20000 above)
+pick rc 0
+S294-DONE
+== the new cell: line 101 of adocs/data/S145_mined_set.tsv (game 3499, label 4); python-chess and the oracle (stockfish, SimpleEngine analyse, Limit(nodes=5000000), ucinewgame first)
+is_valid True is_check False legal 35 captures 3 promotions 0
+stockfish 5000000 nodes: #+4 depth 139 nodes 5000575 pv a7d7 h7h5 h4f6 e8e7 f6e7 d3f5 e7g7
+pv ends in checkmate (python-chess): True after 7 plies
+   -> line 244 (2k5/5K2/3R4/8/8/8/8/8 w, game 4411) at 150000, the landed cell, read red on part A: test_mate_pv.cpp REQUIRE( completed->mate_found ); the family's candidate picked this same cell
+
+== 10. The other goldens a search-visible change can move (.tuning/s124/pa/chain.sh)
+
+== first-mate, candidate: S188_repair_goldens.py first-mate --engine bin_cand/chesso
+r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18
+  d1:cp941  d2:cp941  d3:cp1177  d4:cp1170  d5:cp1210  d6:cp1260  d7:cp1281  d8:cp1288  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2
+  d1:cp1586  d2:cp1586  d3:cp1644  d4:cp1605  d5:cp1684  d6:cp1650  d7:cp1693  d8:cp1734  d9:cp1734  d10:cp1734
+  no mate inside the swept depth -- this position no longer carries the shape the case is about
+rc 1
+
+== first-mate, parent
+r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18
+  d1:cp941  d2:cp941  d3:cp1177  d4:cp1170  d5:cp1210  d6:cp1260  d7:cp1281  d8:cp1288  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2
+  d1:cp1213  d2:cp1213  d3:cp1238  d4:cp1236  d5:cp1270  d6:cp1270  d7:cp1294  d8:cp1289  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+rc 0
+
+== s207, candidate: S188_repair_goldens.py s207 --lib bin_cand/libchesso_engine.a
+depth	root_recurrence	in_tree(d+1)	pre_root
+2	-971	-942	-971
+3	-942	-954	-942
+4	-954	0	0
+5	0	0	0
+6	0	0	0
+7	0	0	0
+8	0	0	0
+
+# lib: /home/max/ws/chesso-s124p2/.tuning/s124/pa/bin/libchesso_engine.a
+# separating depth: 4  (the case drives 4, 5 and 4)
+rc 0
+
+== node budget: S192_node_budget.py build/tests/test_search (the candidate's)
+binary        /home/max/ws/chesso-s124p2/build/tests/test_search
+count         11588 nodes, depth 5 on KIWIPETE_POS, cold table
+budget        46352  (4x the count)
+floor         2317  (the count over 5)
+
+shipping      budget 65024, floor 3251
+the count is  3.56x the shipping floor and 0.18 of the shipping budget
+derived from  c = 16256  (the shipping budget over 4; the floor agrees)
+the count is  0.71 of c
+middle half   [7270, 32512]: the count is inside it
+              [c / sqrt 5, c x sqrt 4], half of the factor from c to either end
+rc 0
+
+== ply 2, candidate: S083s_rfp_ply2.py bin_cand/chesso
+  depth  1  cp 1102
+  depth  2  cp 1060
+  depth  3  cp 915
+  depth  4  cp 915
+  depth  5  cp 934
+  depth  6  mate -2
+  depth  7  mate -2
+  depth  8  mate -2
+iterations 8, nodes 3820
+first_exact 6
+mate -2 at the last iteration: yes
+rc 0
+
+== ply 2, parent
+  depth  1  cp 1102
+  depth  2  cp 1060
+  depth  3  cp 915
+  depth  4  cp 915
+  depth  5  cp 934
+  depth  6  mate -2
+  depth  7  mate -2
+  depth  8  mate -2
+iterations 8, nodes 3820
+first_exact 6
+mate -2 at the last iteration: yes
+rc 0
+
+== S230 depths on mate_the_extra_ply_hides, candidate
+k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+- - - - 4 4 4 4 4 4 	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+swept 3..12 -> /home/max/ws/chesso-s124p2/.tuning/s124/pa/chain/extra_cand.txt
+rc 0
+
+== S261 sweep, candidate, LATE_CAPTURE_POS alone
+LATE_CAPTURE_POS =
+1 LQ02 cells, 9 LQ03 cells -> /home/max/ws/chesso-s124p2/.tuning/s124/pa/chain/late_cells.tsv
+rc 0
+
+== S261 pick
+one position for both:
+  LQ02: depth 7 b4e4 ♖ capture loss 100 index 9 ahead - lmr_depth 2 flag 10 nodes 10035  4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35
+  LQ03: depth 3 b4a4 ♖ capture loss 400 index - ahead 9 lmr_depth 0 flag 10 nodes 1399  4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35
+each on its own:
+  LQ02: depth 7 b4e4 ♖ capture loss 100 index 9 ahead - lmr_depth 2 flag 10 nodes 10035  4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35
+  LQ03: depth 3 b4a4 ♖ capture loss 400 index - ahead 9 lmr_depth 0 flag 10 nodes 1399  4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35
+rc 0
+
+== S165 defender: parent and candidate tune builds
+104 defender nodes, depth 2k+8, RfpMinPly held at 3, RfpMaxDepth held at 15
+  per proved distance: m1 50  m2 31  m3 15  m4 8
+
+  /home/max/ws/chesso/build-tune/src/chesso exact  88/104  m1 50/50 d0  m2 31/31 d4  m3 5/15 d8  m4 2/8 d6  short 0  sign 0
+  /home/max/ws/chesso-s124p2/.tuning/s124/pa/bin/chesso_tune exact  88/104  m1 50/50 d0  m2 31/31 d4  m3 5/15 d8  m4 2/8 d6  short 0  sign 0
+
+S165-SWEEP-DONE
+rc 0
+
+== S121_alpha_window, candidate and parent
+golden -2108: shape yes, value -2108, searched 9, loop best -48993, pruned b2b3 g2g3 g2g4 a1b1 a1f1 g1h1
+6rk/5rqp/p7/2P1p3/P7/8/1P1n2P1/R5K1 w - - 0 35 at ply 5, depth 3, window [alpha, alpha + 1], non-PV, a wiped table; every alpha from -47999 to 0
+run -2182 .. -2001 (182 alphas)  <- holds the golden
+margin: 74 below, 107 above
+run -1857 .. -1819 (39 alphas)
+shape with a value other than alpha (the rule not firing): 0
+S121-ALPHA-DONE: the golden is inside a run
+rc 0
+golden -2108: shape yes, value -2108, searched 9, loop best -48993, pruned b2b3 g2g3 g2g4 a1b1 a1f1 g1h1
+6rk/5rqp/p7/2P1p3/P7/8/1P1n2P1/R5K1 w - - 0 35 at ply 5, depth 3, window [alpha, alpha + 1], non-PV, a wiped table; every alpha from -47999 to 0
+run -2182 .. -2001 (182 alphas)  <- holds the golden
+margin: 74 below, 107 above
+run -1857 .. -1819 (39 alphas)
+shape with a value other than alpha (the rule not firing): 0
+S121-ALPHA-DONE: the golden is inside a run
+rc 0
+CHAIN-DONE
+== the first-mate case's second position, read deeper: S188_repair_goldens.py first-mate --depth 16, part A's and the parent's chesso
+== first-mate --depth 16 --engine .tuning/s124/pa/bin/chesso
+r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2
+  d1:cp1586  d2:cp1586  d3:cp1644  d4:cp1605  d5:cp1684  d6:cp1650  d7:cp1693  d8:cp1734  d9:cp1734  d10:cp1734  d11:cp1734  d12:mate5  d13:mate5  d14:mate5  d15:mate5  d16:mate5
+  first_mate_depth: 12
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+rc 0
+== first-mate --depth 16 --engine .ref-builds/7214ce5/build/src/chesso
+r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2
+  d1:cp1213  d2:cp1213  d3:cp1238  d4:cp1236  d5:cp1270  d6:cp1270  d7:cp1294  d8:cp1289  d9:mate5  d10:mate5  d11:mate5  d12:mate5  d13:mate5  d14:mate5  d15:mate5  d16:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+rc 0
+   -> NOT RE-DERIVED: part A first reports the mate at 12, outside deepen(fen, 10), as the family's candidate did. A finding
+
+== 11. The lazy margin, by the tool that sizes it (.tuning/s124/pa/margin.sh): pick 275 at both K, the clamp 0.153 %; LAZY_EVAL_MARGIN and golden_defaults unmoved
+== build/tools/margin_census --data <S122's corpus> --k 1.2171 (part A's build/, the build's own weights)
+margin census, S122 DEC-344 (4)
+  data       /home/max/ws/chesso/.tuning/s122/prepared/corpus.tsv
+  rows       6307294; the trace is evaluate() on every one at the build's weights and margin 275
+  weights    the build's own
+  K          1.2171
+  graded     21023 rows (0.333 %): a king with >= 3 attackers, a queen among them, and a safe check, reading 2
+  x > 0      kings 49.657 % mg, 88.093 % eg, of 12614588
+  bars       rows bound <= 0.5 %, graded mass bound <= 10 % at the clamped score
+  margin      bound    %rows     graded   %graded %mass clamped %mass unclamped       loss  bars
+     275       9619    0.153       3171     15.08          9.94            7.84   0.083780  pass
+     150     146966    2.330      11871     56.47         50.45           43.48   0.083891  fail
+     200      47670    0.756       7626     36.27         29.50           24.26   0.083807  fail
+     225      27664    0.439       5835     27.76         21.16           17.08   0.083792  fail
+     250      16084    0.255       4345     20.67         14.77           11.77   0.083784  fail
+     300       5787    0.092       2262     10.76          6.45            5.01   0.083778  pass
+     350       2195    0.035       1139      5.42          2.73            2.12   0.083777  pass
+     400        847    0.013        522      2.48          1.00            0.76   0.083777  pass
+pick 275
+rc 0
+== S122_screen.py clamp census_1.2171.txt --margin 275
+clamp: binds on 0.153 % of rows at margin 275, against the bound 1.000 %
+rc 0
+== build/tools/margin_census --data <S122's corpus> --k 1.3270 (part A's build/, the build's own weights)
+margin census, S122 DEC-344 (4)
+  data       /home/max/ws/chesso/.tuning/s122/prepared/corpus.tsv
+  rows       6307294; the trace is evaluate() on every one at the build's weights and margin 275
+  weights    the build's own
+  K          1.3270
+  graded     21023 rows (0.333 %): a king with >= 3 attackers, a queen among them, and a safe check, reading 2
+  x > 0      kings 49.657 % mg, 88.093 % eg, of 12614588
+  bars       rows bound <= 0.5 %, graded mass bound <= 10 % at the clamped score
+  margin      bound    %rows     graded   %graded %mass clamped %mass unclamped       loss  bars
+     275       9619    0.153       3171     15.08          9.56            7.41   0.083931  pass
+     150     146966    2.330      11871     56.47         49.89           42.45   0.084031  fail
+     200      47670    0.756       7626     36.27         28.87           23.38   0.083955  fail
+     225      27664    0.439       5835     27.76         20.59           16.35   0.083941  fail
+     250      16084    0.255       4345     20.67         14.29           11.21   0.083934  fail
+     300       5787    0.092       2262     10.76          6.14            4.70   0.083929  pass
+     350       2195    0.035       1139      5.42          2.56            1.97   0.083928  pass
+     400        847    0.013        522      2.48          0.92            0.69   0.083928  pass
+pick 275
+rc 0
+== S122_screen.py clamp census_1.3270.txt --margin 275
+clamp: binds on 0.153 % of rows at margin 275, against the bound 1.000 %
+rc 0
+MARGIN-DONE
+
+== 12. Phase 1's guards at part A: adocs/data/S124_phase1_plants.sh (its patch regenerated by context, every +/- line byte-identical to the landed patch's) on a scratch copy of part A, OUT .tuning/s124/pa/plants
+plants test_eval_model plant 0 [the engine counts the endgame family the walk counts,the walk and the engine count the endgame family by hand]: exit 0, [doctest] assertions: 179079 | 179079 passed | 0 failed |
+plants test_eval_model plant 6 [the engine counts the endgame family the walk counts,the walk and the engine count the endgame family by hand]: exit 1, [doctest] assertions: 179079 | 163001 passed | 16078 failed |
+    first: tests/test_eval_model.cpp:2680: ERROR: CHECK( engine.cell[side] == walk.cell[side] ) is NOT correct!
+plants test_eval_trace plant 0 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 0, [doctest] assertions: 55469 | 55469 passed | 0 failed |
+plants test_eval_trace plant 1 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55469 | 53445 passed | 2024 failed |
+    first: tests/test_eval_trace.cpp:644: ERROR: CHECK( parts.positional == expected ) is NOT correct!
+plants test_eval_trace plant 2 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55469 | 40273 passed | 15196 failed |
+    first: tests/test_eval_trace.cpp:645: ERROR: CHECK( parts.e1 == e1 ) is NOT correct!
+plants test_eval_trace plant 3 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55469 | 45225 passed | 10244 failed |
+    first: tests/test_eval_trace.cpp:413: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+plants test_eval_trace plant 4 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55469 | 55349 passed | 120 failed |
+    first: tests/test_eval_trace.cpp:644: ERROR: CHECK( parts.positional == expected ) is NOT correct!
+forced test_eval_trace plant 0 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 20939 | 20939 passed | 0 failed |
+forced test_eval_trace plant 1 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 20573 passed | 366 failed |
+    first: tests/test_eval_trace.cpp:413: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+forced test_eval_trace plant 2 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 19649 passed | 1290 failed |
+    first: tests/test_eval_trace.cpp:413: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+forced test_eval_trace plant 3 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 18577 passed | 2362 failed |
+    first: tests/test_eval_trace.cpp:413: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+forced test_eval_trace plant 4 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 20939 | 20939 passed | 0 failed |
+plants test_tuner_gradient plant 0 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 0, [doctest] assertions: 12688 | 12688 passed | 0 failed |
+plants test_tuner_gradient plant 5 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 1, [doctest] assertions: 12688 | 12685 passed | 3 failed |
+    first: tests/test_tuner_gradient.cpp:912: ERROR: CHECK( after.cell == data.cells[1] ) is NOT correct!
+plants test_tuner_gradient plant 7 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 1, [doctest] assertions: 12688 | 12687 passed | 1 failed |
+    first: tests/test_tuner_gradient.cpp:854: ERROR: CHECK( check.worst < 1e-6 ) is NOT correct!
+plants test_tuner_gradient plant 8 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 1, [doctest] assertions: 12688 | 12686 passed | 2 failed |
+    first: tests/test_tuner_gradient.cpp:961: ERROR: CHECK( params[EGS_BASE + 0] == ENDGAME_SCALE_ONE ) is NOT correct!
+plants test_eval_trace plant 0 [the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 9000 | 9000 passed | 0 failed |
+plants test_eval_trace plant 10 [the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 9000 | 8996 passed | 4 failed |
+    first: tests/test_eval_trace.cpp:1102: ERROR: CHECK( gap <= tuner_trace::truncation_bound(data, 0, weights.data()) + 1e-9 ) is NOT correct!
+plants test_eval_trace plant 9 [the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 43530 | 43528 passed | 2 failed |
+    first: tests/test_eval_trace.cpp:652: ERROR: CHECK( gap <= tuner_trace::truncation_bound(data, 0, weights.data()) + 1e-9 ) is NOT correct!
+forced test_eval_trace plant 9 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 20937 passed | 2 failed |
+    first: tests/test_eval_trace.cpp:1102: ERROR: CHECK( gap <= tuner_trace::truncation_bound(data, 0, weights.data()) + 1e-9 ) is NOT correct!
+forced test_eval_trace plant 11 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 20145 passed | 794 failed |
+    first: tests/test_eval_trace.cpp:413: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+plants test_tuner_box.sh plant 0: exit 0, ok: every factor in [0, 128], cells 4 and 2 at 0 and 128: 128 128 128 128 0 128 128 128 128 128 128 128 128
+plants test_tuner_box.sh plant 13: exit 1, FAIL: header factor 2 is 411, outside [0, 128]
+plants test_tuner_box.sh plant 14: exit 1, FAIL: header factor 2 is 132, outside [0, 128]
+forced chesso_engine against chesso_engine_trace plant 0: 0 rows of 6226944 differ
+forced chesso_engine against chesso_engine_trace plant 11: 0 rows of 6226944 differ
+forced chesso_engine against chesso_engine_trace plant 12: 840136 rows of 6226944 differ
+forced truncation_scan plant 0: exit 0, 6226944 rows scanned, 111581 past 2.0, 1 past 2.8750, worst 2.906576, each row's taperings' loss; the largest difference 3.690165, 0 past their own bound
+forced truncation_scan plant 1: exit 1, the trace disagrees with evaluate(): 113 against 90: 8/8/8/5p2/1k5K/8/6PP/8 b - - 0 49
+forced truncation_scan plant 2: exit 1, the trace disagrees with evaluate(): 63 against 49: 8/5p2/8/5K2/2k4p/P7/1Q4PP/4q3 w - - 4 45
+forced truncation_scan plant 3: exit 1, the trace disagrees with evaluate(): -5327 against 49: 8/5p2/8/5K2/2k4p/P7/1Q4PP/4q3 w - - 4 45
+forced truncation_scan plant 4: exit 1, the trace disagrees with evaluate(): -130 against -137: 6R1/6pp/4p3/4qpk1/8/R6P/6P1/6K1 w - - 0 49
+forced truncation_scan plant 9: exit 1, 6226944 rows scanned, 111581 past 2.0, 1 past 2.8750, worst 2.906576, each row's taperings' loss; the largest difference 3.690165, 1 past their own bound
+== the forced scan's hits past 2.875 (plant 0): cell_truncation_positions reproduces, the one hit the landed row
+2.906576	phase 13	w	1k2r3/1pp5/p7/5q2/3Q4/2N3P1/5P2/3R2K1 w - - 0 32
+
+== 13. tools/search_bench.py, depths 9 and 12, part A's frozen binary and the parent's: node for node the parent's (timings are no reading)
+== .tuning/s124/pa/bin/chesso depth 9
+  midgame      0.008s        25473 nodes      3111 knps  best c3d5
+  kiwipete     0.039s       127664 nodes      3245 knps  best e2a6
+  tactical     0.010s        34197 nodes      3328 knps  best d7c8q
+  total        0.058s
+== .tuning/s124/pa/bin/chesso depth 12
+  midgame      0.030s        94541 nodes      3127 knps  best c3d5
+  kiwipete     0.113s       353715 nodes      3141 knps  best e2a6
+  tactical     0.124s       409231 nodes      3296 knps  best d7c8r
+  total        0.267s
+== .ref-builds/7214ce5/build/src/chesso depth 9
+  midgame      0.008s        25473 nodes      3310 knps  best c3d5
+  kiwipete     0.039s       127664 nodes      3286 knps  best e2a6
+  tactical     0.010s        34197 nodes      3445 knps  best d7c8q
+  total        0.056s
+== .ref-builds/7214ce5/build/src/chesso depth 12
+  midgame      0.030s        94541 nodes      3151 knps  best c3d5
+  kiwipete     0.112s       353715 nodes      3153 knps  best e2a6
+  tactical     0.125s       409231 nodes      3268 knps  best d7c8r
+  total        0.267s
+
+== 14. Gates on the staged tree, CLANG_FORMAT_MAJOR=22
+build: 95% tests passed, 3 tests failed out of 61
+build: 	  4 - test_evaluation (Failed)
+build: 	  5 - test_search (Failed)
+build: 	  6 - test_engine (Failed)
+build-tune: 95% tests passed, 3 tests failed out of 61
+build-tune: 	  4 - test_evaluation (Failed)
+build-tune: 	  5 - test_search (Failed)
+build-tune: 	  6 - test_engine (Failed)
+both builds without a warning; ./clang-format.sh --check clean
+test_mate_pv -s (a reading, none asserted): S145_mate_set.tsv at depth 8: 177 mate lines, 0 incomplete; S145_mined_set.tsv at depth 8: 522 mate lines, 0 incomplete

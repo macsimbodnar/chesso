@@ -1,0 +1,5 @@
+S124 K refit: /home/max/ws/chesso/.tuning/s122/prepared/corpus.tsv, 6307294 rows, 0 differ from evaluate()
+weights   /home/max/ws/chesso-s124p2/.tuning/s124/screen/fits/f1_f2/full/r4/fit.vector
+threads   12
+train     0.080856 at K
+K 1.3248

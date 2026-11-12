@@ -1,0 +1,18 @@
+S124 screen reading, F3: cells OCB_PURE P=3-4, OCB_PURE P>=5, OCB_ROOK
+free endgame_scale.f1,endgame_scale.f2,endgame_scale.f3, fit f1_f2_f3, against f1_f2
+  full  K 1.3367 after 5 round(s): best 0.078872 (patience) against 0.079263, d +0.0003910; at K identity d +0.0003490
+  q1    K 1.3407 after 4 round(s): best 0.078902 (patience) against 0.079282, d +0.0003800; at K identity d +0.0003360
+  q2    K 1.3368 after 4 round(s): best 0.078877 (patience) against 0.079268, d +0.0003910; at K identity d +0.0003480
+  q3    K 1.3572 after 4 round(s): best 0.078978 (patience) against 0.079375, d +0.0003970; at K identity d +0.0003550
+  q4    K 1.3394 after 4 round(s): best 0.078891 (patience) against 0.079288, d +0.0003970; at K identity d +0.0003590
+  q5    K 1.3414 after 4 round(s): best 0.078898 (patience) against 0.079282, d +0.0003840; at K identity d +0.0003410
+rule at K refit: full d +0.0003910, s 0.0000077, m 0.0000126, kept iff d > m; quarters +0.0003800 +0.0003910 +0.0003970 +0.0003970 +0.0003840
+beside, at K identity (round 1): full d +0.0003490, m 0.0000157, past its m; deciding nothing
+endgame_scale 45 0 9 29 80 113 85 128 122 19 50 77 103
+GUARD refused F3 (f1_f2_f3 against f1_f2), both at the part's K 1.3367: the tablebase-labelled loss moves +0.0000086 +/- 0.0000010 by game (29985 games, 292418 rows); refused past +1.645 errors
+beside, deciding nothing: F3 (f1_f2_f3 against f1_f2), both at K_0 1.2171: the tablebase-labelled loss moves +0.0000123 +/- 0.0000010 by game (29985 games, 292418 rows), past +1.645 errors yes
+DECIDED fit f1_f2_f3 pred f1_f2 d +0.0003910 K 1.3367
+F3 dropped: refused by the tablebase guard
+survivors F1,F2
+CANDIDATE f1_f2 dir /home/max/ws/chesso-s124p2/.tuning/s124/screen/fits/f1_f2/full
+PART-OUTCOME dropped

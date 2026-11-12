@@ -1,0 +1,68 @@
+# S124: the fixed-rounds A/A DEC-143 owed before S124's SPRT, read by the rule S124's step file wrote before it ran
+# ("2026-11-12: before the SPRT, the coordinator"). What moved since the last one: the kernel, 7.2.6 -> 7.2.15;
+# fastchess (alpha 1.8.1 20260720-daa3ea2), the book (noob_3moves.epd, sha256 2011193b...) and fastchess.sh did not.
+# The run, the coordinator's: `CAND=7214ce5 REF=7214ce5 AA=1 ROUNDS=500 ./fastchess.sh` from the main checkout,
+# 2026-11-12 02:40:23 to 03:09, 8+0.08, Hash 16, concurrency 12, seed 20261112024023; out
+# .tuning/aa_s124_20261112/, console .tuning/aa_s124_20261112.console, both in chesso_S124_sprt_2026-11-12.tar.xz in
+# the owner's archive. Read 2026-11-12 by the Opus 5.5 subagent recording S124's H0.
+#
+# THE RULE'S FOUR CLAUSES, EACH READ.
+#   1. `SPRT-RUN-DONE full`, 1000 games, no `SPRT-RUN-INVALID` in the console: holds.
+#   2. tools/forfeit_report.py --max-pct 1.0 over the PGN: 0 of 1000 for each side, exit 0: holds.
+#   3. The pair-score variance within two combined standard errors of S219's 0.2905 +/- 0.0184: 0.2559 +/- 0.0162
+#      (the error bar S105_pairs.py and S198_pairs.py print, v sqrt(2 / (n - 1)) over 500 pairs), combined error
+#      0.0245, z -1.41: holds. The step file's and the pin's 0.0142 and z -1.49 were the bar taken short; the clause
+#      holds on either.
+#   4. 1000 games in 29 m 05 s, fastchess's Total Time: 2063 games an hour beside 2110, over 1900: the SPRT's hours
+#      stand.
+# Beside, deciding nothing: Elo +2.78 +/- 15.42 between two copies of one commit; pentanomial [33, 118, 192, 122, 35];
+# draws 47.6 % against S219's 35.3 %, 631 games adjudicated; white won both 7.8 % of pairs against 13.0 %.
+#
+$ ~/.venv/chess/bin/python -I adocs/data/S105_pairs.py .tuning/aa_s124_20261112/games.pgn adocs/data/S219_aa_calibration.pgn
+=== .tuning/aa_s124_20261112/games.pgn ===
+games            1000
+draws            476, 47.6 %
+decisive         524, 52.4 %
+plies per game   mean 130.3, median 113
+seconds per game mean 20.2, median 19
+seconds per ply  0.1551
+complete pairs   500
+  pair score 0.0     33    6.6 %
+  pair score 0.5    118   23.6 %
+  pair score 1.0    192   38.4 %
+  pair score 1.5    122   24.4 %
+  pair score 2.0     35    7.0 %
+white won both   39 of 500, 7.8 %  (the pair Pohl's floor is about)
+pair score       mean 1.0080, variance 0.2559, sd 0.5059
+
+=== adocs/data/S219_aa_calibration.pgn ===
+games            1000
+draws            353, 35.3 %
+decisive         647, 64.7 %
+plies per game   mean 114.0, median 101
+seconds per game mean 19.8, median 19
+seconds per ply  0.1733
+complete pairs   500
+  pair score 0.0     54   10.8 %
+  pair score 0.5     91   18.2 %
+  pair score 1.0    198   39.6 %
+  pair score 1.5    118   23.6 %
+  pair score 2.0     39    7.8 %
+white won both   65 of 500, 13.0 %  (the pair Pohl's floor is about)
+pair score       mean 0.9970, variance 0.2905, sd 0.5390
+
+pair variance    0.2559 +/- 0.0162  vs  0.2905 +/- 0.0184
+ratio            1.135
+(exit 0)
+
+$ ~/.venv/chess/bin/python -I adocs/data/S198_pairs.py .tuning/aa_s124_20261112/games.pgn
+pair variance    0.2559 +/- 0.0162  vs  0.2905 +/- 0.0184  (this run vs S219 A/A, the current book, DEC-190)
+ratio            0.881
+z                -1.41  (inside the band, |z| < 1.96)
+(exit 0)
+(S198_pairs.py prints both reports above it first, the same as S105_pairs.py's; only its comparison is kept here.)
+
+$ python3 tools/forfeit_report.py --max-pct 1.0 .tuning/aa_s124_20261112/games.pgn
+  cand-7214ce5      1000 games, 0 forfeits, 0.00 %
+  ref-7214ce5       1000 games, 0 forfeits, 0.00 %
+(exit 0)

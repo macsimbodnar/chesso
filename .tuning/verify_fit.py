@@ -49,6 +49,12 @@ refused, which is right.
 ks_weak and ks_defenders one, ks_storm seven, and the curve's twelve inputs,
 ks_curve. A fit emitted by a tuner built before S122 lacks them and is refused,
 which is right.
+
+1190 since S124, whose endgame family is nineteen more: mopup_mg and mopup_eg
+three wide, and endgame_scale, thirteen cells of one half each. S124's phase 2b
+found the list at 1171, so a paste of the family would have been checked on the
+other 1171 alone. A fit emitted by a tuner built before S124 lacks them and is
+refused, which is right.
 """
 import re
 import sys
@@ -87,7 +93,7 @@ def arguments(flags):
 
 
 EMITTED, ROOT, _ = arguments(set())
-TOTAL = 1171
+TOTAL = 1190
 
 WIDTHS = [
     ("PAWN", 1),
@@ -163,6 +169,9 @@ WIDTHS = [
     ("ks_storm_eg", 7),
     ("ks_curve_mg", 12),
     ("ks_curve_eg", 12),
+    ("mopup_mg", 3),
+    ("mopup_eg", 3),
+    ("endgame_scale", 13),
 ]
 
 

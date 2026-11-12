@@ -387,9 +387,9 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Open
 
-1. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
+1. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert -- the family's SPRT read H0 2026-11-12 (`adocs/data/S124_sprt.log`), nothing landed; the bisection plays in order, A = mop-up alone (staged in `../chesso-s124p2`), then B = F1, C = F2, each `{0, 5}` against what has landed
 2. S340  **paused by S341** -- filler (DEC-171): the tree builds under clang with `-Werror` whatever S124's family ships, its identity included; the fix is landed, the clang stage's green waits on S341
-3. S341  filler (DEC-171), blocks S340: the fast label is green under clang with libc++ -- no pinned golden rests on a population the standard library's own shuffle or distribution drew; `test_tuner_gradient` reads 4.70e-6 there; starts after S124's verdict
+3. S341  filler (DEC-171), blocks S340: the fast label is green under clang with libc++ -- no pinned golden rests on a population the standard library's own shuffle or distribution drew; `test_tuner_gradient` reads 4.70e-6 there; cause verified and the tree's own shuffle written in `../chesso-s341`, uncommitted; **stopped 2026-11-12 at the owner's stop** (DEC-344 (9)): on the one population DEC-356's pair reads 8.996e-6 and its rule picks two other pairs (8.308e-7); waits on the owner's ruling
 4. S102  outpost and space terms in the evaluation, one family
 5. S266  a complexity term moves the endgame score toward or away from zero, never past it, by how likely the stronger side is to convert, never flipping its sign
 6. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted

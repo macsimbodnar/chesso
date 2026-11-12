@@ -1,0 +1,16 @@
+S124 screen reading, F1: cells P=0 d<=0, P=0 d=1, OCB_PURE P<=2
+free endgame_scale.f1, fit f1, against landed
+  full  K 1.2647 after 2 round(s): best 0.081114 (patience) against 0.084794, d +0.0036800; at K identity d +0.0039230
+  q1    K 1.2665 after 2 round(s): best 0.081123 (patience) against 0.084819, d +0.0036960; at K identity d +0.0039350
+  q2    K 1.2666 after 2 round(s): best 0.081124 (patience) against 0.084800, d +0.0036760; at K identity d +0.0039260
+  q3    K 1.2826 after 2 round(s): best 0.081230 (patience) against 0.084952, d +0.0037220; at K identity d +0.0039730
+  q4    K 1.2654 after 2 round(s): best 0.081117 (patience) against 0.084814, d +0.0036970; at K identity d +0.0039310
+  q5    K 1.2707 after 2 round(s): best 0.081141 (patience) against 0.084827, d +0.0036860; at K identity d +0.0039430
+rule at K refit: full d +0.0036800, s 0.0000171, m 0.0000282, kept iff d > m; quarters +0.0036960 +0.0036760 +0.0037220 +0.0036970 +0.0036860
+beside, at K identity (round 1): full d +0.0039230, m 0.0000306, past its m; deciding nothing
+endgame_scale 46 0 128 128 128 128 128 128 128 20 128 128 128
+GUARD pass F1 (f1 against landed), both at the part's K 1.2647: the tablebase-labelled loss moves -0.0339195 +/- 0.0004762 by game (29985 games, 292418 rows); refused past +1.645 errors
+beside, deciding nothing: F1 (f1 against landed), both at K_0 1.2171: the tablebase-labelled loss moves -0.0328673 +/- 0.0004642 by game (29985 games, 292418 rows), past +1.645 errors no
+DECIDED fit f1 pred landed d +0.0036800 K 1.2647
+F1 kept: past its margin, the guard passes
+PART-OUTCOME kept

@@ -1,0 +1,32 @@
+engine c496403, corpus sha256 04c596de726b5a2886df4e7e41c08fdd958529c669ba98ee69befd6a54676509, 6307294 rows, 484308773 bytes
+trace: 6307294 rows, 241884663 entries (38.35 a row), 7.8 s; 0 differ from evaluate(), the clamp binds on 9619
+held out: /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.qs.validation, sha256 faef5cd415abfb999c77f9754d0d1fbcd81fa572d04680b2b73e1bb9508936eb, 1384182 rows; 0 corpus rows stand on one of its positions
+6307294 positions, 137987 games, 6307294 train, 1384182 validation (17.9963%), 1190 parameters, group endgame_scale.f1,endgame_scale.f2, freeze (nothing), 10 free
+gauges held: 0 of 7
+start: train 0.083916  validation 0.085726
+epoch    100  train 0.081109  validation 0.079846  *
+epoch    200  train 0.080856  validation 0.079263  *
+epoch    300  train 0.080856  validation 0.079264
+epoch    400  train 0.080856  validation 0.079264
+epoch    500  train 0.080856  validation 0.079264
+epoch    600  train 0.080856  validation 0.079264
+epoch    700  train 0.080856  validation 0.079264
+epoch    800  train 0.080856  validation 0.079264
+epoch    900  train 0.080856  validation 0.079264
+epoch   1000  train 0.080856  validation 0.079264
+epoch   1100  train 0.080856  validation 0.079264
+epoch   1200  train 0.080856  validation 0.079264
+epoch   1300  train 0.080856  validation 0.079264
+epoch   1400  train 0.080856  validation 0.079264
+epoch   1500  train 0.080856  validation 0.079264
+epoch   1600  train 0.080856  validation 0.079264
+epoch   1700  train 0.080856  validation 0.079264
+epoch   1800  train 0.080856  validation 0.079264
+epoch   1900  train 0.080856  validation 0.079264
+epoch   2000  train 0.080856  validation 0.079264
+epoch   2100  train 0.080856  validation 0.079264
+epoch   2200  train 0.080856  validation 0.079264
+no improvement in 20 reports, stopping
+best: train 0.080856  validation 0.079263  (start 0.083916 / 0.085726)
+constants written to /home/max/ws/chesso-s124p2/.tuning/s124/screen/fits/f1_f2/full/r4/fit.hpp
+vector written to /home/max/ws/chesso-s124p2/.tuning/s124/screen/fits/f1_f2/full/r4/fit.vector

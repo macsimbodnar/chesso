@@ -7,7 +7,50 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-12, by hand.
 
-## 2026-11-12 00:55: S124's candidate is built and checked; its SPRT waits for a foreign load to end
+## 2026-11-12 06:45: S124's family read H0; part A (mop-up alone) is next on the machine
+
+**S124's one `{0, 5}` nElo SPRT read H0** (03:10 to 04:46): Elo -13.23 +/- 8.24, nElo -19.03 +/- 11.84, LLR -2.95,
+3310 games, Ptnml [122, 428, 632, 400, 73], 0 forfeits, 2072.7 games an hour. The abort rule held. Nothing of the
+paste lands: the family stays at its identity, bench 4707943. Log `adocs/data/S124_sprt.log`, played diff
+`adocs/data/S124_candidate.diff` (blob `632626a385c6`), archive `chesso_S124_sprt_2026-11-12.tar.xz` (sha256
+`5420340e...`, the A/A inside). Quarters +6.7, -12.2, -14.7, -32.8 (chi-square 10.05, p 0.02), nodes per second
+flat within 1.3 % a side: recorded, not attributed. Three incomplete mating PVs, one search of the candidate's,
+longer than Stockfish's distance, never shorter (`adocs/data/S124_sprt_mate_pvs.txt`). The owner's two stops are
+moot for the family; each part reads them on its own tree.
+
+**The A/A's reading is corrected**: `adocs/data/S124_aa_20261112.txt` prints 0.2559 +/- 0.0162 and z -1.41, not
+the 0.0142 and -1.49 the pin and this file carried. The rule still holds; the pin stays as played.
+
+**Bisection part A, mop-up alone, is staged in `../chesso-s124p2`** (HEAD `7214ce5`, REF): P1's six, every cell at
+F; 10 files, staged diff sha256 `484ac455...` (`.tuning/coord/S124/S124_partA_cached.diff`); bench **4586026**.
+No owner's stop fires: `EXACT_FLOOR` 167 and 155 against 157, `MATE_IN_THREE_FLOOR` 12 and 11 against 11, no
+mate-carry ceiling rises, `test_tuner_gradient` green (8.61e-7 at 984). Three reds in each build, all on the family's
+"Reds left": `test_engine` first-mate, `test_evaluation` "removing a piece", `test_search`'s two planted-bound
+cases. The script's dry run passes. The family's tree is saved first (`.tuning/coord/S124/`, blobs checked).
+Launch: `cd /home/max/ws/chesso-s124p2 && nohup setsid -w adocs/data/S124_sprt.sh >
+/home/max/ws/chesso/.tuning/s124a_sprt.console 2>&1 &`, after the coordinator's sentence is pinned. Worst case
+19.86 h; the harness's resignation at 400 cp hides most of mop-up, so a long run near zero is the likely one.
+**Nothing compiles and nothing is committed while it plays.** Then B = F1 (cells 0, 1, 9), C = F2 (cells 0-9), each
+against what has landed.
+
+**S341 stopped at the owner's stop (DEC-344 (9)), waits on the owner.** Cause verified: `std::shuffle` draws 5696
+rows under libc++ and 5719 under libstdc++. The tree's own Fisher-Yates over `mt19937`'s raw output is written in
+`../chesso-s341` (branch `s341`, `739a537`, uncommitted, patch `.tuning/s341/s341_shuffle.patch` there); both
+compilers then draw one population (5719 rows) and agree to every digit. On it DEC-356's pair reads 8.996e-6, red
+under both; DEC-356's rule picks two other pairs, 8.308e-7 at 435 over 5721 rows. Options put to the owner: A, land
+the shuffle and the rule's two pairs (margin 1.20 against 1.59; recommended); B, freeze libstdc++'s population as
+about 600 KB of rows; C, leave it, S340 paused and the clang stage red. `tools/datagen.cpp`'s draw is left alone:
+changing it would move every recorded corpus seed under GCC. S340 stays paused by S341.
+
+**Findings, no step filed yet:** `adocs/data/S124_phase1_plants.patch` no longer applies on `achesso` since
+`5048611` (the hunk at `scaled_taper`'s signature), so `S124_phase1_plants.sh` stops there; no ctest runs it
+(DEC-171 filler; part A's tree regenerated its own copy). `.tuning/verify_fit.py`'s docstring still says 1171.
+`test_datagen_repetition`'s precondition rests on six games and flips with the engine.
+
+**Weekly `gate_extra`:** last `GATE-EXTRA-DONE` 2026-11-05; 2026-11-11's run failed its clang stage alone (S340,
+S341), the other stages green.
+
+## 2026-11-12 00:55: the candidate as built and checked
 
 **S124's candidate is staged in `../chesso-s124p2` (HEAD `7214ce5`), not committed.** Delivery
 `.tuning/coord/S124/S124_candidate.diff`, sha256 `ecca2b17...`, 38 files; under `src/` three array lines and a comment.
@@ -64,19 +107,10 @@ kill and the baseline's are named; a malformed pair or entry of any shape is ref
 each with nothing real. Two shapes known and left, no step filed, neither reachable from the list: a file whose own
 `M` is not iterable, and an empty-string `id`.
 
-**Waiting, not on the owner: a foreign load.** Another session's `go test ./internal/watch/ -run TestSoak` (a 2 h
-soak, started 00:38, heavy disk I/O) is running. No A/A and no SPRT starts while it does (MACHINE; the script's abort
-rule). A watcher waits for its exit.
-
 **Next, in order:**
-1. **The A/A, 1000 games (DEC-143), about 28 minutes**: the kernel moved 7.2.6 -> 7.2.15 since the last one, and
-   every pre-registration since S083 named the kernel in "the same machine". `CAND=7214ce5 REF=7214ce5 AA=1
-   ROUNDS=500 ./fastchess.sh`. The reading rule is in S124's step file, written before the run.
-2. **S124's one `{0, 5}` SPRT**, `adocs/data/S124_sprt.sh` in `../chesso-s124p2`: 12 to 20 h at the worst, cap 41900
-   games, watcher ceiling 40 h. Nothing compiles while it plays.
-3. S341 (which completes S340), then on H1 the reds' repair and the owner's ruling on the two stops; on H0 the bisection (A mop-up, B F1,
-   C F2).
-4. S102's landing after the owner's ruling on B1, then its screen (phase 2).
+1. S124's verdict, as above.
+2. S341 (which completes S340): the fast label green under clang's library.
+3. S102's landing after the owner's ruling on B1, then its screen (phase 2).
 
 ## 2026-11-11 22:50: P1 kept mop-up; S338 done; S124's candidate was being built
 

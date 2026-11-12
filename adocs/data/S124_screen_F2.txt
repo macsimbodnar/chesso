@@ -1,0 +1,16 @@
+S124 screen reading, F2: cells P=0 d>=2, P=1 d<=0, P=1 d=1, P=1 d>=2, P=2 d<=0, P=2 d=1, P=2 d>=2
+free endgame_scale.f1,endgame_scale.f2, fit f1_f2, against f1
+  full  K 1.3248 after 4 round(s): best 0.079263 (patience) against 0.081114, d +0.0018510; at K identity d +0.0019230
+  q1    K 1.3292 after 3 round(s): best 0.079282 (patience) against 0.081123, d +0.0018410; at K identity d +0.0019310
+  q2    K 1.3249 after 4 round(s): best 0.079268 (patience) against 0.081124, d +0.0018560; at K identity d +0.0019230
+  q3    K 1.3462 after 4 round(s): best 0.079375 (patience) against 0.081230, d +0.0018550; at K identity d +0.0019740
+  q4    K 1.3267 after 4 round(s): best 0.079288 (patience) against 0.081117, d +0.0018290; at K identity d +0.0019130
+  q5    K 1.3299 after 3 round(s): best 0.079282 (patience) against 0.081141, d +0.0018590; at K identity d +0.0019310
+rule at K refit: full d +0.0018510, s 0.0000127, m 0.0000209, kept iff d > m; quarters +0.0018410 +0.0018560 +0.0018550 +0.0018290 +0.0018590
+beside, at K identity (round 1): full d +0.0019230, m 0.0000384, past its m; deciding nothing
+endgame_scale 45 0 9 29 81 114 86 128 123 19 128 128 128
+GUARD pass F2 (f1_f2 against f1), both at the part's K 1.3248: the tablebase-labelled loss moves -0.0068595 +/- 0.0002704 by game (29985 games, 292418 rows); refused past +1.645 errors
+beside, deciding nothing: F2 (f1_f2 against f1), both at K_0 1.2171: the tablebase-labelled loss moves -0.0048971 +/- 0.0002577 by game (29985 games, 292418 rows), past +1.645 errors no
+DECIDED fit f1_f2 pred f1 d +0.0018510 K 1.3248
+F2 kept: past its margin, the guard passes
+PART-OUTCOME kept

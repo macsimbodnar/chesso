@@ -1,0 +1,63 @@
+{
+  "batch": {
+    "KBBvK": 21,
+    "KBNvK": 40,
+    "KQvK": 40,
+    "KRBvK": 40,
+    "KRNvK": 40,
+    "KRvK": 40
+  },
+  "bench": 4707943,
+  "head_engine": "/home/max/ws/chesso-s124spsa/.tuning/s124/p1/bin/head.chesso",
+  "head_sha": "a240486596004ba11ecdb4c2dd9a3970da0453f9efc4c66c929bae28cb005683",
+  "helpers": {
+    "S124_engine_eval.cpp": "416420e71cd7b684cbb7f9f721d1125f51da57400453d7cf062b96d22d6c2bbe",
+    "S124_p0.py": "bb7886987ef13e8f6e1f493f07ae6449c9b8fb7f94c4c46b3efdeb65b1968720",
+    "spsa_driver.py": "401602b2a6d0175d0949440d7b26eae302f6ba7ef3d0b81d2dcdd4e9ea550b9b"
+  },
+  "iterations": 150,
+  "landed": {
+    "mopup_eg": [
+      0,
+      0,
+      0
+    ],
+    "mopup_mg": [
+      0,
+      0,
+      0
+    ]
+  },
+  "nodes": 100000,
+  "out": "/home/max/ws/chesso-s124spsa/.tuning/s124/p1",
+  "plant": null,
+  "room": 4838,
+  "scratch": {
+    "final": "/home/max/ws/chesso-s124spsa/.tuning/s124/p1/scratch/final",
+    "head": "/home/max/ws/chesso-s124spsa/.tuning/s124/p1/scratch/head",
+    "minus": "/home/max/ws/chesso-s124spsa/.tuning/s124/p1/scratch/minus",
+    "plus": "/home/max/ws/chesso-s124spsa/.tuning/s124/p1/scratch/plus"
+  },
+  "script_committed": "02f4c4a930ca6efbfd42dbd815253a457abda4140b030c6b1cd3a6a1e6a41384",
+  "script_sha": "02f4c4a930ca6efbfd42dbd815253a457abda4140b030c6b1cd3a6a1e6a41384",
+  "sha": "54c892d9b4e92e10a735938911d2cf304dc0e3d9",
+  "smoke": false,
+  "source": "/home/max/ws/chesso-s124spsa",
+  "stage_one_bound": 27929,
+  "train": "/home/max/ws/chesso-s124spsa/.tuning/s124/p1/train.tsv",
+  "train_header": {
+    "heldout": "/home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.qs.validation",
+    "heldout_sha": "faef5cd415abfb999c77f9754d0d1fbcd81fa572d04680b2b73e1bb9508936eb",
+    "per_class": 200,
+    "pool": "/home/max/ws/chesso/.tuning/s122/corpus/pool.tsv.root",
+    "pool_sha": "a0a36b5fae98c05f71ee6cf9d60b038ffffb8459ab259f844dbe716aba35e8f2",
+    "rest": "",
+    "seed": 20261106,
+    "skip": 0
+  },
+  "train_sha": "a738a365d0d375a15bb7dc6ce07a3e5506ae509023a3740837785955a15e4f58",
+  "train_starts": "/home/max/ws/chesso-s124spsa/.tuning/s124/p1/bin/p0_starts.tsv",
+  "train_starts_from": "/home/max/ws/chesso-s124p2/.tuning/s124/screen/p0/starts.tsv",
+  "train_starts_sha": "6974c6b5b69581a77a1ad416c9f19b5a0f67f70c95f18f1709dafdac1b439512",
+  "workers": 12
+}

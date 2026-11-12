@@ -1,0 +1,11 @@
+select: 18786043 root rows read, 12000 held-out games left out
+  KRvK   training games with a root row in it  7515; not won at a zeroed clock 3074; a position already kept  320; won and distinct  4121; taken  200
+  KQvK   training games with a root row in it  3869; not won at a zeroed clock    0; a position already kept  344; won and distinct  3525; taken  200
+  KRBvK  training games with a root row in it  1375; not won at a zeroed clock   17; a position already kept    4; won and distinct  1354; taken  200
+  KRNvK  training games with a root row in it  1175; not won at a zeroed clock   18; a position already kept    1; won and distinct  1156; taken  200
+  KBNvK  training games with a root row in it   407; not won at a zeroed clock   22; a position already kept    1; won and distinct   384; taken  184
+  KBNvK  SHORT: 184 of the 200 asked
+  KBBvK  training games with a root row in it   130; not won at a zeroed clock    4; a position already kept    0; won and distinct   126; taken    0
+starts written to /home/max/ws/chesso-s124spsa/.tuning/s124/p1/test/fresh.tsv.tmp, sha256 30ff42c5c2f8cbdd6bb8b509bffe3112bb703fc823fbd45ccbe70dedcb3aed72
+S124-P0-SELECT-OK
+selected in 50 s

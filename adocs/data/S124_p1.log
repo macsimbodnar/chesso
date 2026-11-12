@@ -1,0 +1,216 @@
+setup: /home/max/ws/chesso-s124spsa at 54c892d, four scratch copies built in 20 s; bench 4707943 head's copy, 4707943 build/
+eval check: 1126 rows in the domain, 4 outside; |evaluate() moved - expected| worst 1.667 in the domain (bound 2), every outside row 0; rows with each count non-zero (centre, kings, corner): [976, 1126, 195]
+room: stage_one_bound 27929, ROOM 4838; a half reaching 4838 compiles True, 4839 fires the assert True
+setup written to /home/max/ws/chesso-s124spsa/.tuning/s124/p1/setup.json
+iteration 0: y -60.58 plies, converted 128 / 191 of 221, build 1.8 s, games 69 s, theta 59.52,59.52,7.44,7.44,7.44
+iteration 1: y +2.03 plies, converted 191 / 191 of 221, build 1.8 s, games 47 s, theta 61.58,61.58,7.70,7.18,7.18
+iteration 2: y -14.80 plies, converted 187 / 193 of 221, build 1.8 s, games 53 s, theta 76.72,76.72,5.81,9.07,9.07
+iteration 3: y -5.75 plies, converted 197 / 201 of 221, build 1.9 s, games 43 s, theta 70.86,82.58,5.07,9.81,9.81
+iteration 4: y -2.73 plies, converted 197 / 190 of 221, build 2.0 s, games 49 s, theta 73.61,85.34,4.73,10.15,10.15
+iteration 5: y +4.71 plies, converted 194 / 194 of 221, build 1.8 s, games 46 s, theta 68.91,90.04,5.32,10.74,9.56
+iteration 6: y +0.51 plies, converted 191 / 194 of 221, build 2.1 s, games 44 s, theta 68.41,90.54,5.25,10.80,9.50
+iteration 7: y +3.86 plies, converted 194 / 194 of 221, build 1.9 s, games 46 s, theta 72.16,94.30,4.78,11.27,9.03
+iteration 8: y -5.34 plies, converted 192 / 195 of 221, build 1.8 s, games 44 s, theta 67.03,99.43,5.43,11.91,8.39
+iteration 9: y -5.23 plies, converted 190 / 197 of 221, build 1.8 s, games 41 s, theta 71.98,104.39,6.04,11.29,7.77
+iteration 10: y +1.71 plies, converted 196 / 194 of 221, build 1.8 s, games 44 s, theta 70.38,105.99,6.25,11.09,7.57
+iteration 11: y -2.56 plies, converted 195 / 198 of 221, build 1.7 s, games 44 s, theta 68.02,108.35,6.54,10.80,7.27
+iteration 12: y -1.56 plies, converted 194 / 194 of 221, build 1.8 s, games 43 s, theta 69.43,109.76,6.72,10.62,7.45
+iteration 13: y +3.11 plies, converted 198 / 194 of 221, build 1.9 s, games 43 s, theta 72.22,106.97,7.06,10.97,7.80
+iteration 14: y +3.41 plies, converted 199 / 196 of 221, build 1.9 s, games 40 s, theta 75.24,109.99,7.44,10.59,8.18
+iteration 15: y -1.57 plies, converted 196 / 199 of 221, build 1.9 s, games 41 s, theta 73.86,111.36,7.61,10.42,8.00
+iteration 16: y +8.51 plies, converted 196 / 189 of 221, build 1.9 s, games 46 s, theta 81.20,118.70,8.53,11.34,7.09
+iteration 17: y -3.86 plies, converted 191 / 196 of 221, build 1.9 s, games 44 s, theta 77.91,115.41,8.12,11.75,6.68
+iteration 18: y -0.08 plies, converted 197 / 196 of 221, build 1.8 s, games 41 s, theta 77.98,115.34,8.13,11.76,6.67
+iteration 19: y +2.61 plies, converted 200 / 198 of 221, build 1.9 s, games 41 s, theta 80.14,117.51,8.40,12.03,6.94
+iteration 20: y +3.24 plies, converted 196 / 193 of 221, build 1.8 s, games 42 s, theta 82.80,120.16,8.73,11.70,6.61
+iteration 21: y +4.22 plies, converted 197 / 193 of 221, build 1.7 s, games 43 s, theta 79.38,123.58,9.16,12.12,6.18
+iteration 22: y -0.25 plies, converted 192 / 191 of 221, build 1.9 s, games 44 s, theta 79.18,123.78,9.13,12.15,6.16
+iteration 23: y -1.11 plies, converted 193 / 194 of 221, build 1.9 s, games 43 s, theta 80.06,124.66,9.24,12.04,6.27
+iteration 24: y +0.92 plies, converted 195 / 189 of 221, build 1.9 s, games 46 s, theta 79.33,123.94,9.15,11.95,6.36
+iteration 25: y +2.00 plies, converted 197 / 196 of 221, build 2.0 s, games 42 s, theta 80.88,125.49,9.35,12.14,6.16
+iteration 26: y +0.75 plies, converted 192 / 194 of 221, build 1.9 s, games 44 s, theta 81.46,126.06,9.42,12.21,6.23
+iteration 27: y +3.00 plies, converted 197 / 193 of 221, build 2.0 s, games 41 s, theta 79.18,128.34,9.70,11.93,6.52
+iteration 28: y +0.84 plies, converted 197 / 199 of 221, build 1.9 s, games 42 s, theta 79.81,128.97,9.78,12.01,6.44
+iteration 29: y +2.63 plies, converted 196 / 192 of 221, build 1.8 s, games 42 s, theta 77.86,130.93,10.03,11.76,6.68
+iteration 30: y +3.49 plies, converted 198 / 194 of 221, build 1.8 s, games 39 s, theta 80.42,133.50,10.35,11.44,7.00
+iteration 31: y -1.12 plies, converted 194 / 196 of 221, build 1.7 s, games 40 s, theta 81.24,132.68,10.45,11.34,6.90
+iteration 32: y -0.53 plies, converted 191 / 192 of 221, build 1.7 s, games 41 s, theta 80.85,132.30,10.40,11.39,6.85
+iteration 33: y +2.96 plies, converted 191 / 185 of 221, build 1.8 s, games 43 s, theta 78.74,130.18,10.14,11.12,7.12
+iteration 34: y -0.93 plies, converted 197 / 199 of 221, build 1.8 s, games 38 s, theta 78.08,129.52,10.22,11.21,7.20
+iteration 35: y +1.12 plies, converted 197 / 195 of 221, build 1.7 s, games 39 s, theta 78.86,128.74,10.12,11.31,7.10
+iteration 36: y -1.76 plies, converted 191 / 193 of 221, build 1.8 s, games 41 s, theta 77.63,129.96,9.97,11.15,6.95
+iteration 37: y -0.81 plies, converted 193 / 194 of 221, build 1.7 s, games 40 s, theta 78.20,130.53,10.04,11.08,6.88
+iteration 38: y +1.04 plies, converted 195 / 193 of 221, build 1.7 s, games 41 s, theta 77.48,129.82,9.95,11.17,6.79
+iteration 39: y -6.29 plies, converted 194 / 203 of 221, build 1.7 s, games 38 s, theta 81.75,134.08,10.48,10.64,6.26
+iteration 40: y -0.07 plies, converted 191 / 192 of 221, build 1.8 s, games 41 s, theta 81.70,134.03,10.47,10.64,6.25
+iteration 41: y +2.98 plies, converted 195 / 192 of 221, build 1.8 s, games 40 s, theta 83.69,136.02,10.23,10.89,6.00
+iteration 42: y +2.41 plies, converted 197 / 195 of 221, build 1.8 s, games 40 s, theta 85.29,137.62,10.43,10.69,5.80
+iteration 43: y +7.51 plies, converted 195 / 187 of 221, build 1.7 s, games 41 s, theta 90.22,142.55,11.04,11.31,6.42
+iteration 44: y +0.55 plies, converted 193 / 194 of 221, build 1.7 s, games 39 s, theta 90.57,142.90,11.00,11.35,6.46
+iteration 45: y +0.01 plies, converted 197 / 197 of 221, build 1.7 s, games 39 s, theta 90.56,142.89,11.00,11.35,6.46
+iteration 46: y -1.63 plies, converted 195 / 197 of 221, build 1.7 s, games 39 s, theta 89.52,143.94,11.13,11.22,6.33
+iteration 47: y -1.20 plies, converted 189 / 191 of 221, build 1.7 s, games 42 s, theta 90.28,143.18,11.03,11.32,6.43
+iteration 48: y +0.18 plies, converted 197 / 196 of 221, build 1.7 s, games 38 s, theta 90.39,143.07,11.02,11.33,6.44
+iteration 49: y -4.66 plies, converted 190 / 197 of 221, build 1.7 s, games 40 s, theta 93.31,140.15,11.38,10.96,6.08
+iteration 50: y +3.47 plies, converted 194 / 189 of 221, build 1.7 s, games 40 s, theta 91.15,142.30,11.11,10.70,6.35
+iteration 51: y +2.14 plies, converted 193 / 190 of 221, build 1.7 s, games 42 s, theta 89.83,143.63,11.28,10.53,6.51
+iteration 52: y +1.27 plies, converted 194 / 193 of 221, build 2.2 s, games 43 s, theta 89.05,144.41,11.38,10.63,6.42
+iteration 53: y +0.25 plies, converted 196 / 193 of 221, build 1.8 s, games 44 s, theta 89.20,144.25,11.36,10.61,6.40
+iteration 54: y +2.81 plies, converted 198 / 194 of 221, build 1.8 s, games 42 s, theta 90.91,142.55,11.15,10.82,6.61
+iteration 55: y -0.30 plies, converted 194 / 195 of 221, build 2.1 s, games 44 s, theta 90.73,142.37,11.12,10.80,6.59
+iteration 56: y +3.97 plies, converted 199 / 194 of 221, build 1.9 s, games 41 s, theta 88.35,144.74,11.42,10.50,6.88
+iteration 57: y -0.04 plies, converted 194 / 195 of 221, build 1.9 s, games 42 s, theta 88.38,144.72,11.42,10.50,6.89
+iteration 58: y -3.19 plies, converted 193 / 197 of 221, build 1.8 s, games 43 s, theta 86.50,142.84,11.65,10.74,6.65
+iteration 59: y +3.19 plies, converted 197 / 194 of 221, build 1.8 s, games 42 s, theta 88.36,144.71,11.88,10.51,6.42
+iteration 60: y +0.78 plies, converted 197 / 195 of 221, build 1.8 s, games 40 s, theta 87.91,145.16,11.94,10.45,6.48
+iteration 61: y +0.91 plies, converted 194 / 193 of 221, build 1.8 s, games 45 s, theta 88.43,145.69,11.88,10.51,6.54
+iteration 62: y -0.90 plies, converted 192 / 193 of 221, build 2.2 s, games 46 s, theta 87.91,145.17,11.81,10.58,6.48
+iteration 63: y +0.63 plies, converted 195 / 194 of 221, build 2.0 s, games 45 s, theta 88.28,145.53,11.86,10.53,6.43
+iteration 64: y +1.23 plies, converted 194 / 194 of 221, build 2.8 s, games 46 s, theta 87.58,146.23,11.94,10.62,6.34
+iteration 65: y -0.19 plies, converted 195 / 195 of 221, build 2.8 s, games 43 s, theta 87.69,146.33,11.96,10.61,6.33
+iteration 66: y +1.52 plies, converted 194 / 192 of 221, build 2.2 s, games 44 s, theta 88.54,145.48,11.85,10.71,6.22
+iteration 67: y +2.03 plies, converted 194 / 191 of 221, build 2.2 s, games 44 s, theta 87.41,144.35,11.99,10.57,6.08
+iteration 68: y +7.57 plies, converted 198 / 189 of 221, build 1.8 s, games 44 s, theta 83.21,148.55,12.52,11.10,5.56
+iteration 69: y -2.16 plies, converted 194 / 196 of 221, build 1.8 s, games 43 s, theta 84.40,149.74,12.37,10.95,5.71
+iteration 70: y -0.06 plies, converted 193 / 194 of 221, build 1.9 s, games 42 s, theta 84.36,149.71,12.37,10.95,5.71
+iteration 71: y -1.61 plies, converted 190 / 192 of 221, build 1.9 s, games 43 s, theta 83.48,148.83,12.48,11.06,5.60
+iteration 72: y +5.68 plies, converted 199 / 191 of 221, build 2.0 s, games 42 s, theta 86.57,145.74,12.87,11.45,5.99
+iteration 73: y -0.58 plies, converted 198 / 199 of 221, build 2.0 s, games 42 s, theta 86.26,145.42,12.91,11.49,5.95
+iteration 74: y +0.35 plies, converted 195 / 195 of 221, build 0.1 s, games 42 s, theta 86.44,145.61,12.88,11.47,5.97
+iteration 75: y +2.20 plies, converted 194 / 190 of 221, build 2.0 s, games 42 s, theta 85.26,144.43,13.03,11.32,6.12
+iteration 76: y +1.34 plies, converted 192 / 189 of 221, build 1.7 s, games 42 s, theta 84.55,143.72,13.12,11.23,6.21
+iteration 77: y +2.13 plies, converted 204 / 200 of 221, build 1.8 s, games 39 s, theta 83.43,144.84,12.98,11.37,6.35
+iteration 78: y +1.24 plies, converted 194 / 193 of 221, build 1.7 s, games 41 s, theta 82.78,144.19,12.90,11.45,6.43
+iteration 79: y -0.35 plies, converted 196 / 195 of 221, build 1.7 s, games 39 s, theta 82.96,144.38,12.92,11.47,6.40
+iteration 80: y -3.18 plies, converted 187 / 192 of 221, build 1.7 s, games 41 s, theta 84.62,142.72,12.71,11.27,6.20
+iteration 81: y -1.68 plies, converted 192 / 195 of 221, build 1.7 s, games 40 s, theta 83.74,141.85,12.82,11.16,6.09
+iteration 82: y +5.56 plies, converted 195 / 188 of 221, build 1.7 s, games 41 s, theta 86.61,144.72,13.18,10.80,5.73
+iteration 83: y +3.30 plies, converted 201 / 196 of 221, build 1.7 s, games 38 s, theta 88.30,146.41,12.97,11.01,5.52
+iteration 84: y +0.27 plies, converted 195 / 197 of 221, build 1.7 s, games 40 s, theta 88.44,146.27,12.99,11.03,5.50
+iteration 85: y -0.84 plies, converted 198 / 198 of 221, build 1.7 s, games 38 s, theta 88.02,146.70,13.04,10.97,5.45
+iteration 86: y +1.54 plies, converted 193 / 191 of 221, build 1.8 s, games 40 s, theta 88.79,147.48,13.14,10.88,5.55
+iteration 87: y +1.13 plies, converted 197 / 194 of 221, build 1.8 s, games 41 s, theta 88.22,146.91,13.07,10.81,5.47
+iteration 88: y +2.21 plies, converted 197 / 193 of 221, build 1.8 s, games 39 s, theta 89.33,148.01,12.93,10.94,5.61
+iteration 89: y -2.46 plies, converted 198 / 202 of 221, build 1.7 s, games 37 s, theta 90.56,146.79,13.08,11.10,5.46
+iteration 90: y +3.65 plies, converted 196 / 192 of 221, build 1.7 s, games 40 s, theta 88.74,148.60,13.31,11.32,5.23
+iteration 91: y +1.48 plies, converted 204 / 201 of 221, build 1.8 s, games 37 s, theta 89.47,147.87,13.40,11.23,5.32
+iteration 92: y -4.05 plies, converted 195 / 200 of 221, build 1.8 s, games 38 s, theta 87.48,145.88,13.65,11.48,5.57
+iteration 93: y +0.89 plies, converted 197 / 195 of 221, build 1.8 s, games 41 s, theta 87.92,145.44,13.59,11.43,5.52
+iteration 94: y -4.38 plies, converted 189 / 194 of 221, build 1.9 s, games 41 s, theta 85.78,147.58,13.86,11.69,5.25
+iteration 95: y -2.98 plies, converted 196 / 199 of 221, build 1.7 s, games 39 s, theta 87.23,149.02,14.04,11.51,5.43
+iteration 96: y +3.13 plies, converted 195 / 191 of 221, build 1.8 s, games 41 s, theta 85.72,150.54,13.85,11.32,5.62
+iteration 97: y +3.57 plies, converted 196 / 191 of 221, build 1.8 s, games 41 s, theta 87.43,148.82,14.07,11.54,5.84
+iteration 98: y -0.61 plies, converted 195 / 197 of 221, build 1.7 s, games 40 s, theta 87.72,148.53,14.10,11.50,5.80
+iteration 99: y -2.50 plies, converted 195 / 199 of 221, build 1.7 s, games 41 s, theta 88.92,147.34,13.95,11.35,5.65
+iteration 100: y +6.38 plies, converted 201 / 192 of 221, build 1.8 s, games 41 s, theta 91.95,144.30,14.33,11.73,5.27
+iteration 101: y -0.23 plies, converted 191 / 191 of 221, build 1.7 s, games 40 s, theta 92.06,144.20,14.35,11.75,5.28
+iteration 102: y -2.96 plies, converted 191 / 194 of 221, build 1.7 s, games 41 s, theta 90.66,142.80,14.52,11.57,5.46
+iteration 103: y +2.13 plies, converted 196 / 193 of 221, build 1.7 s, games 40 s, theta 91.66,141.80,14.65,11.45,5.58
+iteration 104: y +1.97 plies, converted 192 / 189 of 221, build 1.7 s, games 40 s, theta 92.58,140.88,14.53,11.56,5.70
+iteration 105: y -1.73 plies, converted 197 / 199 of 221, build 1.7 s, games 39 s, theta 93.39,141.69,14.63,11.66,5.80
+iteration 106: y -3.97 plies, converted 189 / 193 of 221, build 1.7 s, games 41 s, theta 91.54,143.53,14.86,11.89,6.03
+iteration 107: y +0.52 plies, converted 198 / 198 of 221, build 1.7 s, games 38 s, theta 91.78,143.77,14.89,11.92,6.06
+iteration 108: y -0.78 plies, converted 193 / 192 of 221, build 1.7 s, games 41 s, theta 92.14,144.13,14.94,11.97,6.11
+iteration 109: y +1.93 plies, converted 197 / 195 of 221, build 1.7 s, games 40 s, theta 91.26,145.01,14.83,12.08,5.99
+iteration 110: y -1.46 plies, converted 198 / 198 of 221, build 1.7 s, games 38 s, theta 91.92,145.68,14.91,12.16,6.08
+iteration 111: y -0.67 plies, converted 189 / 191 of 221, build 1.8 s, games 41 s, theta 91.62,145.37,14.87,12.20,6.04
+iteration 112: y +0.77 plies, converted 196 / 194 of 221, build 1.7 s, games 39 s, theta 91.97,145.02,14.83,12.16,6.00
+iteration 113: y +0.16 plies, converted 195 / 194 of 221, build 1.7 s, games 39 s, theta 92.04,144.95,14.84,12.15,5.99
+iteration 114: y -0.66 plies, converted 189 / 190 of 221, build 1.8 s, games 41 s, theta 91.74,145.25,14.80,12.11,6.02
+iteration 115: y -0.30 plies, converted 192 / 192 of 221, build 1.7 s, games 40 s, theta 91.61,145.39,14.82,12.09,6.04
+iteration 116: y +0.53 plies, converted 195 / 195 of 221, build 1.7 s, games 40 s, theta 91.37,145.62,14.85,12.06,6.01
+iteration 117: y +1.30 plies, converted 194 / 193 of 221, build 1.7 s, games 39 s, theta 91.95,146.20,14.77,12.14,6.08
+iteration 118: y +0.58 plies, converted 198 / 197 of 221, build 1.7 s, games 39 s, theta 92.21,146.46,14.74,12.10,6.05
+iteration 119: y -1.23 plies, converted 193 / 195 of 221, build 1.7 s, games 39 s, theta 92.75,145.92,14.67,12.17,5.98
+iteration 120: y -0.95 plies, converted 196 / 199 of 221, build 1.7 s, games 39 s, theta 92.33,145.50,14.62,12.22,6.04
+iteration 121: y -2.90 plies, converted 193 / 198 of 221, build 1.7 s, games 38 s, theta 91.06,144.23,14.46,12.38,6.20
+iteration 122: y +0.46 plies, converted 197 / 196 of 221, build 1.7 s, games 39 s, theta 90.86,144.43,14.44,12.36,6.22
+iteration 123: y -0.42 plies, converted 192 / 192 of 221, build 1.7 s, games 40 s, theta 91.04,144.61,14.46,12.34,6.24
+iteration 124: y -2.62 plies, converted 191 / 195 of 221, build 1.8 s, games 40 s, theta 92.18,143.47,14.60,12.19,6.10
+iteration 125: y -2.64 plies, converted 193 / 196 of 221, build 1.8 s, games 39 s, theta 93.32,142.33,14.74,12.34,5.96
+iteration 126: y +2.53 plies, converted 196 / 192 of 221, build 1.8 s, games 39 s, theta 94.41,141.24,14.88,12.20,5.82
+iteration 127: y +2.16 plies, converted 201 / 198 of 221, build 1.7 s, games 37 s, theta 95.34,142.17,15.00,12.08,5.94
+iteration 128: y -0.82 plies, converted 191 / 192 of 221, build 1.7 s, games 41 s, theta 95.69,141.82,15.04,12.04,5.98
+iteration 129: y +0.78 plies, converted 196 / 196 of 221, build 1.7 s, games 40 s, theta 95.35,142.15,15.00,12.08,5.94
+iteration 130: y +4.53 plies, converted 203 / 196 of 221, build 1.7 s, games 38 s, theta 97.28,144.08,14.76,11.84,5.70
+iteration 131: y +1.69 plies, converted 198 / 194 of 221, build 1.7 s, games 38 s, theta 96.57,143.36,14.85,11.93,5.79
+iteration 132: y -2.13 plies, converted 190 / 193 of 221, build 1.7 s, games 40 s, theta 95.67,144.26,14.74,12.04,5.68
+iteration 133: y -0.29 plies, converted 198 / 198 of 221, build 1.7 s, games 38 s, theta 95.54,144.14,14.72,12.06,5.69
+iteration 134: y -0.07 plies, converted 193 / 194 of 221, build 1.7 s, games 40 s, theta 95.51,144.11,14.72,12.06,5.70
+iteration 135: y -3.19 plies, converted 192 / 196 of 221, build 1.7 s, games 39 s, theta 96.85,145.44,14.89,12.23,5.86
+iteration 136: y +0.41 plies, converted 194 / 195 of 221, build 1.7 s, games 39 s, theta 97.02,145.61,14.91,12.25,5.88
+iteration 137: y +2.67 plies, converted 197 / 192 of 221, build 1.8 s, games 40 s, theta 98.12,144.51,14.77,12.39,5.75
+iteration 138: y +1.77 plies, converted 193 / 191 of 221, build 1.7 s, games 41 s, theta 97.39,145.24,14.86,12.48,5.84
+iteration 139: y +2.54 plies, converted 195 / 192 of 221, build 1.7 s, games 40 s, theta 96.34,146.29,15.00,12.61,5.97
+iteration 140: y +1.08 plies, converted 193 / 191 of 221, build 1.7 s, games 41 s, theta 95.90,145.84,15.05,12.55,6.02
+iteration 141: y -2.05 plies, converted 193 / 195 of 221, build 1.7 s, games 40 s, theta 96.74,146.68,15.16,12.45,6.13
+iteration 142: y +2.82 plies, converted 200 / 196 of 221, build 1.7 s, games 38 s, theta 95.59,145.53,15.01,12.59,6.27
+iteration 143: y -3.22 plies, converted 195 / 201 of 221, build 1.7 s, games 39 s, theta 94.27,146.84,14.85,12.43,6.44
+iteration 144: y +0.73 plies, converted 195 / 195 of 221, build 1.7 s, games 40 s, theta 94.57,147.14,14.81,12.47,6.47
+iteration 145: y -2.41 plies, converted 192 / 195 of 221, build 1.7 s, games 39 s, theta 93.60,148.12,14.93,12.35,6.60
+iteration 146: y -3.37 plies, converted 195 / 200 of 221, build 1.7 s, games 39 s, theta 94.95,146.76,14.76,12.52,6.43
+iteration 147: y -4.77 plies, converted 195 / 201 of 221, build 1.8 s, games 38 s, theta 96.87,148.68,15.00,12.76,6.19
+iteration 148: y -0.98 plies, converted 197 / 199 of 221, build 1.7 s, games 38 s, theta 97.27,148.28,14.95,12.71,6.14
+iteration 149: y -2.19 plies, converted 193 / 194 of 221, build 1.7 s, games 40 s, theta 96.39,149.16,14.84,12.82,6.25
+run: 150 iterations in 6460 s this session; the candidate 96,149,0|15,13,6
+test: head 0,0,0|0,0,0, the candidate 96,149,0|15,13,6 (b10455a6c5d8), bench 4586026
+select: 18786043 root rows read, 12000 held-out games left out
+  KRvK   training games with a root row in it  7515; not won at a zeroed clock 3074; a position already kept  320; won and distinct  4121; taken  200
+  KQvK   training games with a root row in it  3869; not won at a zeroed clock    0; a position already kept  344; won and distinct  3525; taken  200
+  KRBvK  training games with a root row in it  1375; not won at a zeroed clock   17; a position already kept    4; won and distinct  1354; taken  200
+  KRNvK  training games with a root row in it  1175; not won at a zeroed clock   18; a position already kept    1; won and distinct  1156; taken  200
+  KBNvK  training games with a root row in it   407; not won at a zeroed clock   22; a position already kept    1; won and distinct   384; taken  184
+  KBNvK  SHORT: 184 of the 200 asked
+  KBBvK  training games with a root row in it   130; not won at a zeroed clock    4; a position already kept    0; won and distinct   126; taken    0
+starts written to /home/max/ws/chesso-s124spsa/.tuning/s124/p1/test/fresh.tsv.tmp, sha256 30ff42c5c2f8cbdd6bb8b509bffe3112bb703fc823fbd45ccbe70dedcb3aed72
+S124-P0-SELECT-OK
+selected in 50 s
+fresh: 984 starts, KRvK 200, KQvK 200, KRBvK 200, KRNvK 200, KBNvK 184, KBBvK 0; disjoint from P0's 1126 by id and by position
+played head_fresh in 144 s
+P0 /home/max/ws/chesso-s124spsa/.tuning/s124/p1/test/head_fresh.tsv: class, starts, converted (mated within 100 plies), rate; plies to mate over the converted, mean / median / max; the other ends
+  KRvK   starts  200 converted  157 (0.785)  plies 44.2 / 34 / 100  others fifty 41, material 1, threefold 1
+  KQvK   starts  200 converted  200 (1.000)  plies 24.7 / 22 / 58  others none
+  KRBvK  starts  200 converted  191 (0.955)  plies 40.9 / 34 / 98  others fifty 8, material 1
+  KRNvK  starts  200 converted  189 (0.945)  plies 41.2 / 36 / 100  others bound 6, fifty 4, stalemate 1
+  KBNvK  starts  184 converted   22 (0.120)  plies 50.9 / 42 / 100  others fifty 155, material 1, stalemate 6
+  all    starts  984 converted  759 (0.771)  plies 37.7 / 31 / 100  others bound 6, fifty 208, material 3, stalemate 7, threefold 1
+P0-FAILS-TO-CONVERT 225 of 984
+played cand_fresh in 85 s
+P0 /home/max/ws/chesso-s124spsa/.tuning/s124/p1/test/cand_fresh.tsv: class, starts, converted (mated within 100 plies), rate; plies to mate over the converted, mean / median / max; the other ends
+  KRvK   starts  200 converted  199 (0.995)  plies 26.2 / 26 / 48  others material 1
+  KQvK   starts  200 converted  200 (1.000)  plies 14.4 / 14 / 26  others none
+  KRBvK  starts  200 converted  200 (1.000)  plies 19.4 / 19 / 32  others none
+  KRNvK  starts  200 converted  200 (1.000)  plies 20.1 / 20 / 46  others none
+  KBNvK  starts  184 converted   63 (0.342)  plies 41.5 / 40 / 94  others fifty 107, stalemate 11, threefold 3
+  all    starts  984 converted  862 (0.876)  plies 21.6 / 20 / 94  others fifty 107, material 1, stalemate 11, threefold 3
+P0-FAILS-TO-CONVERT 122 of 984
+played head_kbb in 23 s
+P0 /home/max/ws/chesso-s124spsa/.tuning/s124/p1/test/head_kbb.tsv: class, starts, converted (mated within 100 plies), rate; plies to mate over the converted, mean / median / max; the other ends
+  KBBvK  starts  126 converted  102 (0.810)  plies 52.9 / 50 / 100  others fifty 24
+  all    starts  126 converted  102 (0.810)  plies 52.9 / 50 / 100  others fifty 24
+P0-FAILS-TO-CONVERT 24 of 126
+played cand_kbb in 12 s
+P0 /home/max/ws/chesso-s124spsa/.tuning/s124/p1/test/cand_kbb.tsv: class, starts, converted (mated within 100 plies), rate; plies to mate over the converted, mean / median / max; the other ends
+  KBBvK  starts  126 converted  126 (1.000)  plies 34.3 / 34 / 70  others none
+  all    starts  126 converted  126 (1.000)  plies 34.3 / 34 / 70  others none
+P0-CONVERTS-EVERY-START
+exact McNemar (DEC-358): 984 fresh starts; head alone converts 10, the candidate alone 113; one-sided p 1.545e-23 that it converts more (kept below 0.05)
+  class  set       starts  head  cand  head-alone  cand-alone  p(fewer)
+  KRvK   fresh        200   157   199           0          42  1
+  KQvK   fresh        200   200   200           0           0  1
+  KRBvK  fresh        200   191   200           0           9  1
+  KRNvK  fresh        200   189   200           0          11  1
+  KBNvK  fresh        184    22    63          10          51  1
+  KBBvK  in-sample    126   102   126           0          24  1
+P1 kept
+beside, deciding nothing: the rule DEC-358 replaced, S124_p0.py mcnemar
+  mcnemar: 984 starts; head alone converts 10, the candidate alone 113; z +9.287 one-sided
+    KRvK   starts  200 head  157 candidate  199
+    KQvK   starts  200 head  200 candidate  200
+    KRBvK  starts  200 head  191 candidate  200
+    KRNvK  starts  200 head  189 candidate  200
+    KBNvK  starts  184 head   22 candidate   63
+    KBBvK  starts    0 head    0 candidate    0
+  P1 kept
+S124-P1-KEPT
+S124-P1-DONE

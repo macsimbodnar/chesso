@@ -1,0 +1,5 @@
+# S124 P1's candidate: theta after 150 iterations, clamped and rounded
+theta 96.393757,149.156118,14.844454,12.815037,6.246227
+vector 96,149,0|15,13,6
+constexpr int mopup_mg[MOPUP_FEATURE_COUNT] = {96, 149, 0};
+constexpr int mopup_eg[MOPUP_FEATURE_COUNT] = {15, 13, 6};
