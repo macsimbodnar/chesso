@@ -58,6 +58,11 @@ a red the two errors had hidden: `test_tuner_gradient`'s factor case, 4.70e-6 ov
 implements its own way. **S341 is filed in `plan_current/`**, filler, and starts after S124's verdict. The MacBook's
 `ctest -L fast` reads that red until then.
 
+**S339 is done (`plan_done/`), 01:45.** A ctest row that did not run is no kill and the baseline's are named; two
+crashes on a malformed mutant are refusals by name. Each red seen first, 38 cases, gate 61 of 61 in both builds, one
+fast check with nothing real. **S342 is filed**, filler, last before the parked steps: four further crashes on
+malformed entries, none reachable from the list as it stands.
+
 **Waiting, not on the owner: a foreign load.** Another session's `go test ./internal/watch/ -run TestSoak` (a 2 h
 soak, started 00:38, heavy disk I/O) is running. No A/A and no SPRT starts while it does (MACHINE; the script's abort
 rule). A watcher waits for its exit.
@@ -70,7 +75,7 @@ rule). A watcher waits for its exit.
    games, watcher ceiling 40 h. Nothing compiles while it plays.
 3. S341 (which completes S340), then on H1 the reds' repair and the owner's ruling on the two stops; on H0 the bisection (A mop-up, B F1,
    C F2).
-4. S339, filler. S102's landing after the owner's ruling on B1, then its screen (phase 2).
+4. S102's landing after the owner's ruling on B1, then its screen (phase 2).
 
 ## 2026-11-11 22:50: P1 kept mop-up; S338 done; S124's candidate was being built
 

@@ -2671,6 +2671,28 @@ them unmeasured cost both (DEC-165). The score is killed over total less
 equivalent, stillborn and unmeasured. The run exits 0 only when every verdict
 equals its `expected`, which is what a completing step reads.
 
+**A test that did not run is no kill (S339).** ctest lists three rows in the
+shape of a failure for a test that ran nothing: `(Skipped)`, a test that exited
+with its `SKIP_RETURN_CODE`, and `(Disabled)`, both under "The following tests
+did not run:" with ctest exiting 0, and `(Not Run)`, an executable ctest could
+not find, under "FAILED" with ctest exiting 8 (ctest 3.28.3, read on a scratch
+project). None is a kill. Such a row is left out of the failing tests, out of
+what caught the mutant and out of the TSV's `failing_tests`, and a run whose
+only listed row is `(Not Run)` is `unmeasured`, as a ctest that failed to run
+is. Before S339 the tool read each of them as an assertion: on a fixture where
+one test skips, a mutant that changed nothing scored `killed`.
+`test_bare_fen_relay` skips that way when no python imports python-chess, so on
+such a machine every mutant would have read killed by it. A baseline with a
+test that did not run says so on the line after its green one, naming it; the
+driver's gate prints this for its skipped test:
+
+```
+baseline did not run: test_skips (Skipped) -- a test that did not run kills no mutant
+```
+
+The count on the green line is ctest's own: it includes a skipped test and
+leaves out a disabled one.
+
 **`expected="equivalent"` is a declaration, never an inference.** Equivalent
 mutants are undecidable in general, so a person argues it in the mutant file and
 the tool believes them. A still bench never argues equivalence on its own: 12 of
@@ -2712,10 +2734,12 @@ Per-mutant build and ctest logs, and a `results.tsv` of the whole table, land in
 `tests/test_mutation_check.py` is the tool's own gate, in the fast suite: a
 throwaway git repository, a four-line `src/x.cpp` beside a committed `tests/`,
 `adocs/`, root `CMakeLists.txt` and `.gitignore` to dirty, and `cmake`, `ctest`
-and the engine as stubs on PATH. Thirty-three cases, its class
+and the engine as stubs on PATH. Thirty-eight cases, its class
 `MutationCheckTest` — 1.6 s when S196 wrote the first twenty-four on an idle
 machine, 6.9 s at thirty-one on 2026-09-22 with a match on every core, 8.6 s at
-thirty-two and 5.5 s at thirty-three on 2026-11-11 with every core held — and it
+thirty-two and 5.5 s at thirty-three on 2026-11-11 with every core held, 12.7 s
+alone at thirty-eight on 2026-11-12 at a load of 9.5 on 12 threads and 17 to
+18 s inside the gate's `ctest -j12` — and it
 is what catches an anchor counted wrong, a revert that leaves a mutant behind, a
 verdict on the wrong branch or a missing marker. Each was observed
 red under a cut to the guard it names before it was kept -- the tool held to
@@ -2734,7 +2758,12 @@ started; the status narrowed back to `src/`, which measured a tree whose
 count read from the first summary line in the log instead of the last, which
 alone broke three cases. S338's two went red on a plant each: the run's
 `-LE mutant_list` absent, and the anchors entry's labels cut to `mutant_list`
-alone.
+alone. S339's five went red on the tool as it stood: a quiet mutant over a
+baseline with a skipped or a disabled test read `killed`, and so did one whose
+only listed row was `(Not Run)`; a kill beside a skipped test listed that test
+among what caught it; and five malformed pairs and an own-`m` entry with no
+pairs each ended in a traceback, the pair with a number for its replacement
+only after the baseline had run.
 
 **`test_mutant_anchors` holds the real list to the tree, in the fast suite
 (S338).** The file's second class, `MutantAnchorsTest`, reads `tools/mutants/`
@@ -2745,7 +2774,7 @@ anchor; it builds nothing and applies nothing. Four cases, 0.15 to 0.16 s
 in ctest with every core held. It is red when a mutant file does not load or
 defines none, the directory holds no mutant file, an id repeats, an `expected`
 is neither verdict, a file is outside `src/` or missing from it, a mutant has no
-pair or a pair that changes nothing,
+pair, a pair that is not two strings or a pair that changes nothing,
 and when an anchor matches no line or more than one. Each of the validator's
 reds names the mutant and its file, and an anchor's its count and text too:
 
@@ -2757,7 +2786,14 @@ M22_castling_rights_on_capture in /home/max/ws/chesso/tools/mutants/board.py: pa
 **The fix is a re-anchor, never a deletion**: the pair takes the text the tree
 now holds at that site, and the mutant keeps what it breaks. A mutant file that
 does not compile or raises while loading is a Python traceback ending at its
-own line. S102 is why it exists:
+own line. Two malformed shapes are refusals by name instead, since S339, where
+each was a traceback naming neither mutant nor file: a pair that is not an
+(old, new) pair of strings -- a bare string, one or three strings, a number for
+either side -- reads `<id> in <file>: pair <n> is not an (old, new) pair of
+strings: <the pair>`, and in a file that brings its own `m`, as the two
+evidence copies under `adocs/data/` do, an entry that gives no pairs reads
+``<id> in <file>: an entry from the file's own `m` gives no pairs``. S102 is why
+it exists:
 giving `outside_pawn_terms` a sixth argument left `PT08`'s anchor in
 `tools/mutants/S118_pawn_cache.py` matching nothing, the tool would have
 refused every run over the directory, and both gates stayed green, because
@@ -2769,7 +2805,11 @@ still the mutation run's to find** -- a test that stopped biting, or an anchor
 that still matches once at a site whose meaning moved. So is a mutant that no
 longer compiles, and one whose first pair makes its second ambiguous, which
 `apply_mutant` refuses at run time (`P01` in the driver's gate). It reads
-`tools/mutants/` only, never the two evidence copies under `adocs/data/`.
+`tools/mutants/` only, never the two evidence copies under `adocs/data/`. And
+**the loader reads only the `*.py` files directly in the directory it is
+given**: a mutant file saved under another name, or one directory down, is not
+read and nothing says so, in a mutation run or here, because this test's
+precondition filters the directory the same way. That stays as it is (S339).
 
 **A mutation run leaves it out.** A mutant applied removes its own anchor, so
 inside a run this test is red -- under 261 of the 264 mutants the day it landed

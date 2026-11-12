@@ -131,6 +131,13 @@ PLAIN_FAIL_RE = re.compile(r"^\s*FAIL:\s*(.*)$")
 CTEST_SUMMARY_RE = re.compile(r"(\d+)% tests passed, (\d+) tests failed out of (\d+)")
 CTEST_FAILED_RE = re.compile(r"^\s*\d+ - (\S+) \((Failed|Timeout|[^)]*)\)\s*$", re.M)
 CTEST_START_RE = re.compile(r"^\s*Start\s+\d+:\s+(\S+)\s*$")
+# What CTEST_FAILED_RE also matches for a test that never ran: one exiting with
+# its SKIP_RETURN_CODE and one marked DISABLED, both listed under "The
+# following tests did not run:", and one whose executable ctest cannot find,
+# listed under FAILED. None ran a line of the engine, so none is a detection;
+# before S339 each was scored as one, and test_bare_fen_relay skips on any
+# machine where no python imports python-chess.
+CTEST_DID_NOT_RUN = ("Skipped", "Disabled", "Not Run")
 
 BENCH_TOTAL_RE = re.compile(r"^(\d+) nodes (\d+) nps$", re.M)
 BENCH_BESTMOVE_RE = re.compile(r"^bestmove (\S+)$", re.M)
@@ -169,6 +176,10 @@ def load_mutants(paths):
     here, so the files carry no driver of their own. A file that defines its own
     `m` and appends to `M` -- the two evidence copies under adocs/data/ do, and
     they are never edited -- is read through that list instead.
+
+    A directory is read for its `*.py` files alone and is not recursed into: a
+    mutant file under any other name, or one directory down, is not read, and
+    nothing says so.
     """
     files = []
     for path in paths:
@@ -207,6 +218,11 @@ def load_mutants(paths):
 def normalise(entry, path):
     """An entry from a file that brought its own `m`, given this tool's fields."""
     out = dict(entry)
+    if out.get("pairs") is None:
+        # The one field this tool cannot default; it was a KeyError here that
+        # named no file.
+        raise Refused(f"{out.get('id', '(no id)')} in {path}: an entry from "
+                      "the file's own `m` gives no pairs")
     out.setdefault("expected", "killed")
     out.setdefault("origin", None)
     out["source"] = path
@@ -254,7 +270,16 @@ def validate(mutants, worktree):
 
         if not mut["pairs"]:
             problems.append(f"{where}: no (old, new) pair")
-        for index, (old, new) in enumerate(mut["pairs"]):
+        for index, pair in enumerate(mut["pairs"]):
+            # Checked before it is unpacked or counted: a bare string or a
+            # tuple of three died on a ValueError here, naming no mutant, and
+            # a number for the replacement passed and died while being applied.
+            if not (isinstance(pair, (tuple, list)) and len(pair) == 2
+                    and all(isinstance(side, str) for side in pair)):
+                problems.append(f"{where}: pair {index} is not an (old, new) "
+                                f"pair of strings: {pair!r}")
+                continue
+            old, new = pair
             if old == new:
                 problems.append(f"{where}: pair {index} replaces its anchor "
                                 "with itself")
@@ -500,18 +525,20 @@ def ctest(build_dir, label, log_path):
     failed = summary.group(2) if summary else "?"
     total = summary.group(3) if summary else "?"
     rows = CTEST_FAILED_RE.findall(output)
-    # `asserted` is the detection: a row that failed for any reason other than
-    # its ceiling. `inconclusive` is the run saying nothing -- this tool's own
-    # ceiling on the whole of ctest (code None), or a non-zero exit with no
-    # failing row parsed, which is ctest failing to run rather than a test
-    # failing. A `(Timeout)` row alone lands here; beside an `asserted` one it
-    # does not, and DEC-165 is why.
-    asserted = any(how != "Timeout" for _, how in rows)
+    ran = [(name, how) for name, how in rows if how not in CTEST_DID_NOT_RUN]
+    # `asserted` is the detection: a test that ran and failed for any reason
+    # other than its ceiling. `inconclusive` is the run saying nothing -- this
+    # tool's own ceiling on the whole of ctest (code None), or a non-zero exit
+    # with no failing row parsed, which is ctest failing to run rather than a
+    # test failing. A `(Timeout)` row alone lands here, and so does a `(Not
+    # Run)` one; beside an `asserted` one neither does, and DEC-165 is why.
+    asserted = any(how != "Timeout" for _, how in ran)
     inconclusive = code is None or (code != 0 and not asserted)
-    return dict(code=code, failed=failed, total=total,
-                tests=[(name, how) for name, how in rows],
+    return dict(code=code, failed=failed, total=total, tests=ran,
+                skipped=[(name, how) for name, how in rows
+                         if how in CTEST_DID_NOT_RUN],
                 asserted=asserted, inconclusive=inconclusive,
-                kills=extract_kills(output, [name for name, _ in rows]))
+                kills=extract_kills(output, [name for name, _ in ran]))
 
 
 def extract_kills(output, failing_tests):
@@ -761,11 +788,20 @@ def main(argv=None):
     if baseline["code"] != 0:
         # Every later row would be uninterpretable: a test already red cannot
         # say whether it saw the mutant.
+        # Every row ctest listed, a `(Not Run)` one included: it is counted
+        # among the failed and is the only row when an executable is missing.
+        listed = baseline["tests"] + baseline["skipped"]
         raise Refused("the unmutated worktree is red: "
                       f"{baseline['failed']} of {baseline['total']} failed "
-                      f"({', '.join(name for name, _ in baseline['tests'])})")
+                      f"({', '.join(name for name, _ in listed)})")
     print(f"baseline green, {baseline['total']} tests, "
           f"bench {baseline_display} via {oracle}", flush=True)
+    if baseline["skipped"]:
+        # The count above is ctest's and includes a skipped test, which judges
+        # no mutant in this run: a reading taken here is over a smaller suite.
+        print("baseline did not run: "
+              + ", ".join(f"{name} ({how})" for name, how in baseline["skipped"])
+              + " -- a test that did not run kills no mutant", flush=True)
 
     rows = []
     for mut in chosen:

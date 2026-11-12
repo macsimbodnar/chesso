@@ -23,7 +23,9 @@ no summary line, exit 0; `empty_summary` is that emptiness in its other shape,
 a summary line counting to zero. Otherwise it reads the worktree's src/x.cpp
 and goes red when it holds the marker MUTANT_SEEN, times out on TIMEOUT_ONLY,
 does both at once on TIMEOUT_PLUS_FAIL, and refuses to run at all on
-CTEST_BROKEN; the engine's bench total moves when it holds BENCH_MOVES and it
+CTEST_BROKEN; it lists a test that never ran -- skipped on SKIP_ONE, disabled on
+DISABLE_ONE, its executable missing on NOT_RUN -- and SKIP_ONE beside
+MUTANT_SEEN is a real red with a skip next to it (S339); the engine's bench total moves when it holds BENCH_MOVES and it
 prints no bench line at all on BENCH_BROKEN; `cmake` fails with an `error:` on
 WILL_NOT_COMPILE, which is the -Werror class the two `(void)` mutants exist
 for. So the four squares of the verdict table -- suite red, suite green
@@ -138,6 +140,86 @@ fi
 if grep -q CTEST_BROKEN "$MUT_SRC"; then
   echo "No tests were found!!!"
   exit 1
+fi
+# S339: the rows ctest lists for a test that never ran, in the shapes ctest
+# 3.28.3 printed for them on a scratch project on 2026-11-12. A test exiting
+# with its SKIP_RETURN_CODE and one marked DISABLED go under "did not run" and
+# leave the exit at 0; one whose executable is missing goes under FAILED and
+# makes it 8. SKIP_ONE beside MUTANT_SEEN is a real failure with a skip next to
+# it, the two blocks in the order ctest prints them.
+if grep -q SKIP_ONE "$MUT_SRC" && grep -q MUTANT_SEEN "$MUT_SRC"; then
+  cat <<'EOF'
+Test project /sandbox
+    Start 1: test_x
+1/2 Test #1: test_x ...........................***Failed    0.01 sec
+===============================================================================
+/sandbox/tests/test_x.cpp:10:
+TEST CASE:  a fabricated case the stub reports
+
+/sandbox/tests/test_x.cpp:12: ERROR: CHECK( guard_one_holds() ) is NOT correct!
+  values: CHECK( false )
+
+    Start 2: test_skips
+2/2 Test #2: test_skips .......................***Skipped   0.00 sec
+
+50% tests passed, 1 tests failed out of 2
+
+The following tests did not run:
+	  2 - test_skips (Skipped)
+
+The following tests FAILED:
+	  1 - test_x (Failed)
+Errors while running CTest
+EOF
+  exit 8
+fi
+if grep -q SKIP_ONE "$MUT_SRC"; then
+  cat <<'EOF'
+Test project /sandbox
+    Start 1: test_x
+1/2 Test #1: test_x ...........................   Passed    0.01 sec
+    Start 2: test_skips
+2/2 Test #2: test_skips .......................***Skipped   0.00 sec
+
+100% tests passed, 0 tests failed out of 2
+
+The following tests did not run:
+	  2 - test_skips (Skipped)
+EOF
+  exit 0
+fi
+if grep -q DISABLE_ONE "$MUT_SRC"; then
+  cat <<'EOF'
+Test project /sandbox
+    Start 1: test_x
+1/2 Test #1: test_x ...........................   Passed    0.01 sec
+    Start 2: test_off
+2/2 Test #2: test_off .........................***Not Run (Disabled)   0.00 sec
+
+100% tests passed, 0 tests failed out of 1
+
+The following tests did not run:
+	  2 - test_off (Disabled)
+EOF
+  exit 0
+fi
+if grep -q NOT_RUN "$MUT_SRC"; then
+  cat <<'EOF'
+Test project /sandbox
+    Start 1: test_x
+1/2 Test #1: test_x ...........................   Passed    0.01 sec
+    Start 2: test_gone
+Could not find executable /sandbox/build/tests/test_gone
+Unable to find executable: /sandbox/build/tests/test_gone
+2/2 Test #2: test_gone ........................***Not Run   0.00 sec
+
+50% tests passed, 1 tests failed out of 2
+
+The following tests FAILED:
+	  2 - test_gone (Not Run)
+Errors while running CTest
+EOF
+  exit 8
 fi
 if grep -q MUTANT_SEEN "$MUT_SRC"; then
   cat <<'EOF'
@@ -288,6 +370,15 @@ class Sandbox:
             with open(os.path.join(self.worktree, rel), "a") as handle:
                 handle.write("an edit the fixture's sha does not carry\n")
 
+    def commit_marker(self, marker, message):
+        """A stub marker committed into the worktree's own source, so the
+        unmutated tree -- the baseline, and every mutant's run -- carries it."""
+        with open(self.src, "a") as handle:
+            handle.write(f"// {marker} planted before the run\n")
+        self.git(self.worktree, "-c", "user.email=t@example.invalid",
+                 "-c", "user.name=test", "commit", "--quiet", "-a",
+                 "-m", message)
+
     def close(self):
         shutil.rmtree(self.root, ignore_errors=True)
 
@@ -376,6 +467,42 @@ m("X01_bad_expected", "src/x.cpp", "sandbox", "a verdict nobody can hold it to",
 
 DUPLICATE = KILLED + KILLED
 
+NOT_RUN = """
+m("N01_not_run", "src/x.cpp", "sandbox", "ctest cannot find a test's executable",
+  ("int guard_two = 2;", "int guard_two = 2;  // NOT_RUN"))
+"""
+
+# S339: a pair that is not an (old, new) pair of strings, as the text that
+# stands for it in an m() call. Before S339 the first three died on a
+# ValueError at validate's unpacking, the fourth on a TypeError at its count,
+# and the fifth passed validate and died while being applied.
+MALFORMED_PAIRS = {
+    "a bare string": '"int guard_one = 1;"',
+    "one string": '("int guard_one = 1;",)',
+    "three strings": '("int guard_one = 1;", "int guard_one = 0;", "x")',
+    "a number for the anchor": '(1, "int guard_one = 0;")',
+    "a number for the replacement": '("int guard_one = 1;", 0)',
+}
+MALFORMED = """
+m("Q01_malformed_pair", "src/x.cpp", "sandbox", "a pair that is not a pair",
+  {pair})
+"""
+
+# The form of the two evidence copies under adocs/data/: the file brings its
+# own `m` and appends to `M`, and the loader reads that list. {pairs} is the
+# field the entry gives, or nothing.
+OWN_M = """
+M = []
+
+
+def m(mid, file, klass, note, *pairs):
+    M.append(dict(id=mid, file=file, klass=klass, note=note{pairs}))
+
+
+m("O02_own_m", "src/x.cpp", "sandbox", "an entry from the file's own m",
+  ("int guard_one = 1;", "int guard_one = 1;  // MUTANT_SEEN"))
+"""
+
 
 def last_line(text):
     lines = [line for line in text.splitlines() if line.strip()]
@@ -431,6 +558,44 @@ class MutationCheckTest(unittest.TestCase):
         proc = self.box.run(self.box.mutant_file(BAD_EXPECTED))
         self.assertNotEqual(proc.returncode, 0)
         self.assertIn("not 'killed' or 'equivalent'", proc.stdout)
+        self.assertEqual(last_line(proc.stdout), "MUTATION-RUN-FAILED")
+
+    def test_a_pair_that_is_not_two_strings_refused_by_name(self):
+        """S338's plant p14: a bare string where a pair goes died on a
+        ValueError at validate's unpacking, a traceback naming neither the
+        mutant nor its file. Each shape is refused before the baseline, by the
+        line every refusal of validate's starts with."""
+        for shape, pair in MALFORMED_PAIRS.items():
+            with self.subTest(shape=shape):
+                path = self.box.mutant_file(MALFORMED.replace("{pair}", pair))
+                proc = self.box.run(path)
+                self.assertNotEqual(proc.returncode, 0)
+                self.assertIn(f"Q01_malformed_pair in {path}: pair 0 is not an "
+                              "(old, new) pair of strings", proc.stdout)
+                self.assertNotIn("Traceback", proc.stdout)
+                self.assertNotIn("baseline green", proc.stdout)
+                self.assertEqual(self.box.worktree_dirty(), "")
+                self.assertEqual(last_line(proc.stdout), "MUTATION-RUN-FAILED")
+
+    def test_an_own_m_entry_without_pairs_refused_by_name(self):
+        """S338's plant p15: a file that brings its own `m` -- the two evidence
+        copies under adocs/data/ do -- and an entry that gives no pairs died
+        on a KeyError in normalise, naming no file. The same file giving its
+        pairs loads and runs, so what is refused is the missing field and not
+        the form."""
+        given = self.box.run(self.box.mutant_file(
+            OWN_M.replace("{pairs}", ", pairs=list(pairs)")))
+        self.assertEqual(given.returncode, 0, given.stdout)
+        self.assertRegex(given.stdout, r"O02_own_m\s+yes\s+1/1\s+\S+\s+killed")
+
+        path = self.box.mutant_file(OWN_M.replace("{pairs}", ""))
+        proc = self.box.run(path)
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn(f"O02_own_m in {path}: an entry from the file's own `m` "
+                      "gives no pairs", proc.stdout)
+        self.assertNotIn("Traceback", proc.stdout)
+        self.assertNotIn("baseline green", proc.stdout)
+        self.assertEqual(self.box.worktree_dirty(), "")
         self.assertEqual(last_line(proc.stdout), "MUTATION-RUN-FAILED")
 
     def test_main_tree_refused(self):
@@ -603,6 +768,63 @@ class MutationCheckTest(unittest.TestCase):
         self.assertNotEqual(proc.returncode, 0)
         self.assertRegex(proc.stdout,
                          r"C01_ctest_broken\s+yes\s+\S+\s+\S+\s+unmeasured")
+        self.assertEqual(last_line(proc.stdout),
+                         "MUTATION-RUN-FAILED: a verdict differs "
+                         "from what the mutant list expects")
+
+    def test_a_test_that_did_not_run_is_no_kill_and_the_run_names_it(self):
+        """S338 found it on a two-test scratch project: ctest lists a test that
+        exited with its SKIP_RETURN_CODE under "The following tests did not
+        run:", in the `N - name (how)` shape of a failure, and the tool read
+        the row as an assertion, so an unmutated tree scored killed.
+        test_bare_fen_relay skips that way on a machine where no python imports
+        python-chess. A DISABLED test is listed the same way. The mutant is the
+        quiet one, so its suite reads what the unmutated tree's reads."""
+        for marker, name, how, fast in (("SKIP_ONE", "test_skips", "Skipped", "0/2"),
+                                        ("DISABLE_ONE", "test_off", "Disabled", "0/1")):
+            with self.subTest(how=how):
+                box = Sandbox()
+                self.addCleanup(box.close)
+                box.commit_marker(marker, f"a tree with a test that is {how}")
+                proc = box.run(box.mutant_file(EQUIVALENT))
+                self.assertRegex(
+                    proc.stdout,
+                    rf"E01_equivalent\s+yes\s+{fast}\s+same\s+equivalent")
+                self.assertIn("mutation score 0 of 0", proc.stdout)
+                # And the precondition that would make it a kill: ctest listed
+                # the row, and the run says which test did not run.
+                self.assertRegex(proc.stdout,
+                                 rf"(?m)^baseline did not run: {name} \({how}\)")
+                self.assertEqual(proc.returncode, 0, proc.stdout)
+                self.assertEqual(last_line(proc.stdout), "MUTATION-RUN-DONE")
+
+    def test_a_real_failure_beside_a_skipped_test_is_still_killed(self):
+        """The skip takes nothing away from a kill and adds nothing to it: the
+        row reads killed by the binary that asserted, and the test that did not
+        run is neither in what caught it nor in the failing tests the TSV
+        records."""
+        self.box.commit_marker("SKIP_ONE", "a tree with a skipped test")
+        proc = self.box.run(self.box.mutant_file(KILLED))
+        self.assertEqual(proc.returncode, 0, proc.stdout)
+        self.assertRegex(proc.stdout, r"K01_killed\s+yes\s+1/2\s+\S+\s+killed")
+        self.assertIn("[test_x] a fabricated case the stub reports", proc.stdout)
+        self.assertNotIn("[test_skips]", proc.stdout)
+        self.assertEqual(last_line(proc.stdout), "MUTATION-RUN-DONE")
+        tsv = os.path.join(self.box.worktree, "build", "mutation", "results.tsv")
+        with open(tsv) as handle:
+            row = [line.split("\t") for line in handle
+                   if line.startswith("K01_killed\t")]
+        self.assertEqual(len(row), 1)
+        self.assertEqual(row[0][10], "test_x(Failed)")
+
+    def test_a_test_whose_executable_is_missing_is_no_kill(self):
+        """ctest lists it under FAILED as `(Not Run)` and exits non-zero, and
+        it ran nothing: with no assertion beside it that is ctest failing to
+        run a test, which is unmeasured and not a detection."""
+        proc = self.box.run(self.box.mutant_file(NOT_RUN))
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertRegex(proc.stdout, r"N01_not_run\s+yes\s+1/2\s+\S+\s+unmeasured")
+        self.assertNotIn("[test_gone]", proc.stdout)
         self.assertEqual(last_line(proc.stdout),
                          "MUTATION-RUN-FAILED: a verdict differs "
                          "from what the mutant list expects")

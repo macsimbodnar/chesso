@@ -634,7 +634,9 @@ set_tests_properties(test_spsa_probe PROPERTIES LABELS "fast" TIMEOUT 120)
 # moment somebody next needs this tool is the moment they are adding a pruning
 # rule and want to know their new test bites (DEC-141 clause 2). 31 cases,
 # ~3.8 s; 33 since S338 added the run's exclusion of the label below and the
-# check that the entry below keeps `fast` beside it, 5.5 s with every core held.
+# check that the entry below keeps `fast` beside it, 5.5 s with every core held;
+# 38 since S339 added the rows of tests that did not run and two refusals, 17 to
+# 18 s inside a `ctest -j12`.
 # Its class is named because the file holds a second one that a mutation run
 # must not run, and an entry naming none would run both.
 add_test(NAME test_mutation_check

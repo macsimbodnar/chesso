@@ -379,28 +379,28 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Done recently
 
+- S339  **the mutation tool never scores a test that did not run as a kill, and refuses a malformed mutant by name** -- a `Skipped`, `Disabled` or `Not Run` ctest row is no kill and the baseline's are named in the report; `validate` refuses a pair that is not two strings and the loader an own-`m` entry without pairs, each naming mutant and file before the baseline; every red seen first, 38 cases; one fast check, nothing real; S342 filed for four further crashes on malformed entries; filler (DEC-171), no `src/`
 - S338  **a mutant whose anchor no longer matches the tree turns the fast suite red where it is broken** -- `test_mutant_anchors` validates all 264 mutants in 34 files by the tool's own loader and validator, 0.1 s, building nothing; every refusal kind seen red, and the real one: `42f2aa7`'s list against S102's staged `src/` names PT08; a mutation run excludes the test by its `mutant_list` label, since 261 of 264 mutants would otherwise read as false kills; the registration is guarded from both classes; one fast check, a real and a low finding fixed; S339 filed for the tool's skipped-row kill and two crashes; filler (DEC-171), no `src/`
 - S337  **the ledger's four other garbled rows read right** -- `e47eb4a` and `b9f5b96` by override rows; `775dafd` and `7f46c0c` through an optional `run` column, now S022 v1 and S023 v1; a malformed run cell, a run naming another step, and an override changing nothing refused, each red first; every other row byte-equal; one fast check, two lows fixed; filler (DEC-171)
 - S336  **a stage of S122's preparation drops every later stage's record when it makes its output, and `seeds` reads the corpus's own copied settings line as its own** -- `filter`, `split`, `sample`, `k` remove `split.txt`, `corpus.tsv.done`, `k.txt`, `prepared.txt` before writing; `split` refuses an unrecorded fixed set; `seeds` passes on the real tree (21 other runs) and refuses a planted range, a near copy and a copies-only listing; the stamped preparation reads clean in a mirror; smoke 35 of 35, 33 red at `9daee21`; one fast check, three lows fixed; filler (DEC-171)
 - S335  **S332's three low findings in the corpus merge and its reader are answered** -- a part-1 game with no row stays counted as the top-up books it (DEC-296), shown in no view and counted apart; `S331_measure.py read` refuses a non-number field on one line naming file and line; the interrupted-merge check tells a stop before the merger's rename from one after it, by real SIGKILL fixtures; S332's 15 cases, S333's 25 and S331's reading byte-equal; one fast check, two lows fixed; filler (DEC-171)
-- S334  **the ledger reads a verdict row's description from a recorded override where a closing commit's subject breaks its rule** -- `tools/ledger_overrides.tsv`, keyed by full sha, its one row `1ffc96e` -> "the king safety family"; refused when the sha closes no verdict, when the parser already reads the subject cleanly, or on a key that is not a full sha, each seen red; `--table` byte-equal but for the S122 row; 45 ledger tests; one fast check, three lows fixed; filler (DEC-171)
 
 ## Open
 
 1. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
 2. S340  **paused by S341** -- filler (DEC-171): the tree builds under clang with `-Werror` whatever S124's family ships, its identity included; the fix is landed, the clang stage's green waits on S341
 3. S341  filler (DEC-171), blocks S340: the fast label is green under clang with libc++ -- no pinned golden rests on a population the standard library's own shuffle or distribution drew; `test_tuner_gradient` reads 4.70e-6 there; starts after S124's verdict
-4. S339  filler (DEC-171): the mutation tool never scores a test that did not run as a kill, and refuses a malformed mutant by name instead of crashing
-5. S102  outpost and space terms in the evaluation, one family
-6. S266  a complexity term moves the endgame score toward or away from zero, never past it, by how likely the stronger side is to convert, never flipping its sign
-7. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
-8. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
-9. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
-10. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-11. S030  move_t drops the moving piece and becomes 16 bits
-12. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
-13. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
-14. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
+4. S102  outpost and space terms in the evaluation, one family
+5. S266  a complexity term moves the endgame score toward or away from zero, never past it, by how likely the stronger side is to convert, never flipping its sign
+6. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
+7. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
+8. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
+9. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+10. S030  move_t drops the moving piece and becomes 16 bits
+11. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
+12. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
+13. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
+14. S342  filler (DEC-171): the mutation tool refuses any malformed entry of a mutant file by name, before the baseline; four crashes S339 found beyond its step, none reachable from the list as it stands
 15. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
 16. S311  **parked, DEC-342** — a comment rule in `AGENTS.md` and `tools/comment_budget.py`, which reports what breaks it and proves a comment edit left the code identical
 17. S312  **parked, DEC-342** — the log-shaped comment blocks become what the code cannot say, with current values, read old against new
