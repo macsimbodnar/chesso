@@ -7,7 +7,103 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-12, by hand.
 
-## 2026-11-12 06:45: S124's family read H0; part A (mop-up alone) is next on the machine
+## 2026-11-12 10:15: HANDOVER for a fresh session (the owner shuts the workstation down today)
+
+**Read this section first; it is enough to act on.** The owner turns the workstation off today. Part A of S124's
+bisection was playing and is **resumed after the boot, not restarted** (DEC-362, written before the stop). It
+was stopped at 11:59 on the owner's command; the lines under AT THE STOP are filled.
+
+**What was running until the stop.** Part A, mop-up alone, `{0, 5}` nElo at 8+0.08, Hash 16, `noob_3moves.epd`,
+concurrency 12, cap 20950 rounds (41900 games). Started 06:05. Wrapper PID 4028674, fastchess PID 4028897. It runs
+from `/home/max/ws/chesso-s124p2` (branch `s124p2`, HEAD `7214ce5` = REF, the candidate staged, the pin an unstaged
+edit of `adocs/data/S124_sprt.sh`): **do not commit, reset, build or clean in that worktree.** Console
+`.tuning/s124a_sprt.console`; out `.tuning/sprt_s124_20261112_060554/` (`games.pgn`, `fastchess.log`,
+`candidate.diff` blob `361ef1a30802`). fastchess saves its state every 20 games to
+`/home/max/ws/chesso-s124p2/config.json`. At 10:08: 8520 games, Elo +3.10 +/- 5.00, LLR 0.73, 0 forfeits.
+
+**The two binaries (DEC-362 (2)).** Candidate: fastchess plays `/tmp/chesso-candidate.DIcYIH`, sha256
+`a5b6bc74cb1855b84731f76b87b7ad2a6ad15cdd3a31ebc25d89de9b56a38354`, byte-equal to the worktree's
+`build/src/chesso`; `/tmp` does not survive a boot, so a copy is kept at
+`.tuning/coord/S124/partA_resume/chesso-candidate.DIcYIH`. Reference:
+`/home/max/ws/chesso-s124p2/.ref-builds/7214ce5/build/src/chesso`, sha256 `26f526638ee4e05b...`. Regime at the
+start: kernel `7.2.15-76070215-generic`, `fastchess alpha 1.8.1 20260720-daa3ea2`, book sha256 `2011193b4854...`,
+governor `performance` (read, not set).
+
+**AT THE STOP (the coordinator, on the owner's command):** `kill -INT 4028897` (fastchess itself; it writes its
+state and exits, the wrapper then prints `SPRT-RUN-FAILED`, which is expected here and is not a verdict). Then copy
+`config.json`, the console and `fastchess.log` into `.tuning/coord/S124/partA_resume/` with a `sha256sum` file,
+write the saved figures below, and commit this file, `decisions.md` and `plan.md` (the gate compiles; the machine is
+free then).
+- **Stopped at 11:59:07 on the owner's command**, SIGINT to fastchess, which printed "Tournament was interrupted. To
+  resume the tournament, run: fastchess -config file=config.json" and exited; the wrapper printed
+  `SPRT-RUN-FAILED: exited 1`, expected. Total time 05:53:15. No process of the run is left.
+- Saved state, `config.json` sha256 `8b8ec2c42b89fb78...`: 12388 games, W 3257 L 3162 D 5969, pairs 6194 (WW 352,
+  WD 1520, WL 1033, DD 1484, LD 1481, LL 324); the sums agree (DEC-362 (3)). Copies and `SHA256SUMS` in
+  `.tuning/coord/S124/partA_resume/` (the state, the console, `fastchess.log`, the candidate binary).
+- Segment 1's last report: Elo +2.61 +/- 4.15, nElo +3.85 +/- 6.12, LLR 0.69, 12380 games, Ptnml [324, 1481, 2515,
+  1518, 352]. 0 forfeits (`tools/forfeit_report.py`, rc 0).
+- **`games.pgn` holds 12390 games, two more than the state** (sha256 `3b677b6d0fa08c4f...` at the stop): the state
+  is what fastchess resumes from, so those two games may be played again. Segment 1 for DEC-362 (4) is the first
+  12388 games of the file; after the resume, look for the pair written twice before reading anything from the PGN.
+- The watcher on the first console ended with the wrapper; none is armed. Nothing of this session runs.
+
+**AFTER THE BOOT, in this order (nothing below was run; fastchess's resume was last used here in DEC-111's time):**
+1. Orient: this file, `plan.md`'s Open list, DEC-362. Check `uname -r`, `fastchess --version`, the book's and both
+   binaries' sha256 against the lines above. Anything moved: the run is void (DEC-362 (2)), part A restarts from
+   zero with `adocs/data/S124_sprt.sh` as pinned, a new console name, and a kernel move also owes the A/A first
+   (DEC-143).
+2. Nothing else on the machine (`cat /proc/loadavg`, `ps aux --sort=-%cpu | head`); never touch another session's
+   processes.
+3. Rehearse the resume once on a scratch match, outside every worktree's `config.json`: a scratch directory, the two
+   binaries, `-rounds 30 -concurrency 12 -each tc=1+0.01`, `kill -INT` it after a few reports, then
+   `fastchess -config file=config.json` there. It must continue the saved count with the same names and not replay
+   from game 1. If it does not, stop and read `fastchess --help` under `-config`; do not touch the real state.
+4. Restore the candidate: `cp -p .tuning/coord/S124/partA_resume/chesso-candidate.DIcYIH /tmp/chesso-candidate.DIcYIH`
+   and check its sha256. Check the saved state's sums (DEC-362 (3)).
+5. Resume, detached, from the worktree, appending to a second console:
+   `cd /home/max/ws/chesso-s124p2 && nohup setsid -w bash -c 'fastchess -config file=config.json; rc=$?; python3
+   tools/forfeit_report.py --max-pct 1.0 /home/max/ws/chesso/.tuning/sprt_s124_20261112_060554/games.pgn; echo
+   "SPRT-RUN-$([ $rc -eq 0 ] && echo DONE || echo FAILED) rc=$rc"' >
+   /home/max/ws/chesso/.tuning/s124a_sprt_resume1.console 2>&1 & echo $!`. The PGN and log append
+   (`append_file` is true in the state). Take the PID from `$!`, never from `pgrep -f`.
+6. Read the first report: games above the saved count, the same two names, the same bounds. Then arm the four-exit
+   poll watcher on the second console (AGENTS.md WATCHERS; markers `SPRT-RUN-(DONE|FAILED|INVALID)`, ceiling 40 h
+   awake).
+7. Nothing compiles and nothing is committed while it plays. A second owner's stop repeats AT THE STOP with
+   `resume2`.
+8. At the verdict: DEC-362 (4) first -- split `games.pgn` at the stop's game count and compare the segments' Elo
+   (void past 2.58 standard errors of the difference) and each side's nodes per second (void past 3 %) -- then the
+   abort rule on the pooled run, then the record commit with DEC-220's block (the log is both consoles trimmed by
+   `tools/trim_console.py`, one file; the gate checks the block against it), `tools/ledger.py`, the archive. H1:
+   one Opus agent repairs part A's three reds on a tree rebased onto `achesso`, then mop-up lands; no owner's stop
+   fires on part A. H0 or no verdict: mop-up recorded as zero at this control, and whether it ships for its
+   conversions (P1, DEC-358) is the owner's. Either way part B (F1's cells 0, 1, 9) follows against what has landed.
+
+**What waits for a compile window (between two matches), in this order:** (a) S341's landing, option A by the owner
+(DEC-359): the worktree `../chesso-s341` holds the shuffle, uncommitted, and its step file; one Opus agent replaces
+DEC-356's pair by the rule's two pairs, re-derives under both compilers, gates all four builds; then
+`STAGES=clang tools/gate_extra.sh` must end `GATE-EXTRA-DONE`, which completes S340, and a full weekly `gate_extra`
+is owed (last `GATE-EXTRA-DONE` 2026-11-05). (b) S102's phase 1 with B1 (DEC-361), rebased onto `achesso` by saved
+diff and `git apply --3way` (never `git stash`), from `../chesso-s102p1`; then its phase 2 screen. (c) A step for
+`adocs/data/S124_phase1_plants.patch`, which no longer applies past `5048611`. After S124's bisection and S102's
+verdict: S267's gate with one 10+0.2 gauntlet (DEC-360).
+
+**How the coordinator works here (the owner's standing instruction):** it implements nothing itself; one fresh Opus
+5.5 agent at xhigh effort per step; it holds the machine, owns `plan.md`, `status.md`, `specs.md`, `decisions.md`
+and commits; never pushes; few questions to the owner, each restated whole with what every answer implies; strength
+and correctness before machine time; the governor is read and not set.
+
+## 2026-11-12 06:10: S124's family read H0; part A (mop-up alone) is playing
+
+**Running: bisection part A's `{0, 5}` nElo SPRT**, started 06:05, PID 4028674 (`setsid`), console
+`.tuning/s124a_sprt.console`, out `.tuning/sprt_s124_20261112_060554/` (`candidate.diff` blob `361ef1a30802`),
+`7214ce5` plus the staged tree of `../chesso-s124p2` against `7214ce5`; cap 41900 games, 19.86 h at the worst;
+watcher armed, ceiling 40 h. The banner read as pinned, no load warning. DEC-141's second tier before it: the Debug
+binary self-played 8 games, 0 `Assertion`, 0 disconnects, bench 4586026. **Nothing compiles and nothing is
+committed while it plays; this edit is uncommitted.** On its verdict: abort rule, the record commit with DEC-220's
+block (H1: one agent repairs the three reds on a tree rebased onto `achesso`, no stop to rule on), then part B's
+tree, F1's cells 0, 1 and 9, against what has landed. The records `7f3acee` (H0) and `eed6817` (ledger, 65 runs)
+are committed.
 
 **S124's one `{0, 5}` nElo SPRT read H0** (03:10 to 04:46): Elo -13.23 +/- 8.24, nElo -19.03 +/- 11.84, LLR -2.95,
 3310 games, Ptnml [122, 428, 632, 400, 73], 0 forfeits, 2072.7 games an hour. The abort rule held. Nothing of the
@@ -33,7 +129,15 @@ Launch: `cd /home/max/ws/chesso-s124p2 && nohup setsid -w adocs/data/S124_sprt.s
 **Nothing compiles and nothing is committed while it plays.** Then B = F1 (cells 0, 1, 9), C = F2 (cells 0-9), each
 against what has landed.
 
-**S341 stopped at the owner's stop (DEC-344 (9)), waits on the owner.** Cause verified: `std::shuffle` draws 5696
+**The owner answered on 2026-11-12, recorded uncommitted in `decisions.md` and `plan.md` until the match ends:**
+DEC-359, S341 takes option A (the shuffle and the rule's two pairs); DEC-360, by delegation, S267's gate and one
+10+0.2 gauntlet are read after S124 and S102, ahead of S266 and S133; DEC-361, by delegation, B1 lands with S102's
+phase 1. **Disk cleaned on the owner's word, 08:45:** `.tuning/s122/void_twofold`, `.tuning/coord/cleanup` and
+S122's two variant trees removed (their diffs kept in `.tuning/coord/S122/`); 13 GB free. **In the next compile
+window, in this order:** S341's landing by one agent (then `STAGES=clang tools/gate_extra.sh`, which completes
+S340, and a full weekly `gate_extra`), then S102's phase 1 with B1, rebased onto `achesso`.
+
+**S341 stopped at the owner's stop (DEC-344 (9)); ruled A, DEC-359.** Cause verified: `std::shuffle` draws 5696
 rows under libc++ and 5719 under libstdc++. The tree's own Fisher-Yates over `mt19937`'s raw output is written in
 `../chesso-s341` (branch `s341`, `739a537`, uncommitted, patch `.tuning/s341/s341_shuffle.patch` there); both
 compilers then draw one population (5719 rows) and agree to every digit. On it DEC-356's pair reads 8.996e-6, red

@@ -17580,3 +17580,91 @@ Rejected:     Raw counts (above). A per-class guard with a family-wise correctio
               further, with nothing asking for it). Dropping the per-class guard (a real loss in a converted class would go
               unseen behind a KBNvK gain).
 Consequences: P1's verdict is exact-test based. The SPRT that follows still decides what ships.
+
+## DEC-359  2026-11-12  S341 lands the tree's own shuffle and takes the two pairs DEC-356's rule picks on the one population
+Tags:         testing, fixtures, clang, tuner, gradient, s341, s340, s124, dec-356, dec-344, dec-142, dec-171
+Context:      S341 verified that `std::shuffle` draws `placements()`'s endgame population differently under libstdc++
+              (5719 rows) and libc++ (5696), which alone turned `test_tuner_gradient`'s factor case red under clang
+              (4.70e-6). A Fisher-Yates over `mt19937`'s raw output draws one population under both (5719 rows). On it
+              DEC-356's pair reads 8.996e-6, red under both compilers, and DEC-356's rule, run unchanged, picks two other
+              pairs: 8.308e-7 at 435 over 5721 rows. A recurrence on that bound is the owner's stop (DEC-344 (9)), so the
+              step stopped and the options were put to the owner.
+Decision:     By the owner, 2026-11-12: option A. The shuffle lands and DEC-356's pair is replaced by the rule's two
+              pairs (4 rows), re-derived by `S124_factor_gradient_rows` under both compilers. The bound stays 1e-6.
+Why:          It is the method S341's accepts prescribe, with the owner's own rule unchanged, and the fixture stays small.
+Rejected:     B, freezing libstdc++'s population as about 600 KB of committed rows (nothing of DEC-356 moves, at the
+              price of the fixture text and an amended accept). C, leaving `739a537` as it is (S340 paused, the clang
+              stage red, the owner's Mac likely at 60 of 61). Reimplementing libstdc++'s shuffle (a library's algorithm
+              copied).
+Consequences: The case's margin under its bound thins from 1.59 to 1.20, so a refit is likelier to bring the class back;
+              DEC-361's step is what widens it. `tools/datagen.cpp`'s draw stays library-dependent on purpose: changing
+              it would move every recorded corpus seed under GCC. S341's landing unblocks S340.
+
+## DEC-360  2026-11-12  S267's gate and a 10+0.2 gauntlet reading are taken after S124 and S102, ahead of S266 and S133
+Tags:         planning, rating, measurement, gate, s267, s152, s266, s133, dec-108, dec-258
+Context:      The drift point of 2026-11-01 read +293.62 +/- 17.15 against `1680439`, before S101 (+33.87) and S122
+              (+19.44) landed; S267's gate needs 232 and the path to the mark was priced at 282. DEC-258's order puts the
+              gate behind S266 and S133, and DEC-108 rates once, near the goal. `plan.md`'s "Where chesso stands" dates
+              from 2026-10-08. Asked on 2026-11-11, the owner answered on 2026-11-12 that the coordinator should pick
+              what it judges more correct.
+Decision:     By the coordinator on the owner's delegation of 2026-11-12. Once S124's bisection has closed and S102 has
+              its verdict, S267's drift match is read, and beside it one gauntlet in S152's form at 10+0.2 (about 3.5 h).
+              S266 and S133 follow. S152 itself, both controls and the new anchors, keeps its place near the mark.
+Why:          The evidence already says the gate is passed and the mark may be near; two large evaluation steps planned
+              on a month-old position cost more than one afternoon of machine time, and the reading tells the owner
+              whether the plan's remaining order still fits.
+Rejected:     The written order (the reading waits behind S266 and S133, weeks of machine time planned blind). Reading
+              it now, before S124 and S102 (two families mid-flight; the point would be stale within days).
+Consequences: DEC-108's "once" becomes once at the gate and once near the mark. The early gauntlet is a reading, not
+              the claim: S152 still decides that. If the gate reads below 232 the order stops for the owner, as written.
+
+## DEC-361  2026-11-12  test_tuner_gradient's finite difference takes a step scaled per column (S102's option B1)
+Tags:         testing, tuner, gradient, finite-difference, s102, s341, dec-344, dec-356, dec-316, dec-354
+Context:      `test_tuner_gradient`'s bound has been met four times by a new family's columns (DEC-316, DEC-354,
+              DEC-356, S102's clamp case at 1.29e-6), each read by its step as the plain central difference's own
+              error on one column and not an error in the gradient; no cause beyond that reading is recorded here.
+              S102's phase 1 built option B1 for the owner's
+              ruling: column p's step is h / s_p, s_p = max(1, the largest |D_rp| over the rows). Read on S102's tree:
+              the clamp case 1.72e-7 with `CLAMP_PUSH` +50, the gradient case 6.94 times under its bound, every pair's
+              script still picks its pair, and 18 of 18 planted gradient errors stay red. Asked, the owner answered on
+              2026-11-12 that the coordinator should pick the best.
+Decision:     By the coordinator on the owner's delegation of 2026-11-12: B1 lands with S102's phase 1. The metric, each
+              case's h and every bound (1e-6, the clamp script's 2e-7) are unchanged; the fixture pairs stay.
+Why:          It answers the class and not one more instance of it, and the test's power is measured unchanged: every
+              planted error is still caught.
+Rejected:     Delivery A alone (one red case and the same stop at the next family). B2, the root mean square scale (not
+              built; read as B1 at the pick and worse elsewhere). Raising a bound (relaxing a test). A further fixture
+              pair per recurrence (the class returns with every family).
+Consequences: Every golden under `test_tuner_gradient` is re-derived by its script at S102's landing, on S341's
+              population if that has landed. The owner's stop on the bound (DEC-344 (9)) stands for a recurrence under
+              B1. The suite's time under B1 is not yet timed.
+
+## DEC-362  2026-11-12  An SPRT stopped on the owner's command for a shutdown is resumed from fastchess's saved state, under a rule written before the stop
+Tags:         measurement, sprt, machine, shutdown, resume, s124, s136, dec-111, dec-143, dec-063
+Context:      Part A of S124's bisection (mop-up alone, `{0, 5}` nElo, cap 41900 games, 19.86 h) had played 4 h when
+              the owner said the workstation must be turned off the same day and asked whether the hours are lost. By
+              precedent a killed run is void, never pooled and never resumed (S136's first launch, 6520 games); DEC-111
+              records the one resume this project made, on the MacBook, whose halves did not look like one experiment
+              after a hibernation. The workstation is off by day on many days, so a run at the cap could never finish
+              under that precedent. fastchess saves its tournament state every 20 games (`config.json` in the run's
+              directory: the statistics, the seed, the engines, the book) and `-config file=` resumes from it.
+Decision:     By the owner's instruction of 2026-11-12 ("if we can resume, prepare"), the form by the coordinator. A run
+              stopped by SIGINT on the owner's command, for a reason that is not the run's reading, is resumed and its
+              games pooled, if and only if all of these hold, written here before the stop:
+              (1) the same pre-registration, bounds, control, book, seed and cap; nothing of the script's pin moves;
+              (2) both engine binaries are byte for byte the played ones (sha256), fastchess is the same build, the
+              kernel is the same release; any of them moved, the run is void and restarts from zero;
+              (3) the saved state reads consistent before the resume (wins + losses + draws equal to twice the pairs,
+              or off by the games in flight at the stop), and after it the first report continues the saved count;
+              (4) at the verdict the segments before and after the stop are compared: void if their Elo differ by more
+              than 2.58 standard errors of the difference, if either side's nodes per second moved by more than 3 %
+              between them, or if S101's abort rule fires on the pooled run;
+              (5) the record names both segments, the stop's time and reason, and the saved state's digest.
+Why:          The stop is set by the owner's day and not by the data, so the test's error guarantee is untouched; what
+              a resume risks is two regimes pooled, and (2) and (4) are that check, which S024's resume did not have.
+Rejected:     The precedent, void and restart (every hour before each shutdown is lost and a capped run never ends).
+              Resuming with no segment rule (S024's failure). Keeping the machine on to the cap (the owner's call, not
+              taken). Lowering the cap or widening the bounds to fit a day (choosing the test after seeing data).
+Consequences: A stop the owner did not command -- a crash, power lost, a hang -- is still void. The resume path is not
+              `fastchess.sh`'s: it is driven by hand from the saved state until a step gives the harness one, and its
+              first use is rehearsed on a scratch match before the real resume.

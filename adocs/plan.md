@@ -27,6 +27,10 @@ hand-crafted work, never to the network early (DEC-179).
 
 ## Where chesso stands, 2026-10-08
 
+**Stale since 2026-11-01, and read again by DEC-360.** The drift point of 2026-11-01 read +293.62 +/- 17.15
+against `1680439`, before S101 (+33.87) and S122 (+19.44) landed and S124's family read H0; the gate needs 232.
+The bullets below are the position of 2026-10-08 and wait on S267's reading to be rewritten.
+
 - **About 2766** on the list (S240, 2026-09-27, build `1680439`, five
   anchors, spread 94.1; `adocs/data/rating_2026-09-27_S240_ccrl_blitz.md`).
   234 short. Leorik 2.4, the top anchor at 2830, still scores above chesso,
@@ -390,11 +394,11 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 1. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert -- the family's SPRT read H0 2026-11-12 (`adocs/data/S124_sprt.log`), nothing landed; the bisection plays in order, A = mop-up alone (staged in `../chesso-s124p2`), then B = F1, C = F2, each `{0, 5}` against what has landed
 2. S340  **paused by S341** -- filler (DEC-171): the tree builds under clang with `-Werror` whatever S124's family ships, its identity included; the fix is landed, the clang stage's green waits on S341
-3. S341  filler (DEC-171), blocks S340: the fast label is green under clang with libc++ -- no pinned golden rests on a population the standard library's own shuffle or distribution drew; `test_tuner_gradient` reads 4.70e-6 there; cause verified and the tree's own shuffle written in `../chesso-s341`, uncommitted; **stopped 2026-11-12 at the owner's stop** (DEC-344 (9)): on the one population DEC-356's pair reads 8.996e-6 and its rule picks two other pairs (8.308e-7); waits on the owner's ruling
-4. S102  outpost and space terms in the evaluation, one family
-5. S266  a complexity term moves the endgame score toward or away from zero, never past it, by how likely the stronger side is to convert, never flipping its sign
-6. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
-7. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
+3. S341  filler (DEC-171), blocks S340: the fast label is green under clang with libc++ -- no pinned golden rests on a population the standard library's own shuffle or distribution drew; `test_tuner_gradient` reads 4.70e-6 there; cause verified and the tree's own shuffle written in `../chesso-s341`, uncommitted; **stopped 2026-11-12 at the owner's stop** (DEC-344 (9)): on the one population DEC-356's pair reads 8.996e-6 and its rule picks two other pairs (8.308e-7); **the owner ruled option A, DEC-359**: lands in the next compile window, between two matches
+4. S102  outpost and space terms in the evaluation, one family -- phase 1 staged in `../chesso-s102p1`; B1 ruled (DEC-361), lands in a compile window after S341, rebased
+5. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan; **moved ahead of S266 and S133 by DEC-360**, read once S124's bisection has closed and S102 has its verdict, with one gauntlet in S152's form at 10+0.2 beside it
+6. S266  a complexity term moves the endgame score toward or away from zero, never past it, by how likely the stronger side is to convert, never flipping its sign
+7. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
 8. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
 9. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
 10. S030  move_t drops the moving piece and becomes 16 bits
