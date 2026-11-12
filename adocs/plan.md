@@ -324,8 +324,9 @@ is typed by hand.
 | S125 | the pawn structure family | 1 h 12 m | 2508 | `{0, 5}` | H1, +22.89 +/- 10.02 |
 | S101 | the threat family | 0 h 45 m | 1636 | `{0, 5}` | H1, +33.87 +/- 12.33 |
 | S122 | the king safety family | 1 h 22 m | 2916 | `{0, 5}` | H1, +19.44 +/- 9.07 |
+| S124 | the endgame family | 1 h 35 m | 3310 | `{0, 5}` | H0, -13.23 +/- 8.24 |
 
-**The ledger holds 64: mean 5 h 45 m, median 5 h 02 m, 739031 games in 368.39 hours, 2006.1 an hour across the set.** **Fast class**, an effect outside the bounds interval -- twenty-five runs, mean **1 h 39 m**. **Slow class**, inside it, on a bound or a true zero -- 39 runs, mean **8 h 22 m**.
+**The ledger holds 65: mean 5 h 41 m, median 4 h 57 m, 742341 games in 369.97 hours, 2006.5 an hour across the set.** **Fast class**, an effect outside the bounds interval -- twenty-six runs, mean **1 h 39 m**. **Slow class**, inside it, on a bound or a true zero -- 39 runs, mean **8 h 22 m**.
 
 ### Priced by class
 
