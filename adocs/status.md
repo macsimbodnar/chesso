@@ -7,7 +7,117 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-12, by hand.
 
-## 2026-11-13 08:30: part A read H0; S341 landing; part B is next on the machine
+## 2026-11-13 12:15: HANDOVER for a fresh session (the owner shuts the workstation down)
+
+**Read this section first; it is enough to act on.** Part B of S124's bisection was stopped on the owner's command
+and is **resumed after the boot, not restarted** (DEC-362). Nothing of this session runs; no watcher is armed;
+`.tuning/coord/NO_COMPILE` is removed.
+
+**Part B at the stop.** F1's cells 0, 1, 9 at 46, 0, 20 alone, `{0, 5}` nElo at 8+0.08, Hash 16, `noob_3moves.epd`,
+concurrency 12, cap 20950 rounds. Segment 1: 2026-11-13 07:20:57 to 12:08:21, SIGINT to fastchess, total time
+04:47:26, the wrapper's `SPRT-RUN-FAILED: exited 1` expected. Last report: 10040 games, Elo -1.76 +/- 4.75, nElo
+-2.53 +/- 6.80, LLR -2.09 of -2.94, Ptnml [325, 1199, 1997, 1200, 299]. Saved state `config.json` sha256
+`e59ab802ec29f0a1...`: 10056 games, W 2661 L 2713 D 4682, pairs 5028 (WW 299, WD 1202, WL 861, DD 1139, LD 1202,
+LL 325), the sums exact (DEC-362 (3)). 0 forfeits (`tools/forfeit_report.py`, rc 0). `games.pgn` holds 10060 games
+(sha256 `ff8bbfbe32a0d872...` at the stop). Console `.tuning/s124b_sprt.console`, out
+`.tuning/sprt_s124_20261113_072057/` (`candidate.diff` blob `9c54781f5309`). Copies with `SHA256SUMS` in
+`.tuning/coord/S124/partB_resume/`: the state, the console, `fastchess.log`, the candidate binary.
+- The run's worktree is `/home/max/ws/chesso-s124p2` (branch `s124p2`, HEAD `7214ce5` = REF, part B staged, 10
+  files, sha256 `26484f5e...`, the pin an unstaged edit of `adocs/data/S124_sprt.sh`, fastchess's `config.json` in
+  its root): **do not commit, reset, build or clean there.**
+- Binaries: candidate `/tmp/chesso-candidate.eP57w4`, sha256 `05bdb5e098cbe700...`, equal to the worktree's
+  `build/src/chesso`; `/tmp` does not survive a boot, the kept copy is
+  `.tuning/coord/S124/partB_resume/chesso-candidate.eP57w4`. Reference
+  `../chesso-s124p2/.ref-builds/7214ce5/build/src/chesso`, sha256 `26f526638ee4e05b...`. Regime: kernel
+  `7.2.15-76070215-generic`, `fastchess alpha 1.8.1 20260720-daa3ea2`, book sha256 `2011193b4854...`, governor
+  `powersave` (read, not set).
+
+**AFTER THE BOOT, in this order** (done once already for part A on 2026-11-13, it worked):
+1. Check `uname -r`, `fastchess --version`, the book's and both binaries' sha256, and
+   `cd .tuning/coord/S124/partB_resume && sha256sum -c SHA256SUMS`, and that `../chesso-s124p2/config.json` equals
+   the saved copy. Anything moved: the run is void (DEC-362 (2)), part B restarts from zero with
+   `adocs/data/S124_sprt.sh` as pinned and a new console name; a kernel move also owes the A/A first (DEC-143).
+2. Nothing else on the machine (`cat /proc/loadavg`, `ps aux --sort=-%cpu | head`); never touch another session's
+   processes.
+3. `cp -p .tuning/coord/S124/partB_resume/chesso-candidate.eP57w4 /tmp/chesso-candidate.eP57w4`, check its sha256.
+4. Resume, detached, from the worktree, one line, the PID from `$!`:
+   `cd /home/max/ws/chesso-s124p2 && nohup setsid -w bash -c 'fastchess -config file=config.json; rc=$?; python3
+   tools/forfeit_report.py --max-pct 1.0 /home/max/ws/chesso/.tuning/sprt_s124_20261113_072057/games.pgn; echo
+   "SPRT-RUN-$([ $rc -eq 0 ] && echo DONE || echo FAILED) rc=$rc"' >
+   /home/max/ws/chesso/.tuning/s124b_sprt_resume1.console 2>&1 & echo $!`
+   (put the `cd ... && nohup ...` on its own command line; chained after other `&&` commands the `$!` is a subshell).
+5. Read the first report: games above 10056, the same two names and bounds. Arm the four-exit poll watcher on the
+   second console (AGENTS.md WATCHERS; markers `SPRT-RUN-(DONE|FAILED|INVALID)`, ceiling 40 h awake). Create
+   `.tuning/coord/NO_COMPILE` while it plays.
+6. Nothing compiles and nothing is committed while it plays. Another owner's stop repeats this with `resume2`.
+7. At the verdict, one Opus agent: DEC-362 (4) by `adocs/data/S124_partA_segments.py` adapted to part B (segments'
+   Elo, void past 2.58 standard errors of the difference; each side's nodes per second, void past 3 %; **fastchess's
+   own accounting is the count, no pair is dropped as a duplicate**), the ten-minute bins (DEC-363), the abort rule,
+   then the record: one trimmed log of both consoles as `adocs/data/S124_partB_sprt.log`, the played diff, DEC-220's
+   block, the archive; the coordinator gates, commits, runs `tools/ledger.py`. H1: F1's three cells land after the
+   tree is rebased onto `achesso` and `test_audit_design`'s first case is settled, `Bench: 4707943`. H0 or no
+   verdict: zero at this control. Either way the same agent builds part C's tree, F2's ten cells from the screen's
+   decided F2 fit, against what has landed, and the coordinator pins and launches it.
+
+**In the compile window at part B's verdict (while part C's tree is built):** finish S102's phase 1 rebase, state
+in the section below and in `.tuning/coord/S102/S102_rebase_state.md` (worktree `../chesso-s102p1b`, everything
+staged, staged diff `S102_rebase_stage4_wip.diff`, sha256 `f53775f3...`): the clang build and clang reading of
+`S124_factor_gradient_rows`, `assemble.sh`, the completion command, `gate_extra`, `tools/gate.sh --message`, the
+landing diff; then a fast check and the commit, `No functional change`; widen `touches:` as the agent proposed. Its
+base is `e6ef283` plus S341's diff, which is `2e25582`'s content for those files; apply the landing diff on
+`achesso` with `git apply --3way --index` (never `git stash`). Also owed: a full weekly `tools/gate_extra.sh` (last
+`GATE-EXTRA-DONE` over every stage 2026-11-05; the clang stage alone read `GATE-EXTRA-DONE` on S341's tree
+2026-11-13), and a step for `adocs/data/S124_phase1_plants.patch`, which no longer applies past `5048611`.
+
+**Waiting on the owner, nothing blocks on it:** does mop-up ship anyway for its conversions (the question in full
+is in the section of 07:00 below; the coordinator continues with mop-up at zero); and whether part A should be
+replayed for the speed dip DEC-363 kept (the coordinator kept it).
+
+**How the coordinator works here (the owner's standing instruction):** it implements nothing itself; one fresh Opus
+5.5 agent at xhigh effort per step; it holds the machine, owns `plan.md`, `status.md`, `specs.md`, `decisions.md`
+and commits; never pushes; few questions to the owner, each restated whole with what every answer implies;
+strength and correctness before machine time; the governor is read and not set.
+
+## 2026-11-13 07:30: part B was started; S341 and S340 done; S102's rebase paused at the sentinel
+
+**Started: bisection part B's `{0, 5}` nElo SPRT** (F1's cells 0, 1, 9 at 46, 0, 20 alone), started 07:20:57, wrapper
+PID 1353189, fastchess PID 1353399, console `.tuning/s124b_sprt.console`, out `.tuning/sprt_s124_20261113_072057/`
+(`candidate.diff` blob `9c54781f5309`), from `../chesso-s124p2` against `7214ce5`; cap 41900 games, 19.86 h at
+the worst; watcher armed, ceiling 40 h. The banner read as pinned. The pin's sentence is dated 07:25 and was
+written before the first game; the run started at 07:20:57. DEC-141's second tier before it: 8 Debug games, 0
+`Assertion`, 0 disconnects, bench 4707943. **Nothing compiles and nothing is committed while it plays; this edit is
+uncommitted. `.tuning/coord/NO_COMPILE` exists and is removed when the match ends.**
+- **If the owner stops it (DEC-362):** `kill -INT` fastchess's PID, copy `../chesso-s124p2/config.json`, the console
+  and `fastchess.log` into `.tuning/coord/S124/partB_resume/` with a `SHA256SUMS`, commit the handover. The
+  candidate binary fastchess plays is `/tmp/chesso-candidate.eP57w4`; a copy is already in that directory, the reference is
+  `../chesso-s124p2/.ref-builds/7214ce5/build/src/chesso`. After the boot: the handover section of 2026-11-12 below,
+  steps 1 to 8, with `partB` for `partA` and a console `s124b_sprt_resume1.console`; the rehearsal is done and
+  need not be repeated; **do not drop any "duplicate" pair from the PGN, fastchess's own accounting is the count**
+  (`adocs/data/S124_partA_segments.py` is the segments reading to reuse).
+- **At the verdict:** each side's nodes per second in ten-minute bins first (DEC-363), the abort rule, then the
+  record commit with DEC-220's block, the ledger, the archive. H1: F1's three cells land after one agent rebases
+  part B's tree onto `achesso` (S341's population and, if landed, S102's B1 re-derive `test_tuner_gradient`'s
+  goldens there) and `test_audit_design`'s first case is settled; `Bench: 4707943`. H0 or no verdict: zero at this
+  control. Either way part C, F2's ten cells, follows against what has landed.
+
+**Committed this morning, none pushed:** `390a043` part A's H0 record (DEC-363 with it), `2e25582` S341's landing
+with S341 and S340 moved to `plan_done` and the ledger's row for part A (66 runs).
+
+**S102's phase 1 rebase stopped at the sentinel, 07:18, state saved.** Worktree `../chesso-s102p1b` (branch
+`s102p1b` at `e6ef283`, S341's diff applied first, everything staged, nothing committed); state note
+`.tuning/coord/S102/S102_rebase_state.md`, staged diff `S102_rebase_stage4_wip.diff` (sha256 `f53775f3...`, 46
+files), draft message `phase1_commit_msg.txt`. Done and verified there: delivery A and B1 applied, conflicts
+resolved, DEC-361 written in, every golden re-derived by its script (the factor case 8.30801e-7 at 435 on S341's
+pairs; B1's other readings unchanged, 18 of 18 planted errors red), bench 4707943 and `search_bench` identical,
+`test_mutant_anchors` green. **Left, in the next compile window (resume the same agent or brief a fresh one from
+the state note):** the clang build and the clang reading of `S124_factor_gradient_rows`, `assemble.sh` for
+`S102_rebase_goldens.txt`, the completion command in both builds, `gate_extra`, `tools/gate.sh --message`, the
+landing diff; then the coordinator's fast check and commit (`No functional change`). The agent proposes widening
+`touches:` for the three other steps' programs B1 edited; the coordinator agrees. **Phase 2 has no screen script
+yet** and its draft pre-registration is stale in five places the agent listed (the base tree after S124's
+bisection, the abort rule against DEC-362, mutant PT03 before P9 is live).
+
+## 2026-11-13 07:00: part A read H0; S341 landing; part B was next
 
 **Part A (mop-up alone) read H0**, pooled over two segments under DEC-362: Elo -0.27 +/- 2.95, nElo -0.39 +/- 4.33,
 LLR -2.96, 24760 games, Ptnml [696, 3000, 5004, 2987, 693], 11 h 44 m played, 0 forfeits. Segment 1 2026-11-12
