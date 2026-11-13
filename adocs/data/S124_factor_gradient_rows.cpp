@@ -13,6 +13,26 @@
 // over a weight nearly stationary on these rows (|g| 1.98e-9, 1.1e-5 of the
 // case's largest), the derivative right. DEC-316's class; the owner ruled its
 // answer, fixture rows, the metric, h 0.01 and the 1e-6 unchanged (DEC-356).
+// On S124's landing it picked one pair, 8/8/8/3r4/8/1k6/8/K3R3 w and its
+// mirror, after 157 eligible pairs, and the case then read 6.27485e-7 at 739
+// over 5717 rows (adocs/data/S124_rebase_goldens.txt).
+//
+// S341 (2026-11-13, DEC-359): THE POPULATION MOVED, AND THE RULE PICKS TWO
+// PAIRS. That pick was made on the rows libstdc++'s std::shuffle drew; libc++'s
+// draws other rows from the same seed (5696 at 40, the case 4.70154e-6 at 541
+// under clang), because the standard leaves the shuffle's algorithm to the
+// library. placements() now draws with the tree's own shuffle_squares(), one
+// population under both: 5719 rows at 40, 11436 at 80. On it the landed pair
+// read 8.99624e-6 at 646, psqt_eg[queen][b8], and this program, unchanged in
+// what it computes, prints the same lines under g++ 13.3 with libstdc++ and
+// clang++-22 with libc++: base 5717 rows, 8.52919e-6 at 646 (|g| 2.536e-10);
+// round 1 picks 1Q6/7k/7b/8/8/8/K7/8 w and its mirror, candidate 452 of 11436
+// after 303 eligible pairs, the case then 1.3848e-6 at 679, psqt_eg[queen][c4];
+// round 2, TARGET 679, picks 8/6k1/8/1b3K2/2Q5/8/8/8 w and its mirror,
+// candidate 464 after 4 more, the case then 8.30801e-7 at 435,
+// psqt_eg[pawn][g3], over 5721 rows; "reproduces the landed pair: yes", exit 0.
+// The four rows are factor_gradient_rows since. The whole output of both runs
+// is in S341's step file.
 //
 // THE RULE, written 2026-11-05 before the program first ran (the options file,
 // "Option A, the rule"). Nothing about the finite difference enters the pick.
@@ -59,6 +79,11 @@
 //       -o build/S124_factor_gradient_rows
 //
 //   build/S124_factor_gradient_rows
+//
+// Under clang with libc++ (S341), the same line with clang++-22 -stdlib=libc++
+// for g++ and build-clang for build, after `cmake --build build-clang`. Its
+// output is GCC's line for line; a difference is a population that again
+// depends on the standard library.
 //
 // It prints the base's reading, each round's TARGET and pick, the case's worst
 // with the pair, and whether the pick reproduces the landed pair. It reads no

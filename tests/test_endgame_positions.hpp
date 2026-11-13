@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <random>
 #include <string>
+#include <utility>
 #include <vector>
 #include "bitboard.hpp"
 #include "data_structures.hpp"
@@ -91,9 +92,25 @@ inline char piece_char(char c, bool white)
 { return white ? c : static_cast<char>(c - 'A' + 'a'); }
 
 
+// S341. The shuffle placements() draws its squares with: Fisher and Yates', in
+// Durstenfeld's form, over the generator's raw output. [rand.predef] fixes what
+// std::mt19937 returns from a seed; std::shuffle's algorithm is each standard
+// library's own, and until S341 placements() called it: from this seed
+// libstdc++ drew 5719 rows at 40 and libc++ 5696, other positions, so DEC-356's
+// pair, picked on libstdc++'s, did not hold under clang. The index is the raw
+// value modulo the span left; its bias, under 64 in 2^32, is a fixture's.
+inline void shuffle_squares(std::vector<int>* order, std::mt19937* rng)
+{
+  for (size_t i = order->size() - 1; i > 0; --i) {
+    const size_t j = static_cast<size_t>((*rng)() % (i + 1));
+    std::swap((*order)[i], (*order)[j]);
+  }
+}
+
+
 // `per_signature` placements a signature and colouring, each kept with both
 // sides to move where load_FEN() takes it: the generator, population() below
-// without DEC-356's pair. adocs/data/S124_factor_gradient_rows.cpp reads it
+// without DEC-356's rows. adocs/data/S124_factor_gradient_rows.cpp reads it
 // as the rule's base at 40 and as its candidates at 80.
 inline std::vector<std::string> placements(int per_signature = 40)
 {
@@ -112,7 +129,7 @@ inline std::vector<std::string> placements(int per_signature = 40)
         for (int square = 0; square < 64; ++square) {
           order[static_cast<size_t>(square)] = square;
         }
-        std::shuffle(order.begin(), order.end(), rng);
+        shuffle_squares(&order, &rng);
 
         char squares[64] = {};
         size_t next = 0;
@@ -166,22 +183,35 @@ inline std::vector<std::string> placements(int per_signature = 40)
 // against its 1e-6, the derivative right and the weight nearly stationary over
 // the generator's rows (|g| 1.98e-9, 1.1e-5 of the case's largest). One pair
 // appended after the generator's rows, the position and its colour-mirror,
-// takes 726's |g| x65, and the case reads 6.27485e-7 at 739.
-// GOLDEN (DEC-142): the pair, picked by the rule written before it first ran
+// took 726's |g| x65, and the case read 6.27485e-7 at 739 over 5717 rows: the
+// pair was 8/8/8/3r4/8/1k6/8/K3R3 w and its mirror, picked on the rows
+// libstdc++'s std::shuffle drew.
+// S341 (2026-11-13, DEC-359): on shuffle_squares()'s rows, the one population
+// under both libraries, that pair read 8.99624e-6 at 646, psqt_eg[queen][b8]
+// (646's |g| 2.54e-10 over the generator's rows), and the rule, run
+// unchanged, picks two pairs:
+// the first for 646, after which the case read 1.3848e-6 at 679,
+// psqt_eg[queen][c4], and the second for 679. With both the case reads
+// 8.30801e-7 at 435, psqt_eg[pawn][g3], over 5721 rows, a factor of 1.20,
+// under GCC with libstdc++ and clang with libc++ alike.
+// GOLDEN (DEC-142): the pairs, picked by the rule written before it first ran
 // (adocs/data/S124_factor_gradient_options.txt, "Option A, the rule"): the
 // first eligible pair of placements(80), in order, that puts |dE/d TARGET| at
-// three times the base's. Re-derive with
+// three times the base's, again over the extended rows while the case's worst
+// is past 1e-6, at most three pairs. Re-derive with
 // adocs/data/S124_factor_gradient_rows.cpp (its header has the build line),
-// which exits non-zero if its pick is not this pair, whenever the weights, the
+// which exits non-zero if its pick is not these rows, whenever the weights, the
 // generator or the case's setting move.
 inline const char* const factor_gradient_rows[] = {
-    "8/8/8/3r4/8/1k6/8/K3R3 w - - 0 1",
-    "k3r3/8/1K6/8/3R4/8/8/8 b - - 0 1",
+    "1Q6/7k/7b/8/8/8/K7/8 w - - 0 1",
+    "8/k7/8/8/8/7B/7K/1q6 b - - 0 1",
+    "8/6k1/8/1b3K2/2Q5/8/8/8 w - - 0 1",
+    "8/8/8/2q5/1B3k2/8/6K1/8 b - - 0 1",
 };
 
 
 // S124's population: the generator's rows at 40 a signature and colouring,
-// then DEC-356's pair.
+// then DEC-356's rows, one pair until S341 and two since (DEC-359).
 inline std::vector<std::string> population()
 {
   std::vector<std::string> out = placements();

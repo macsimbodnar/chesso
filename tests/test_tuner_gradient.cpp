@@ -766,7 +766,8 @@ TEST_CASE("gradient() is the derivative of the error it descends")
 // mop-up's weights off zero. The case above reads the same derivative at F,
 // where the factor's term and its chain rule are zero, and every other
 // parameter's on the fixture. The rows are S124's population with E1 non-zero
-// (endgame_rows()), DEC-356's pair among them since 2026-11-06.
+// (endgame_rows()), DEC-356's pair among them since 2026-11-06, its rule's two
+// pairs since S341 (2026-11-13, DEC-359).
 //
 // Read over the parameters the product reaches: the five piece values, every
 // positional endgame weight -- the tables', the pawn families', placement's
@@ -781,8 +782,15 @@ TEST_CASE("gradient() is the derivative of the error it descends")
 // 726, psqt_eg[king][b6], a weight nearly stationary on the generator's rows
 // (DEC-316's class); the owner ruled DEC-316's answer (DEC-356), the pair
 // tests/test_endgame_positions.hpp's factor_gradient_rows appends to the
-// population, and with it the case reads 6.27485e-7 at 739,
-// psqt_eg[king][g5], over 5717 rows, a factor of 1.59 under its 1e-6.
+// population, and with it the case read 6.27485e-7 at 739,
+// psqt_eg[king][g5], over 5717 rows, a factor of 1.59 under its 1e-6, on the
+// rows libstdc++'s std::shuffle drew. Under clang with libc++ the same seed
+// drew other rows and the case read 4.70154e-6 at 541 over 5696 (S340's
+// finding). S341 (2026-11-13, DEC-359): the population is drawn with the
+// fixture's own shuffle, one under both libraries; on it the pair read
+// 8.99624e-6 at 646, psqt_eg[queen][b8], the same rule picks two pairs, and
+// the case reads 8.30801e-7 at 435, psqt_eg[pawn][g3], over 5721 rows, a
+// factor of 1.20, under GCC and clang alike.
 TEST_CASE("the endgame factor's gradient is the derivative, chain rule in")
 {
   const dataset_t data = endgame_rows(true);

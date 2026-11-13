@@ -329,8 +329,9 @@ is typed by hand.
 | S101 | the threat family | 0 h 45 m | 1636 | `{0, 5}` | H1, +33.87 +/- 12.33 |
 | S122 | the king safety family | 1 h 22 m | 2916 | `{0, 5}` | H1, +19.44 +/- 9.07 |
 | S124 | the endgame family | 1 h 35 m | 3310 | `{0, 5}` | H0, -13.23 +/- 8.24 |
+| S124 | mop-up alone | 11 h 44 m | 24760 | `{0, 5}` | H0, -0.27 +/- 2.95 |
 
-**The ledger holds 65: mean 5 h 41 m, median 4 h 57 m, 742341 games in 369.97 hours, 2006.5 an hour across the set.** **Fast class**, an effect outside the bounds interval -- twenty-six runs, mean **1 h 39 m**. **Slow class**, inside it, on a bound or a true zero -- 39 runs, mean **8 h 22 m**.
+**The ledger holds 66: mean 5 h 47 m, median 5 h 02 m, 767101 games in 381.70 hours, 2009.7 an hour across the set.** **Fast class**, an effect outside the bounds interval -- twenty-six runs, mean **1 h 39 m**. **Slow class**, inside it, on a bound or a true zero -- 40 runs, mean **8 h 27 m**.
 
 ### Priced by class
 
@@ -384,28 +385,26 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Done recently
 
+- S341  **the fast label is green under clang with libc++** -- `placements()` draws with the tree's own shuffle over `mt19937`'s raw output, one population under both libraries; DEC-356's pair replaced by its rule's two pairs on the owner's option A (DEC-359), 8.30801e-7 at 435 over 5721 rows under g++ and clang++; `STAGES=clang` ends `GATE-EXTRA-DONE`; `tools/datagen.cpp`'s draw left alone on purpose
+- S340  **the tree builds under clang with `-Werror` whatever S124's family ships** -- `[[maybe_unused]]` on `mopup_terms` and `scaled_taper` (`5048611`), no functional change; completed by S341's landing, the clang stage `GATE-EXTRA-DONE` at the identity, both bisection shapes compiling
 - S342  **the mutation tool refuses any malformed entry of a mutant file by name, before the baseline** -- one shape check over every entry, the tool's own `m`'s too: twelve shapes that died in a traceback, six of them after the baseline, are refusals naming the entry and its file; an `unmeasured` row's note says why; every red seen first, 40 cases; one fast check, nothing real; two shapes known and left, neither reachable from the list; filler (DEC-171), no `src/`
 - S339  **the mutation tool never scores a test that did not run as a kill, and refuses a malformed mutant by name** -- a `Skipped`, `Disabled` or `Not Run` ctest row is no kill and the baseline's are named in the report; `validate` refuses a pair that is not two strings and the loader an own-`m` entry without pairs, each naming mutant and file before the baseline; every red seen first, 38 cases; one fast check, nothing real; S342 filed for four further crashes on malformed entries; filler (DEC-171), no `src/`
 - S338  **a mutant whose anchor no longer matches the tree turns the fast suite red where it is broken** -- `test_mutant_anchors` validates all 264 mutants in 34 files by the tool's own loader and validator, 0.1 s, building nothing; every refusal kind seen red, and the real one: `42f2aa7`'s list against S102's staged `src/` names PT08; a mutation run excludes the test by its `mutant_list` label, since 261 of 264 mutants would otherwise read as false kills; the registration is guarded from both classes; one fast check, a real and a low finding fixed; S339 filed for the tool's skipped-row kill and two crashes; filler (DEC-171), no `src/`
-- S337  **the ledger's four other garbled rows read right** -- `e47eb4a` and `b9f5b96` by override rows; `775dafd` and `7f46c0c` through an optional `run` column, now S022 v1 and S023 v1; a malformed run cell, a run naming another step, and an override changing nothing refused, each red first; every other row byte-equal; one fast check, two lows fixed; filler (DEC-171)
-- S336  **a stage of S122's preparation drops every later stage's record when it makes its output, and `seeds` reads the corpus's own copied settings line as its own** -- `filter`, `split`, `sample`, `k` remove `split.txt`, `corpus.tsv.done`, `k.txt`, `prepared.txt` before writing; `split` refuses an unrecorded fixed set; `seeds` passes on the real tree (21 other runs) and refuses a planted range, a near copy and a copies-only listing; the stamped preparation reads clean in a mirror; smoke 35 of 35, 33 red at `9daee21`; one fast check, three lows fixed; filler (DEC-171)
 
 ## Open
 
 1. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert -- the family's SPRT read H0 2026-11-12 (`adocs/data/S124_sprt.log`) and part A, mop-up alone, read H0 2026-11-13 in two segments under DEC-362 (`adocs/data/S124_partA_sprt.log`); nothing landed, and whether mop-up ships for its conversions waits on the owner; part B, F1's cells 0, 1 and 9 alone, plays from `../chesso-s124p2` against `7214ce5`, then C = F2, each `{0, 5}` against what has landed
-2. S340  **paused by S341** -- filler (DEC-171): the tree builds under clang with `-Werror` whatever S124's family ships, its identity included; the fix is landed, the clang stage's green waits on S341
-3. S341  filler (DEC-171), blocks S340: the fast label is green under clang with libc++ -- no pinned golden rests on a population the standard library's own shuffle or distribution drew; `test_tuner_gradient` reads 4.70e-6 there; cause verified and the tree's own shuffle written in `../chesso-s341`, uncommitted; **stopped 2026-11-12 at the owner's stop** (DEC-344 (9)): on the one population DEC-356's pair reads 8.996e-6 and its rule picks two other pairs (8.308e-7); **the owner ruled option A, DEC-359**: lands in the next compile window, between two matches
-4. S102  outpost and space terms in the evaluation, one family -- phase 1 staged in `../chesso-s102p1`; B1 ruled (DEC-361), lands in a compile window after S341, rebased
-5. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan; **moved ahead of S266 and S133 by DEC-360**, read once S124's bisection has closed and S102 has its verdict, with one gauntlet in S152's form at 10+0.2 beside it
-6. S266  a complexity term moves the endgame score toward or away from zero, never past it, by how likely the stronger side is to convert, never flipping its sign
-7. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
-8. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
-9. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-10. S030  move_t drops the moving piece and becomes 16 bits
-11. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
-12. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
-13. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
-14. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
-15. S311  **parked, DEC-342** — a comment rule in `AGENTS.md` and `tools/comment_budget.py`, which reports what breaks it and proves a comment edit left the code identical
-16. S312  **parked, DEC-342** — the log-shaped comment blocks become what the code cannot say, with current values, read old against new
-17. S313  **parked, DEC-342** — five steps after S312, comment tokens per step are measured again and the cleanup's verdict recorded, zero included
+2. S102  outpost and space terms in the evaluation, one family -- phase 1 staged in `../chesso-s102p1`; B1 ruled (DEC-361), lands in a compile window after S341, rebased
+3. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan; **moved ahead of S266 and S133 by DEC-360**, read once S124's bisection has closed and S102 has its verdict, with one gauntlet in S152's form at 10+0.2 beside it
+4. S266  a complexity term moves the endgame score toward or away from zero, never past it, by how likely the stronger side is to convert, never flipping its sign
+5. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
+6. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
+7. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+8. S030  move_t drops the moving piece and becomes 16 bits
+9. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
+10. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
+11. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
+12. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
+13. S311  **parked, DEC-342** — a comment rule in `AGENTS.md` and `tools/comment_budget.py`, which reports what breaks it and proves a comment edit left the code identical
+14. S312  **parked, DEC-342** — the log-shaped comment blocks become what the code cannot say, with current values, read old against new
+15. S313  **parked, DEC-342** — five steps after S312, comment tokens per step are measured again and the cleanup's verdict recorded, zero included

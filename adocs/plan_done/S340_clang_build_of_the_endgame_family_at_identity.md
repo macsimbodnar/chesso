@@ -6,9 +6,9 @@ excludes:   any change to what the evaluation computes; `tools/gate_extra.sh` an
 decisions:  DEC-171, DEC-141, DEC-350
 closes:
 blocks:
-paused_by:  S341
+paused_by:
 author:     Opus 5.5 subagent, briefed by the coordinator, 2026-11-12
-done:
+done:       2026-11-13, on S341's landing: `STAGES=clang tools/gate_extra.sh` ends `GATE-EXTRA-DONE` at the family's identity (`endgame_scale` all 128, mop-up zero), both clang directories compiling every target with no warning and 61 of 61 each, where on `dbef91e` it ended `GATE-EXTRA-FAILED: clang` on the two `-Wunneeded-internal-declaration` errors (seen first); both bisection shapes compile both libraries in both clang directories with no warning (throwaway, reverted); `chesso bench` 4707943 in both gated builds, `search_bench` identical at depths 9 and 12, No functional change; `[[maybe_unused]]` on the two definitions, no flag added or removed; the fix landed as `5048611`.
 
 ## Why
 
