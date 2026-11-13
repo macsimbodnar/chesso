@@ -17668,3 +17668,22 @@ Rejected:     The precedent, void and restart (every hour before each shutdown i
 Consequences: A stop the owner did not command -- a crash, power lost, a hang -- is still void. The resume path is not
               `fastchess.sh`'s: it is driven by hand from the saved state until a step gives the harness one, and its
               first use is rehearsed on a scratch match before the real resume.
+
+## DEC-363  2026-11-13  Part A's symmetric speed dip, found after the run, is recorded and the run is not void
+Tags:         measurement, sprt, machine, abort-rule, s124, s101, dec-362, dec-143, dec-063
+Context:      Part A of S124's bisection read H0 pooled over two segments (DEC-362 (3) and (4) hold). Reading the PGN
+              afterwards, segment 1 shows both sides' nodes per second down by up to 7 % for the games started
+              2026-11-12 09:50 to 10:20 (candidate 1826 against 1927 knps outside, reference 1834 against 1933), 1061 of
+              24760 games; inferred, another session's work on the machine. S101's abort rule names "another load on
+              the machine", and nobody saw it while the run played.
+Decision:     By the coordinator on the owner's delegation, reported to the owner with the alternative. The run stands
+              and the dip is recorded with a sensitivity reading (`adocs/data/S124_partA_segments.txt`): the two sides'
+              ratio inside the window is the ratio outside it (-0.41 % against -0.34 %), no game was forfeited, the 531
+              dropped pairs read -2.62 +/- 13.33 Elo against -0.16 +/- 3.03 for the rest (z -0.35), and the rest alone
+              read LLR -2.69, short of the bound by their smaller count (-2.84 at the pooled proportions).
+Why:          The clause guards against a load that reaches one side more than the other or forfeits games; this one
+              did neither, and an H0 near zero is not what an equal slowdown of both sides produces.
+Rejected:     Void and replay (12 to 20 h for a verdict the remaining 23698 games already describe). Dropping the pairs
+              and reading the rest as the verdict (choosing the sample after seeing it, DEC-063).
+Consequences: A run's record reads each side's nodes per second in ten-minute bins before the verdict is written, so a
+              load is found by rule and not by luck; an asymmetric dip, or one with forfeits, is still void.

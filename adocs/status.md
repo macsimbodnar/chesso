@@ -7,6 +7,69 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-12, by hand.
 
+## 2026-11-13 08:30: part A read H0; S341 landing; part B is next on the machine
+
+**Part A (mop-up alone) read H0**, pooled over two segments under DEC-362: Elo -0.27 +/- 2.95, nElo -0.39 +/- 4.33,
+LLR -2.96, 24760 games, Ptnml [696, 3000, 5004, 2987, 693], 11 h 44 m played, 0 forfeits. Segment 1 2026-11-12
+06:05 to 11:59 (stopped on the owner's command), segment 2 2026-11-13 00:03 to 05:53. DEC-362 (3) and (4) hold:
+segment 1 +2.66 (se 2.12), segment 2 -3.20 (se 2.15), z +1.95; nodes per second +1.16 % and +0.87 % across the
+boot (the governor read `performance` before it and `powersave` after, recorded and not set). Nothing lands; mop-up
+stays at zero. Log `adocs/data/S124_partA_sprt.log`, played diff `adocs/data/S124_partA_candidate.diff` (blob
+`361ef1a30802`), segments `adocs/data/S124_partA_segments.txt`, archive
+`chesso_S124_partA_sprt_2026-11-13.tar.xz` (sha256 `1678aa5f...`).
+- **A symmetric speed dip in segment 1, 09:50 to 10:20, is recorded and the run stands (DEC-363)**: both sides down
+  up to 7 %, 1061 games, their ratio unchanged, no forfeit; without those pairs the rest read -0.16 +/- 3.03, LLR
+  -2.69. Reported to the owner with the alternative, a replay.
+- The PGN holds round 6195 twice, counted in both segments by fastchess, and three games written and not counted;
+  the handover's "drop the first copies" was wrong and fastchess's own accounting is kept (the segments file).
+- **For the owner, asked 2026-11-13: does mop-up ship anyway for its conversions?** P1 measured 759 -> 862 of 984
+  won lone-king starts converted (KRvK 157 -> 199, KBNvK 22 -> 63 of 184, KBBvK 102 -> 126); the SPRT cannot see
+  most of that, the harness resigning at 400 cp, and prices the rest at nElo -0.39 +/- 4.33; cost +0.970 % nodes;
+  held-out loss slightly worse. (a) ship: one agent repairs part A's three reds on `achesso`, bench 4586026, a loss
+  down to -4.72 nElo not excluded, parts B and C then replay against the new tree. (b) keep at zero: nothing
+  changes; S129's tablebases would cover those endings, twelfth in the Open list. (c) measure first: an SPRT with
+  resignation off, up to 20 h plus an A/A. The coordinator recommends (b) and continues on it until the owner rules.
+
+**Part B, F1's cells alone, is staged in `../chesso-s124p2`** (HEAD `7214ce5`, REF): `endgame_scale` cells 0, 1, 9 at
+46, 0, 20 (F1's decided fit, not refit), mop-up zero; 10 files, staged diff sha256 `26484f5e...`
+(`.tuning/coord/S124/S124_partB_cached.diff`). **Bench 4707943, REF's**: the cells move no bench node but are live
+(an H1 landing writes `Bench: 4707943`, not `No functional change`). No owner's stop fires. One red in each build,
+`test_audit_design`'s first case at its precondition (the family's "Reds left" 4). On its tree, for an H1 landing
+only: `EXACT_FLOOR` 157 -> 165 (166 shipping, 157 weakened; DEC-313 (1)), `CLAMP_PUSH` +40 -> +50, the probcut
+row re-mined, S170's budgets C and D raised under DEC-299. Part A's tree and final state are saved first
+(`.tuning/coord/S124/`, `partA_resume/config_final.json`). Launch after the pin:
+`cd /home/max/ws/chesso-s124p2 && nohup setsid -w adocs/data/S124_sprt.sh >
+/home/max/ws/chesso/.tuning/s124b_sprt.console 2>&1 & echo $!`.
+
+**S341 lands in this window** (option A, DEC-359): the tree's own shuffle, the rule's two pairs, 8.30801e-7 at 435
+over 5721 rows under g++ and clang++ with libc++, all four builds 61 of 61, `STAGES=clang` `GATE-EXTRA-DONE`; its
+fast check found nothing blocking and three wording lows, fixed. Landing diff
+`../chesso-s341/.tuning/s341/s341_landing.diff` (sha256 `220865a0...`). It completes S340.
+
+**S102's phase 1 with B1 (DEC-361) is being rebased** by one agent in `../chesso-s102p1b` (branch `s102p1b`, off
+`e6ef283` plus S341's diff); it stops compiling at `.tuning/coord/NO_COMPILE`, which the coordinator creates before
+a match and removes after it, and saves its state under `.tuning/coord/S102/`.
+
+## 2026-11-13 00:05: part A is resumed and playing (DEC-362)
+
+**Running: part A's second segment**, resumed 00:03 from the saved state by `fastchess -config file=config.json` in
+`../chesso-s124p2`; wrapper PID 67317, fastchess PID 67321; console `.tuning/s124a_sprt_resume1.console`; the PGN
+and log append in `.tuning/sprt_s124_20261112_060554/`. Watcher armed, ceiling 40 h. At most 29512 games are left
+to the cap, about 14 h. **Nothing compiles and nothing is committed while it plays; this edit is uncommitted.**
+- DEC-362 (2), checked after the boot: kernel `7.2.15-76070215-generic`, fastchess alpha 1.8.1 20260720-daa3ea2, the
+  book, both binaries and the saved state all read their recorded sha256. The candidate was restored to
+  `/tmp/chesso-candidate.DIcYIH` from the kept copy.
+- **The governor reads `powersave` after the boot; segment 1 read `performance`.** Recorded and not set (DEC-195,
+  the owner's instruction). Read before the resume on a scratch match at 8+0.08, concurrency 12: 1903 to 1915 knps
+  the candidate, 1895 to 1922 the reference, against segment 1's 1883 to 1925 and 1892 to 1935
+  (`.tuning/coord/S124/nps_quarters.py`): no move a search would see. DEC-362 (4) reads it again at the verdict.
+- The rehearsal (scratch, 5 min, SIGINT, `-config`, 2 min): the resume continued the saved count, 168 to 172 at its
+  first report, same names and bounds.
+- DEC-362 (3): the first report after the resume read 12396 games, the state 12388. **Games 12389 and 12390 were
+  started again**, so the PGN holds that pair twice: drop the first copies (the last two games written before
+  `GameStartTime` 2026-11-13) before any reading from the PGN; segment 1 is the first 12388.
+- At the verdict: step 8 of the handover below.
+
 ## 2026-11-12 10:15: HANDOVER for a fresh session (the owner shuts the workstation down today)
 
 **Read this section first; it is enough to act on.** The owner turns the workstation off today. Part A of S124's

@@ -1,0 +1,1406 @@
+diff --git a/adocs/data/S124_partA_sweep_s170.txt b/adocs/data/S124_partA_sweep_s170.txt
+new file mode 100644
+index 0000000000000000000000000000000000000000..493a2be9376d79548af90a2ffefb19dd3f95ff69
+--- /dev/null
++++ b/adocs/data/S124_partA_sweep_s170.txt
+@@ -0,0 +1,113 @@
++# S124 part A's sweep of adocs/data/S170_cases.tsv, 2026-11-12, on part A's frozen Release build (mop-up alone, P1's six, every cell at F, on 7214ce5, src/evaluation.cpp alone; bench 4586026), sha256 a5b6bc74cb1855b8. adocs/data/S203_case_sweep.sh, one process per case (ENGINE and CASES set to a one-row copy of the TSV), assembled in the TSV's order; node-limited, so the split moves no count.
++The sweep grid. Stride 2 is one side's own turns, which is what a game
++gives an engine's table; stride 1 is a table no game produces (DEC-151),
++and the existing rows use it, so both are swept.
++case                      stride     nodes  mates  short
++A_mate8_shallow                1    100000      0      0
++A_mate8_shallow                1    300000      1      0
++A_mate8_shallow                1    500000      1      0
++A_mate8_shallow                1   1000000     13      0
++A_mate8_shallow                1   1200000     18      0
++A_mate8_shallow                1   1500000      4      0
++A_mate8_shallow                1   2000000     14      0
++A_mate8_shallow                1   3000000     13      1
++A_mate8_shallow                1   4000000     19      0
++A_mate8_shallow                2    100000      0      0
++A_mate8_shallow                2    300000      0      0
++A_mate8_shallow                2    500000      0      0
++A_mate8_shallow                2   1000000      0      0
++A_mate8_shallow                2   1200000     12      0
++A_mate8_shallow                2   1500000      6      0
++A_mate8_shallow                2   2000000     14      0
++A_mate8_shallow                2   3000000     13      0
++A_mate8_shallow                2   4000000      1      0
++B_mate6_shallow                1    100000      9      0
++B_mate6_shallow                1    300000     23      0
++B_mate6_shallow                1    500000     37      0
++B_mate6_shallow                1   1000000     44      3
++B_mate6_shallow                1   1200000     54      0
++B_mate6_shallow                1   1500000     56      1
++B_mate6_shallow                1   2000000     58      0
++B_mate6_shallow                1   3000000     71      0
++B_mate6_shallow                1   4000000     88      0
++B_mate6_shallow                2    100000      1      0
++B_mate6_shallow                2    300000      8      0
++B_mate6_shallow                2    500000     15      0
++B_mate6_shallow                2   1000000     38      0
++B_mate6_shallow                2   1200000     15      1
++B_mate6_shallow                2   1500000     34      0
++B_mate6_shallow                2   2000000     29      0
++B_mate6_shallow                2   3000000     21      0
++B_mate6_shallow                2   4000000     44      0
++C_mate7_depth11                1    100000      3      0
++C_mate7_depth11                1    300000      0      0
++C_mate7_depth11                1    500000      0      0
++C_mate7_depth11                1   1000000     27      0
++C_mate7_depth11                1   1200000     42      0
++C_mate7_depth11                1   1500000      0      0
++C_mate7_depth11                1   2000000     47      0
++C_mate7_depth11                1   3000000     41      0
++C_mate7_depth11                1   4000000     32      0
++C_mate7_depth11                2    100000      0      0
++C_mate7_depth11                2    300000      0      0
++C_mate7_depth11                2    500000      0      0
++C_mate7_depth11                2   1000000      2      0
++C_mate7_depth11                2   1200000      0      0
++C_mate7_depth11                2   1500000      7      0
++C_mate7_depth11                2   2000000      3      0
++C_mate7_depth11                2   3000000      4      1
++C_mate7_depth11                2   4000000      3      0
++D_mate_minus6_depth10          1    100000      0      0
++D_mate_minus6_depth10          1    300000      0      0
++D_mate_minus6_depth10          1    500000      0      0
++D_mate_minus6_depth10          1   1000000      0      0
++D_mate_minus6_depth10          1   1200000      0      0
++D_mate_minus6_depth10          1   1500000      0      0
++D_mate_minus6_depth10          1   2000000      0      0
++D_mate_minus6_depth10          1   3000000      0      0
++D_mate_minus6_depth10          1   4000000      0      0
++D_mate_minus6_depth10          2    100000      0      0
++D_mate_minus6_depth10          2    300000      0      0
++D_mate_minus6_depth10          2    500000      0      0
++D_mate_minus6_depth10          2   1000000      0      0
++D_mate_minus6_depth10          2   1200000      0      0
++D_mate_minus6_depth10          2   1500000      0      0
++D_mate_minus6_depth10          2   2000000      0      0
++D_mate_minus6_depth10          2   3000000      0      0
++D_mate_minus6_depth10          2   4000000      2      0
++E_mate_minus9                  1    100000      0      0
++E_mate_minus9                  1    300000     12      3
++E_mate_minus9                  1    500000     16      0
++E_mate_minus9                  1   1000000      9      0
++E_mate_minus9                  1   1200000     17      0
++E_mate_minus9                  1   1500000     17      0
++E_mate_minus9                  1   2000000     22      0
++E_mate_minus9                  1   3000000     22      0
++E_mate_minus9                  1   4000000     13      0
++E_mate_minus9                  2    100000      0      0
++E_mate_minus9                  2    300000      0      0
++E_mate_minus9                  2    500000      3      0
++E_mate_minus9                  2   1000000      0      0
++E_mate_minus9                  2   1200000      8      0
++E_mate_minus9                  2   1500000      5      0
++E_mate_minus9                  2   2000000      1      0
++E_mate_minus9                  2   3000000     14      0
++E_mate_minus9                  2   4000000      4      0
++F_mate6_inherited_no_line       1    100000     16      0
++F_mate6_inherited_no_line       1    300000     21      1
++F_mate6_inherited_no_line       1    500000     23      0
++F_mate6_inherited_no_line       1   1000000     28      0
++F_mate6_inherited_no_line       1   1200000     36      0
++F_mate6_inherited_no_line       1   1500000     30      0
++F_mate6_inherited_no_line       1   2000000     48      0
++F_mate6_inherited_no_line       1   3000000     44      0
++F_mate6_inherited_no_line       1   4000000     43      0
++F_mate6_inherited_no_line       2    100000      0      0
++F_mate6_inherited_no_line       2    300000      3      0
++F_mate6_inherited_no_line       2    500000     12      0
++F_mate6_inherited_no_line       2   1000000     17      0
++F_mate6_inherited_no_line       2   1200000     18      0
++F_mate6_inherited_no_line       2   1500000      5      0
++F_mate6_inherited_no_line       2   2000000     20      0
++F_mate6_inherited_no_line       2   3000000     18      0
++F_mate6_inherited_no_line       2   4000000     21      0
+diff --git a/adocs/data/S124_phase1_plants.patch b/adocs/data/S124_phase1_plants.patch
+index 1b72d1c69a853aeb8307c04f4a8cb1123c21f96d..e05ff163e6b15ba440c16484a55ed75f2059a05a 100644
+--- a/adocs/data/S124_phase1_plants.patch
++++ b/adocs/data/S124_phase1_plants.patch
+@@ -11,10 +11,10 @@
+  #include <iostream>
+  #ifdef CHESSO_TUNE
+  #include <atomic>
+-@@ -1874,8 +1875,15 @@
+- // the screen and mop-up by SPSA on conversion (DEC-084, DEC-350 (4)).
+- // The factors are written as tools/tuner emits them, ENDGAME_SCALE_ONE's 128
+- // each, cell by endgame_cell_t.
++@@ -1879,8 +1880,15 @@
++ // having credited no part: P1's SPSA on conversion after 150 iterations, the
++ // corner's middlegame half frozen at zero (DEC-358 kept it), pasted as fitted
++ // and not refit. Every cell stays at F, as landed.
+ +#ifdef S124_FORCED
+ +// Every cell off F, the values tests/test_eval_trace.cpp forces: a scratch
+ +// build's, never a candidate's.
+@@ -24,10 +24,10 @@
+  constexpr int endgame_scale[ENDGAME_CELL_COUNT] = {
+      128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128};
+ +#endif
+- constexpr int mopup_mg[MOPUP_FEATURE_COUNT] = {0, 0, 0};
+- constexpr int mopup_eg[MOPUP_FEATURE_COUNT] = {0, 0, 0};
++ constexpr int mopup_mg[MOPUP_FEATURE_COUNT] = {96, 149, 0};
++ constexpr int mopup_eg[MOPUP_FEATURE_COUNT] = {15, 13, 6};
+  constexpr std::array<score_t, MOPUP_FEATURE_COUNT> mopup_score =
+-@@ -1935,6 +1943,19 @@
++@@ -1940,6 +1948,19 @@
+      "the endgame factor's numerator can overflow an int");
+  
+  
+@@ -47,7 +47,7 @@
+  // A set holding exactly one square.
+  static inline bool one_square(bb_t squares)
+  { return squares != 0 && (squares & (squares - 1)) == 0; }
+-@@ -1964,7 +1985,7 @@
++@@ -1969,7 +1990,7 @@
+    const bb_t* bitboards = board->bitboards;
+    const int own = (strong == WHITE) ? W_PAWN : B_PAWN;
+    const int other = (strong == WHITE) ? B_PAWN : W_PAWN;
+@@ -56,7 +56,7 @@
+    const bb_t white_bishops = bitboards[W_BISHOP];
+    const bb_t black_bishops = bitboards[B_BISHOP];
+    const bool bishop_each =
+-@@ -2097,13 +2118,23 @@
++@@ -2102,13 +2123,23 @@
+  static inline int scaled_taper(const board_t* board, score_t pair, int phase)
+  {
+    const int e1 = board->material + eg_value(pair);
+@@ -151,7 +151,7 @@
+        w[tuner_layout::EGS_BASE + parts.cell] != ENDGAME_SCALE_ONE;
+  
+    return (off_f ? 2.0 * 23.0 / 24.0 + 3071.0 / 3072.0 : 3.0 * 23.0 / 24.0) +
+-@@ -1151,11 +1182,27 @@
++@@ -1154,11 +1185,27 @@
+    // 0, where the pick switches, so the score is continuous across it.
+    out.e1 = material + eg[SITE_POSITIONAL];
+    out.cell = picked_cell(data, row, out.e1);
+@@ -179,7 +179,7 @@
+  
+    for (size_t g = 0; g < model.groups.size(); ++g) {
+      if (!model.groups[g].clamped) { out.score += group_score(g); }
+-@@ -1312,7 +1359,8 @@
++@@ -1315,7 +1362,8 @@
+            grad[cell] += outer * s.e1 * eg_weight / ENDGAME_SCALE_ONE;
+          }
+  
+@@ -189,7 +189,7 @@
+  
+          for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
+            const entry_t e = data.entries[j];
+-@@ -1327,8 +1375,10 @@
++@@ -1330,8 +1378,10 @@
+            if (s.clamp_binds && clamped_site(f.site)) { continue; }
+  
+            grad[f.mg] += c * mg_weight;
+diff --git a/adocs/data/S124_sprt.sh b/adocs/data/S124_sprt.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..e3d18a80261c45c9317603a3c5c43b93950fff1a
+--- /dev/null
++++ b/adocs/data/S124_sprt.sh
+@@ -0,0 +1,495 @@
++#!/usr/bin/env bash
++#
++# S124: THE ENDGAME FAMILY -- the screen's F1 and F2 scale factor cells (the decided fit for
++# F2, F1's and F2's ten cells free over S122's corpus at K 1.3248, F3 dropped by the
++# tablebase guard and its three cells at F) and P1's mop-up (SPSA on conversion, kept by
++# DEC-358), against the tree that ships the family at its identity: one SPRT at the harness's
++# 8+0.08, Hash 16, {0, 5} nElo (DEC-259 (b), DEC-350 (8)), bisected along the pre-registered
++# partition on H0 or no verdict.
++#
++#   cd /home/max/ws/chesso-s124p2 && nohup adocs/data/S124_sprt.sh > /home/max/ws/chesso/.tuning/s124_sprt.console 2>&1 &
++#
++# Written 2026-11-11 in S124's phase 2b, before any of it ran, in adocs/data/S122_sprt.sh's
++# working-tree form (DEC-334, DEC-254), re-pinned to S124. **Why the working tree: an owner's
++# stop fired** (DEC-344 (9)): re-derived by its script on S124's candidate's grid
++# (adocs/data/S124_sweep_s170.txt), `C_mate7_depth11`'s short-line ceiling rises 4 -> 10, one
++# cell (stride 1, 2000000 nodes, 39 mate lines, 10 short), past DEC-299's +2. The ceiling in
++# tests/test_mate_carry.cpp is not moved and the budgets S170_pick_budgets.sh answers are not
++# applied (DEC-299's guard is not met); the case reads green at its landed budgets. In
++# DEC-334's form the SPRT plays the staged tree and the owner rules on the ceiling only on H1.
++# Both mate floors hold (`EXACT_FLOOR` 157 against 165 shipping and 156 weakened,
++# `MATE_IN_THREE_FLOOR` 11 against 12 and 11). The run plays the uncommitted, staged tree of
++# the worktree `/home/max/ws/chesso-s124p2` against its HEAD, fastchess.sh's dirty-tree mode
++# (S256, DEC-254): the candidate is named `cand-<HEAD>+<hex>` and the run saves its diff as
++# `$OUT/candidate.diff`. Nothing here was run. The coordinator pins REF and fills the
++# bracketed lines below, and until then the script refuses to start (the self-check at the
++# bottom).
++#
++# THE COMMITS AND THE TREE, EACH NAMED BY WHAT IS CHECKED OF IT. No guard names a commit
++# for its place in the log, so a commit that touches neither src/ nor a build file trips
++# none of them, wherever it falls.
++#
++#   screened  the commit the screen ran from, `c496403`, the engine every part was read
++#             against. Checked: its family is at its identity (S124_screen.py
++#             landing-check on that commit's src/evaluation.cpp, not on whatever is
++#             checked out); and it is the commit the screen's .tuning/s124/screen/bin/stamp
++#             names, in this worktree (gitignored), which the screen wrote on freezing its
++#             tools and held every stage to (S124_screen.sh tools). P1 ran at `54c892d`,
++#             a descendant whose src/ and build files are `screened`'s.
++#   ref       what the candidate is played against, and the worktree's HEAD, `7214ce5` at
++#             this script's writing (S338's close; the family at its identity since
++#             S124's phase 1 landed). Checked: it descends from `screened`; its src/ and
++#             build files are `screened`'s byte for byte, or for a later bisection part
++#             that plus what has landed (THE PARTS below). A commit cannot hold its own
++#             sha, so the pin is an uncommitted edit of the worktree's copy of this file,
++#             and the run's candidate.diff holds it, as S101's and S122's did.
++#   the tree  the paste: `ref` plus the staged diff, uncommitted. Checked: it is dirty;
++#             nothing unstaged under src/, tests/, cmake/ or CMakeLists.txt, nothing
++#             untracked under src/ or cmake/; cmake/ and CMakeLists.txt are `ref`'s; under
++#             src/ only src/evaluation.cpp differs from `ref`, and outside whole-line
++#             comments only in whole definitions of the arrays this run moves, each read
++#             to its closing `};` across the lines clang-format wrapped it over and nothing
++#             after it; within endgame_scale only the cells the part frees differ from
++#             `ref`'s, F3's three at F always; every other weight array and define reads
++#             `ref`'s value by name (.tuning/verify_fit.py's reader); and build/'s binary is
++#             no older than any source it is built from.
++#
++# THE PAIR.
++#
++#   CAND  the working tree of `/home/max/ws/chesso-s124p2`, uncommitted: its HEAD (REF) plus
++#         S124's staged paste. `.tuning/apply_fit.py` pasted the screen's decided fit for F2
++#         (`.tuning/s124/screen/fits/f1_f2/full/r4/fit.hpp`, sha256 c56cd322...,
++#         adocs/data/S124_screen_f1_f2_fit.hpp) with P1's two mop-up lines in place of the
++#         fit's zeros (adocs/data/S124_p1_final.txt, sha256 63b6e1fb...), and
++#         `.tuning/verify_fit.py` read 1190 of 1190 parameters the composed header's:
++#         `endgame_scale` {45, 0, 9, 29, 81, 114, 86, 128, 123, 19, 128, 128, 128},
++#         `mopup_mg` {96, 149, 0}, `mopup_eg` {15, 13, 6}; every golden the paste moved
++#         re-derived by its own script (DEC-142) but the ceiling above, the first-mate
++#         case's second position and the four the step file lists as findings.
++#   REF   the worktree's HEAD, which the coordinator pins below.
++#
++# THE PARTS: HOW THE GUARDS READ A BISECTION PART (on H0 or no verdict, the order the screen's
++# pre-registration wrote: A = mop-up, B = F1, C = F2). A part's run is this file over its own
++# uncommitted tree, with `ref=` and `part=` re-pinned and the coordinator's sentence
++# rewritten; `screened=` stays:
++#
++#   part   CAND may move                                   REF may carry past `screened`
++#   ""     mopup_mg, mopup_eg; endgame_scale cells 0-9      nothing
++#   A      mopup_mg, mopup_eg (P1's six, as here)          nothing
++#   B      endgame_scale cells 0, 1, 9 (F1's decided fit,  mopup_mg, mopup_eg, if A landed
++#          `.tuning/s124/screen/fits/f1/full`)
++#   C      endgame_scale cells 0-9 (F2's decided fit,      mop-up's if A landed; cells 0, 1,
++#          which frees F1's cells again, amendment 6)      9 if B landed
++#
++# F3's cells 10, 11 and 12 stay at F = 128 in every part. Mop-up's six are P1's in A and are
++# not refit; F1's and F2's cells are the screen's decided fits, not refit either.
++#
++# WHAT THE VERDICT PRICES. The fitted cells and mop-up and their cost together: every
++# stage-one evaluation pays the cell's gate and pick and mop-up's domain test, the shortcut's
++# nodes included, the family being stage one. The cost is recorded apart, on identical
++# trees, by adocs/data/S124_cost_masks.sh (the candidate, the factor alone, mop-up alone, the
++# parent) and printed beside the verdict; it decides nothing, and there is no bar.
++#
++# WHAT THE VERDICT DOES NOT SEE. **The harness's two-sided resignation at 400 cp
++# (fastchess.sh's adjudication, S212) ends most games before a lone-king ending is reached,
++# so most of mop-up's conversions are hidden from this verdict**; P1's conversion test
++# (adocs/data/S124_p1_*, DEC-358) is the reading of them, and this pair prices what is left:
++# the factor's scaling everywhere and mop-up where a game reaches its domain unadjudicated.
++#
++# WHY THESE BOUNDS AND THIS CONTROL. 8+0.08: DEC-286 keeps the harness's control for an
++# evaluation family. `{0, 5}` nElo at alpha = beta = 0.05: DEC-259 (b) names it for a
++# family's survivors, DEC-350 (8) for this one. Rejected: `{-5, 5}`, `--fast` and `{0, 10}`,
++# one SPRT per part (S101_sprt.sh's reasons).
++#
++# WHAT THE PAIR COSTS (DEC-143), the nElo formula's arithmetic (`adocs/testing_strategy.md`
++# section 1.1, D = 1046535 and 639770 over the bounds' width squared, 25): **41861 games**
++# with the truth at the interval's midpoint, 19.84 h at the 2110 games an hour
++# `.moltke.local.md` budgets 8+0.08 on `noob_3moves.epd` from (DEC-190); **25591 games** on a
++# bound, 12.13 h. S122's run of the same pair and control played 2916 games to H1.
++#
++# THE CAP. **20950 rounds, 41900 games**, 19.86 h at 2110 an hour, S101's rule. Four hours
++# or more, so the run starts by DEC-155's night rule. Watcher ceiling 144000 s (40 h),
++# wall-clock only while the machine is awake.
++#
++# REGIME. 8+0.08, Hash 16, one thread a side, `books/noob_3moves.epd` (DEC-189), concurrency
++# 12 (DEC-050), fastchess.sh's adjudication, the governor recorded and not set (DEC-195). If
++# fastchess, the book, the adjudication or the machine has moved since the last fixed-rounds
++# A/A, that A/A of 1000 games comes first (DEC-143); the coordinator checks on the day.
++#
++# ABORT RULE, S101's. Stop the run and report nothing if the time-forfeit rate passes
++# **1.0 % on either side** (`tools/forfeit_report.py` over the run's PGN in `$OUT`), on a
++# crash or a disconnect on either side (`SPRT-RUN-INVALID`, S212), if the machine loses mains
++# power (POWER) or another load starts on it (MACHINE), if the banner is not what the
++# coordinator's sentence below says it must print, or at 40 h of wall clock with neither
++# bound. Nothing else stops it.
++#
++# THE BANNER, READ BEFORE THE FIRST GAME FINISHES: S283's lines with this run's shas, dates
++# and out directory --
++#
++#   candidate  <REF>  <its date>  + uncommitted changes
++#   diff       /home/max/ws/chesso/.tuning/sprt_s124_<stamp>/candidate.diff  blob <12 hex>
++#   reference  <REF>  <its date>
++#   config     arch native  tune off
++#   padding    cand on  ref on
++#   tc 8+0.08  hash 16  concurrency 12 of 12 cores
++#   book       noob_3moves.epd
++#   seed       <the run's stamp, digits only>
++#   bounds     elo0=0 elo1=5 alpha=0.05 beta=0.05
++#   cap        20950 rounds, 41900 games, from SPRT_ROUNDS; no bound by then is no verdict
++#   out        /home/max/ws/chesso/.tuning/sprt_s124_<stamp>
++#
++# with no `relay` or `A/A CALIBRATION` line, fastchess's engine names `cand-<REF, short>+<the
++# same 12 hex>` and `ref-<REF, short>`, the candidate's `id name` carrying `-dirty`, and
++# fastchess's first `Started game 1 of N` line reading N = 41900.
++#
++# OPEN FINDINGS THIS RUN IS TAKEN WHILE OPEN (BUGS as scoped by DEC-171): S339's three, in
++# plan_todo/ at `7214ce5` -- the mutation tool scores a ctest row that was skipped or not run
++# as a kill; `validate` dies on a ValueError at a pair that is not an (old, new) pair of
++# strings; the loader dies on a KeyError at a file that brings its own `m` and gives no
++# pairs. None moves play. No audit finding reads open at `7214ce5`. And whatever plan.md's
++# Open list says on the day.
++#
++# THE COORDINATOR'S SENTENCE, 2026-11-12 06:10, before a game of part A is played. Part A of the
++# bisection the family's H0 opened (`adocs/data/S124_sprt.log`, recorded at `7f3acee`): mop-up
++# alone. REF `7214ce5` (committed 2026-11-11 22:44, S338's close: tools and tests only since
++# `screened`, `src/` and the build files byte for byte `screened`'s, bench 4707943);
++# `screened` `c496403`; nothing has landed, so REF carries nothing past `screened`. The tree:
++# `/home/max/ws/chesso-s124p2`, REF plus the staged diff, 10 files, sha256 484ac455ba21...: P1's
++# six (`adocs/data/S124_p1_final.txt`, sha256 63b6e1fb..., not refit), every endgame_scale cell
++# at F as landed, the goldens mop-up moves re-derived by their scripts
++# (`adocs/data/S124_partA_goldens.txt` in the main checkout), bench 4586026 in both builds and
++# in the Debug binary; this pin is an unstaged edit of this file beside it. The cost, from the
++# family's reading of 2026-11-12 (`S124_cost_masks.sh`, five interleaved runs, instructions):
++# mop-up alone +0.970 % on `bench` and +0.931 % on `bench 16`
++# (`.tuning/coord/S124/cost_masks.log`). The harness: as at the A/A of 2026-11-12 02:40
++# (`adocs/data/S124_aa_20261112.txt`, pair variance 0.2559 +/- 0.0162, z -1.41, inside the
++# band): fastchess alpha 1.8.1 20260720-daa3ea2, `noob_3moves.epd` sha256 2011193b...,
++# `fastchess.sh` at `ba1cad6`, kernel 7.2.15, the same workstation; no A/A owed. Before the
++# run, on the tree: both fast suites 58 of 61, the same three red in each -- the first-mate
++# case (its KRR position first reports mate at 12, outside ten iterations), "removing a piece
++# moves the score" (mop-up's share past POSITIONAL_ROOM) and the two planted-bound cases of
++# test_search (600 and 500 under the 820 stand pat), each one of the family's "Reds left",
++# none repaired before the verdict; format clean. DEC-141's second tier on the tree, 06:04:
++# the Debug binary self-played 8 games at 4+0.04, 0 `Assertion`, 0 disconnects
++# (`.tuning/coord/S124/debug_selfplay_partA/`). **The owner's stops on part A (DEC-344 (9)):
++# none fires.** `EXACT_FLOOR` 157 against 167 shipping and 155 weakened;
++# `MATE_IN_THREE_FLOOR` 11 against 12 and 11; no mate-carry ceiling rises with part A's grid
++# (`adocs/data/S124_partA_sweep_s170.txt`, added to the command) and no budget moves;
++# test_tuner_gradient green, its gradient case 8.61e-7 at 984, DEC-316's and DEC-356's pairs
++# reproducing. **So where the rows below name the family, the ceiling and the owner's ruling,
++# part A reads them so:** H1 lands mop-up alone with no stop to rule on, after one agent
++# repairs the three fixture reds on a tree rebased onto `achesso` (`5048611` there is S340's
++# `[[maybe_unused]]`, no functional change); H0 or no verdict records mop-up as zero at this
++# control, and whether it ships for its conversions (P1, DEC-358) is the owner's; either way
++# part B, F1's cells 0, 1 and 9, follows against what has landed. Open under DEC-171 on the
++# day, none reachable in play: S340 (the clang stage's green, paused by S341), S341 (stopped
++# at the owner's stop on the gradient bound's population, waiting on the owner),
++# `S124_phase1_plants.patch` not applying past `5048611` (no step yet), and at REF itself
++# S339's and S342's mutation-tool findings, closed on `achesso` by `01ddeec` and `739a537`.
++# The Open list on the day: S124, S340, S341, S102, S266, S133, S267, S126. The governor read
++# `performance`, recorded and not set (DEC-195). This run's console is
++# `/home/max/ws/chesso/.tuning/s124a_sprt.console`, the family's `s124_sprt.console` kept.
++#
++# PRE-REGISTERED INTERPRETATION, written before a game is played (DEC-063).
++#
++#   H1 accepted  -> at 8+0.08 the fitted family is accepted as gaining: H1's 5 nElo preferred
++#                   to H0's 0 at alpha = beta = 0.05. **The owner rules on the mate-carry
++#                   ceiling first** (DEC-334's form, DEC-344 (9)): C_mate7_depth11's 4 -> 10.
++#                   On the owner's word the tree lands with the DEC-142 items phase 2b
++#                   re-derived, the ceiling and S170's budgets as the owner rules them, the
++#                   step's specs.md rows and the record commit's block. F3's cells stay at F,
++#                   refused by the guard, recorded with their figures. The stopping run's Elo
++#                   is upward-biased (DEC-063) and is not the effect size.
++#
++#   H0           -> not shown to gain. **Nothing was committed, so the paste is simply not
++#                   landed**: REF's family stays at its identity, with REF's goldens. The
++#                   bisection follows, survivors only, in order, each its own uncommitted tree
++#                   in this file's shape, each stopping for the coordinator: A = mop-up (P1's
++#                   six), B = F1 (the screen's decided F1 fit), C = F2 (the screen's decided F2
++#                   fit, F1's cells freed again), each `{0, 5}` against what has landed -- at
++#                   worst three more runs after this one, each up to 19.86 h, 79.4 h with this
++#                   run. A part's H1 lands after its verdict and before the next is pasted; its
++#                   H0 or no verdict is that part's zero. Leads, none built: KBNvK's
++#                   conversion (63 of 184 fresh starts), F3's cells (S126's).
++#
++#   No verdict   -> the 41900-game cap, or the 40 h abort, with neither bound: not landed,
++#                   as H0 is, recorded as **unresolved**, and bisected as H0 is (DEC-259 (c)).
++#
++# ON ANY OUTCOME, before any commit: `EXACT_FLOOR` under 157, `MATE_IN_THREE_FLOOR` under 11,
++# a mate-carry ceiling rising by more than 2, or a recurrence on test_tuner_gradient's bound
++# stops for the owner (DEC-344 (9)); the ceiling fired at phase 2b (above), the rest did not.
++#
++# THE COMMIT THAT CLOSES THE VERDICT -- the record commit on H0 or no verdict, on H1 the one
++# that lands the tree -- carries DEC-220's block -- `SPRT | cand <REF>+<hex> vs ref <REF>,
++# 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo` and the `Elo`, `LLR`, `Games`, `Wall` and
++# `Log` lines -- with the log trimmed into `adocs/data/S124_sprt.log` by
++# `tools/trim_console.py` and the run's `candidate.diff` committed beside it as
++# `adocs/data/S124_candidate.diff` (DEC-254); `tools/ledger.py` regenerates plan.md's ledger
++# table from it.
++#
++# AGENTS.md WATCHERS and DEC-061: fastchess.sh prints SPRT-RUN-DONE or SPRT-RUN-FAILED on
++# every exit path, and this script execs it and adds nothing after.
++
++set -uo pipefail
++
++fail()
++{
++  echo "SPRT-RUN-FAILED: $*" >&2
++  exit 1
++}
++
++# THE BOOKED SETTINGS, AND NOTHING ELSE FROM THE CALLER'S ENVIRONMENT.
++ref="7214ce5"
++worktree="/home/max/ws/chesso-s124p2"
++screened="c496403"
++part="A"          # THE PARTS above: empty for the family, or A, B or C
++tc="8+0.08"
++hash="16"
++concurrency="12"
++sprt_bounds="elo0=0 elo1=5 alpha=0.05 beta=0.05"
++sprt_rounds="20950"
++
++# THE COORDINATOR'S SENTENCE AND SHAS. While the bracketed marker is anywhere in this file
++# the pre-registration is unfinished and the run does not start. The marker is assembled in
++# two halves so this line does not match itself.
++self="${BASH_SOURCE[0]}"
++marker='[COORD'"INATOR"
++grep -qF -- "$marker" "$self"
++case $? in
++  0) fail "$self still holds the coordinator's unfilled marker ($marker" \
++          "...]); pin REF and fill the sentence before the run" ;;
++  1) ;;
++  *) fail "could not read $self to check for the coordinator's marker" ;;
++esac
++
++for pair in "REF=$ref" "TC=$tc" "HASH=$hash" \
++            "CONCURRENCY=$concurrency" "SPRT_BOUNDS=$sprt_bounds" \
++            "SPRT_ROUNDS=$sprt_rounds"; do
++  name="${pair%%=*}"
++  want="${pair#*=}"
++  if [[ -n "${!name+set}" && "${!name}" != "$want" ]]; then
++    fail "$name is '${!name}' in the environment, and this run is booked at" \
++         "$name=$want; unset it"
++  fi
++done
++for name in CAND ROUNDS BARE_FEN SRAND AA; do
++  if [[ -n "${!name+set}" ]]; then
++    fail "$name is set in the environment ('${!name}'), and this run is" \
++         "booked without it; unset it"
++  fi
++done
++
++cd "$worktree" || fail "cd $worktree"
++
++if [[ "$(git rev-parse HEAD)" != "$(git rev-parse "$ref")" ]]; then
++  fail "$worktree's HEAD is $(git rev-parse --short HEAD), not REF" \
++       "$(git rev-parse --short "$ref") -- the pair would measure more than S124"
++fi
++
++[[ -n "$(git status --porcelain)" ]] \
++  || fail "$worktree is clean: there is no candidate change to play"
++
++build_paths=(src CMakeLists.txt cmake)
++
++# THE PARTS: the arrays this run may move and the endgame_scale cells it may free; what REF
++# may carry past `screened`, and the cells it may carry.
++mopup="mopup_mg|mopup_eg"
++case "$part" in
++  "") moves="$mopup|endgame_scale"; cells="0,1,2,3,4,5,6,7,8,9"; carries="";              carried_cells="" ;;
++  A)  moves="$mopup";               cells="";                    carries="";              carried_cells="" ;;
++  B)  moves="endgame_scale";        cells="0,1,9";               carries="$mopup";        carried_cells="" ;;
++  C)  moves="endgame_scale";        cells="0,1,2,3,4,5,6,7,8,9"; carries="$mopup|endgame_scale"; carried_cells="0,1,9" ;;
++  *)  fail "part is '$part', not empty, A, B or C" ;;
++esac
++[[ "$sprt_bounds" == "elo0=0 elo1=5 alpha=0.05 beta=0.05" ]] ||
++  fail "part '$part' is booked at {0, 5}: re-pin sprt_bounds"
++
++# Whether two revisions' src/ differ, outside whole-line comments, only in whole definitions of
++# ARRAYS. Each file the two differ in is read whole at both revisions: whole-line comments are
++# dropped, every `constexpr int NAME[...] = {...};` of a NAME in ARRAYS is read across the lines
++# clang-format wrapped it over and replaced by a placeholder, and what is left must be the same
++# text. A definition's first line need not change for this to see it: endgame_scale's values sit
++# on its continuation line. A diff of comments alone leaves nothing to read, which fails: it moved
++# no weight. NEW is a revision or `-` for the working tree.
++#   only_definitions ARRAYS OLD NEW
++only_definitions()
++{
++  local arrays="$1" old="$2" new="$3" file files
++  if [[ "$new" == - ]]; then
++    files="$(git diff --name-only "$old" -- src)"
++  else
++    files="$(git diff --name-only "$old" "$new" -- src)"
++  fi
++  [[ -n "$files" ]] || return 1
++  while IFS= read -r file; do
++    python3 - "${arrays:-NONE}" \
++        <(git show "$old:$file" 2> /dev/null) \
++        <(if [[ "$new" == - ]]; then cat "$file"; else git show "$new:$file" 2> /dev/null; fi) <<'EOF2' || return 1
++import re, sys
++arrays, a, b = sys.argv[1].split("|"), open(sys.argv[2]).read(), open(sys.argv[3]).read()
++definition = re.compile(r"^constexpr int (%s)\[[A-Z_0-9]+\] = \{[^}]*\};$" % "|".join(map(re.escape, arrays)), re.M)
++def reduce(text):
++    text = "\n".join(l for l in text.split("\n") if not re.match(r"^\s*//", l))
++    return definition.sub(lambda m: "<<%s>>" % m.group(1), text), definition.findall(text)
++ra, na = reduce(a)
++rb, nb = reduce(b)
++sys.exit(0 if ra == rb and a != b and sorted(na) == sorted(nb) else 1)
++EOF2
++  done <<< "$files"
++  # Something outside whole-line comments moved: the files differ in a definition.
++  if [[ "$new" == - ]]; then
++    git diff -U0 "$old" -- src | grep -E '^[-+]' | grep -vE '^(\+\+\+|---) ' |
++      grep -qvE '^[-+][[:space:]]*(//.*)?$'
++  else
++    git diff -U0 "$old" "$new" -- src | grep -E '^[-+]' | grep -vE '^(\+\+\+|---) ' |
++      grep -qvE '^[-+][[:space:]]*(//.*)?$'
++  fi
++}
++
++# Whether endgame_scale differs between two sources only in CELLS, and F3's three are at F in
++# the second; and whether every other weight array and define reads the same by name.
++#   weights_differ_only OLD_REVISION NEW_REVISION_OR_- ARRAYS CELLS
++weights_differ_only()
++{
++  local old="$1" new="$2" arrays="$3" cells="$4"
++  python3 - "$arrays" "$cells" \
++      <(git show "$old:src/eval_tables.hpp"; git show "$old:src/evaluation.cpp") \
++      <(if [[ "$new" == - ]]; then cat src/eval_tables.hpp src/evaluation.cpp;
++        else git show "$new:src/eval_tables.hpp"; git show "$new:src/evaluation.cpp"; fi) <<'EOF'
++import re, sys
++arrays, cells, a, b = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
++allowed = set(arrays.split("|")) if arrays else set()
++free = {int(c) for c in cells.split(",")} if cells else set()
++def extract(text):
++    strip = lambda s: re.sub(r"//[^\n]*", "", s)
++    out = {}
++    for name, value in re.findall(r"^#define (\w+)\s+(-?\d+)$", text, re.M):
++        out[name] = [int(value)]
++    for name in ("psqt_mg", "psqt_eg"):
++        m = re.search(r"static constexpr int %s\[6\]\[64\] = \{(.*?)\n\};" % name, text, re.S)
++        if m:
++            out[name] = [int(v) for v in re.findall(r"-?\d+", strip(m.group(1)))]
++    for name, body in re.findall(r"^(?:constexpr|const) int (\w+)\[\w+\] = \{([^}]*)\};", text, re.M):
++        out[name] = [int(v) for v in re.findall(r"-?\d+", strip(body))]
++    for name, value in re.findall(r"^(?:constexpr|const) int (\w+) = (-?\d+);", text, re.M):
++        out[name] = [int(value)]
++    return out
++old, new = extract(open(a).read()), extract(open(b).read())
++bad = []
++for name in sorted(set(old) | set(new)):
++    if old.get(name) == new.get(name):
++        continue
++    if name not in allowed:
++        bad.append("%s moves" % name)
++    elif name == "endgame_scale":
++        moved = [c for c, (x, y) in enumerate(zip(old[name], new[name])) if x != y]
++        if set(moved) - free:
++            bad.append("endgame_scale moves cells %s, outside %s" % (sorted(set(moved) - free), sorted(free)))
++if "endgame_scale" in new and new["endgame_scale"][10:] != [128, 128, 128]:
++    bad.append("F3's cells are %s, not at F" % new["endgame_scale"][10:])
++for line in bad:
++    print("  " + line, file=sys.stderr)
++sys.exit(1 if bad else 0)
++EOF
++}
++
++# `screened`: the family at its identity, read at that commit.
++python3 adocs/data/S124_screen.py landing-check <(git show "$screened:src/evaluation.cpp") ||
++  fail "the commit named as the one the screen ran from, $screened, is not the family at its identity"
++
++stamp_file="$worktree/.tuning/s124/screen/bin/stamp"
++[[ -f "$stamp_file" ]] ||
++  fail "no $stamp_file, so nothing records the commit the screen ran from"
++stamped="$(git rev-parse --verify --quiet "$(cat "$stamp_file")^{commit}")" ||
++  fail "$stamp_file holds '$(cat "$stamp_file")', which names no commit"
++if [[ "$(git rev-parse --verify --quiet "$screened^{commit}")" != "$stamped" ]]; then
++  fail "screened $screened is not $stamped, the commit $stamp_file names"
++fi
++
++# `ref`: it descends from `screened`, its engine `screened`'s; a later part's REF may also
++# carry what has landed by then, and nothing else.
++if ! git merge-base --is-ancestor "$screened" "$ref"; then
++  fail "REF does not descend from the screened commit $screened"
++fi
++ref_changed="$(git diff --name-only "$screened" "$ref" -- "${build_paths[@]}")"
++if [[ -n "$ref_changed" ]]; then
++  [[ -n "$carries" ]] ||
++    fail "REF's src/ or build files differ from the screened commit's -- REF is not the" \
++         "family at its identity"
++  while IFS= read -r file; do
++    case "$file" in
++      src/evaluation.cpp) ;;
++      *) fail "REF changes $file beyond what part $part may have landed" ;;
++    esac
++  done <<< "$ref_changed"
++  only_definitions "$carries" "$screened" "$ref" ||
++    fail "REF's src/ differs from the screened commit's outside comments in more than what" \
++         "part $part may have landed"
++  weights_differ_only "$screened" "$ref" "$carries" "$carried_cells" ||
++    fail "REF's weights differ from the screened commit's in more than part $part may have landed"
++fi
++
++# ONLY THE STAGED PASTE IS PLAYED.
++git diff --quiet -- src tests cmake CMakeLists.txt \
++  || fail "unstaged changes under src/, tests/, cmake/ or CMakeLists.txt:" \
++          "$(git diff --name-only -- src tests cmake CMakeLists.txt |
++             head -5 | tr '\n' ' ')"
++untracked="$(git ls-files --others --exclude-standard -- src cmake | head -5)"
++[[ -z "$untracked" ]] || fail "untracked files under src/ or cmake/: $untracked"
++
++git diff --quiet "$ref" -- cmake CMakeLists.txt \
++  || fail "cmake/ or CMakeLists.txt differs between the tree and REF:" \
++          "$(git diff --name-only "$ref" -- cmake CMakeLists.txt |
++             head -5 | tr '\n' ' ')"
++
++# THE PASTE IS THE FAMILY'S WEIGHTS, in src/evaluation.cpp alone, comments aside.
++changed="$(git diff --name-only "$ref" -- src)"
++[[ -n "$changed" ]] || fail "the tree's src/ is REF's -- not S124's paste"
++while IFS= read -r file; do
++  case "$file" in
++    src/evaluation.cpp) ;;
++    *) fail "the tree changes $file under src/ beyond the paste" ;;
++  esac
++done <<< "$changed"
++
++only_definitions "$moves" "$ref" - ||
++  fail "the tree's src/ differs from REF's outside comments in more than whole definitions" \
++       "of the arrays this run moves (${moves:-none})"
++
++# Every weight array and define outside the arrays this part moves is REF's in the tree,
++# compared by name; within endgame_scale only the part's cells, and F3's at F.
++weights_differ_only "$ref" - "$moves" "$cells" ||
++  fail "the tree moves a weight outside what part '$part' moves against REF"
++
++# BUILD/ WAS BUILT FROM THIS TREE.
++binary="$worktree/build/src/chesso"
++cmake --build "$worktree/build" -j "$concurrency" --target chesso > /dev/null \
++  || fail "cmake --build $worktree/build --target chesso failed"
++[[ -x "$binary" ]] || fail "no engine at $binary after the build"
++newer="$(find "$worktree/src" "$worktree/cmake" "$worktree/CMakeLists.txt" \
++           -newer "$binary" -type f 2> /dev/null | head -5)"
++[[ -z "$newer" ]] || fail "sources newer than $binary: $newer"
++
++[[ -s books/noob_3moves.epd ]] \
++  || fail "no books/noob_3moves.epd in $worktree; copy the main checkout's"
++
++[[ -x ./fastchess.sh ]] || fail "no executable ./fastchess.sh"
++
++for name in SPRT_BOUNDS SPRT_ROUNDS; do
++  if ! grep -qE '\$\{?'"$name"'([^A-Za-z0-9_]|$)' ./fastchess.sh; then
++    fail "./fastchess.sh does not read $name, so this run's bounds or cap would be" \
++         "ignored -- see THE HARNESS in adocs/data/S283_sprt.sh"
++  fi
++done
++
++shopt -s execfail
++exec env -u CAND -u ROUNDS -u BARE_FEN -u SRAND -u AA -u RELAY_PYTHON \
++     REF="$ref" \
++     TC="$tc" \
++     HASH="$hash" \
++     CONCURRENCY="$concurrency" \
++     SPRT_BOUNDS="$sprt_bounds" \
++     SPRT_ROUNDS="$sprt_rounds" \
++     OUT="/home/max/ws/chesso/.tuning/sprt_s124_$(date +%Y%m%d_%H%M%S)" \
++     ./fastchess.sh
++echo "SPRT-RUN-FAILED: exec env ./fastchess.sh" >&2; exit 127
+diff --git a/adocs/data/S192_anchors.py b/adocs/data/S192_anchors.py
+index fde77ddaa87e4b2d0582affac2786c01f119d03b..c05cd5763af04e961538f8fb605b719419aab79b 100644
+--- a/adocs/data/S192_anchors.py
++++ b/adocs/data/S192_anchors.py
+@@ -115,6 +115,21 @@ KS = {  # king_safety_feature_t's order
+ #             the rook on d1 590 -> 585, the queen 1021 -> 1023, Re8 199 -> 247,
+ #             Kh7 -603 -> -573 and the quiet evasion -541 -> -521
+ #             (adocs/data/S122_goldens.txt)
++#  mopup      S124's mop-up (src/evaluation.hpp): None outside its domain, else
++#             (the side with men, centre, kings, corner), that side's own
++#             counts, signed for it into stage one's pair
++#  cells      S124's scale factor: the cell White's being the strong side
++#             selects and Black's, None for no cell, read off the counts by
++#             src/evaluation.hpp's definitions in their order; score() picks
++#             by E1's sign at the weights read. Every case states both; at
++#             S124's landing every cell was at F and mop-up at zero, so no
++#             anchor moved, and the extended script reproduced all ten there
++#             first; at S124's part A, mop-up alone with every cell at F, mop-up
++#             moves every case with a lone king against a rook or a queen: the
++#             rook on d1 585 -> 820 (cheap 578 -> 813), the queen 1023 -> 1358,
++#             Kh7 -573 -> -706 and the quiet evasion -521 -> -710, the values
++#             the family's candidate read, no case's E1 picking a cell there
++#             either (adocs/data/S124_partA_goldens.txt)
+ CASES = [
+     dict(
+         title="pawn on e2",
+@@ -146,6 +161,8 @@ CASES = [
+         # pawn attacks d3 and f3, outside e8's zone; no black pawn, and e2 is
+         # six ranks from e8, past the storm's four
+         danger={"w": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={})},
++        mopup=None,  # S124: White has a pawn, so outside mop-up's domain
++        cells={"w": None, "b": None},  # LONE: Black has his king alone
+     ),
+     dict(
+         title="knight on b1",
+@@ -167,6 +184,8 @@ CASES = [
+         # S122: b1 attacks a3, c3 and d2. None is a knight check on e8 (c7,
+         # d6, f6, g7) or in its zone; d2 is in e1's zone, one defender
+         danger={"w": dict(checks=[0, 0, 0, 0], weak=0, defenders=1, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={})},
++        mopup=None,  # S124: knights alone, excepted from the domain
++        cells={"w": None, "b": None},  # LONE
+     ),
+     dict(
+         title="bishop on c1",
+@@ -189,11 +208,13 @@ CASES = [
+         # diagonals (d7 c6 b5 a4, f7 g6 h5) or in its zone; d2 is in e1's
+         # zone, one defender
+         danger={"w": dict(checks=[0, 0, 0, 0], weak=0, defenders=1, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={})},
++        mopup=None,  # S124: one phase unit, under the domain's two
++        cells={"w": None, "b": None},  # LONE
+     ),
+     dict(
+         title="rook on d1",
+         fen="4k3/8/8/8/8/8/8/3RK3 w - - 0 1",
+-        anchors={"evaluate": 585, "cheap": 578},   # test_evaluation.cpp "each piece is worth what the tables say";
++        anchors={"evaluate": 820, "cheap": 813},   # test_evaluation.cpp "each piece is worth what the tables say";
+         # test_search.cpp "a quiet position stands pat" and eight more sites
+         stm="w",
+         phase=2,
+@@ -214,11 +235,16 @@ CASES = [
+         # white class on it, and e1, White's own: no safe check. d7 and d8,
+         # in e8's zone, no black man defends: two weak squares
+         danger={"w": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=2, defenders=0, storm={})},
++        # S124: Black lone on e8 against two phase units and no pawn; e8 is 0
++        # files from the e file and 3 ranks from the fifth, so centre 3; e1 to e8
++        # is 7, so kings 14 - 7 = 7; no knight, so corner 0
++        mopup=("w", 3, 7, 0),
++        cells={"w": None, "b": None},  # LONE
+     ),
+     dict(
+         title="queen on d1",
+         fen="4k3/8/8/8/8/8/8/3QK3 w - - 0 1",
+-        anchors={"evaluate": 1023},  # test_evaluation.cpp "each piece is worth what the tables say"
++        anchors={"evaluate": 1358},  # test_evaluation.cpp "each piece is worth what the tables say"
+         stm="w",
+         phase=4,
+         material=[("QUEEN", 1)],
+@@ -239,6 +265,8 @@ CASES = [
+         # h5 and e2, empty, outside the ring and unguarded: three safe queen
+         # checks. d7 and d8 are weak, as for the rook
+         danger={"w": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={}), "b": dict(checks=[0, 0, 0, 3], weak=2, defenders=0, storm={})},
++        mopup=("w", 3, 7, 0),  # S124: as the rook's, four phase units
++        cells={"w": None, "b": None},  # LONE
+     ),
+     dict(
+         title="bare kings cancel",
+@@ -259,6 +287,8 @@ CASES = [
+         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
+         # S122: nothing but the kings
+         danger={"w": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={})},
++        mopup=None,  # S124: both lone, so neither is the side with men
++        cells={"w": None, "b": None},  # LONE
+     ),
+     # test_search, "a side in check may not stand pat". White Re8 Re1 Kg1,
+     # Black Kg8 Qa4 pawns f7 g7 h7, Black to move.
+@@ -313,13 +343,18 @@ CASES = [
+         # either king on its files
+         danger={"w": dict(checks=[0, 0, 0, 3], weak=0, defenders=0, storm={}),
+                 "b": dict(checks=[0, 0, 0, 0], weak=2, defenders=0, storm={})},
++        mopup=None,  # S124: no lone king
++        # S124: White strong would read P 0 (no white pawn) and d = 4 - 4 = 0,
++        # two rooks against a queen: P=0 d<=0, cell 0. Black strong reads P 3,
++        # past two with no bishop a side: no cell. E1's sign picks
++        cells={"w": 0, "b": None},
+     ),
+     # test_search, "the losing side takes an available repetition", after
+     # Ra2-b2 Kh8-h7 Rb2-a2. White Ra2 Ka1, Black Kh7, Black to move.
+     dict(
+         title="black a rook down, Kh7",
+         fen="8/7k/8/8/8/8/R7/K7 b - - 3 2",
+-        anchors={"evaluate": -573},  # test_search.cpp "the losing side takes an available repetition"
++        anchors={"evaluate": -706},  # test_search.cpp "the losing side takes an available repetition"
+         stm="b",
+         phase=2,
+         material=[("ROOK", 1)],
+@@ -339,6 +374,11 @@ CASES = [
+         # a2 attacks a7 and h2, both empty, outside the ring, and Black has
+         # no man: two safe rook checks. Nothing of Black's reaches a1
+         danger={"w": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={}), "b": dict(checks=[0, 0, 2, 0], weak=0, defenders=0, storm={})},
++        # S124: Black lone on h7 against the rook; h7 is 3 files from the e file
++        # and 2 ranks from the fifth, so centre 5; a1 to h7 is 7 + 6 = 13, so
++        # kings 1; corner 0
++        mopup=("w", 5, 1, 0),
++        cells={"w": None, "b": None},  # LONE
+     ),
+ ]
+ 
+@@ -378,6 +418,11 @@ LEAVES = [
+         # black class, and d8, empty and outside it: one safe rook check;
+         # e1 and e2 are weak. White has no man, so nothing for f8
+         danger={"w": dict(checks=[0, 0, 1, 0], weak=2, defenders=0, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={})},
++        # S124: White lone on d1 against Black's rook; d1 is 0 files from the d
++        # file and 3 ranks from the fourth, centre 3; d1 to f8 is 2 + 7 = 9,
++        # kings 5
++        mopup=("b", 3, 5, 0),
++        cells={"w": None, "b": None},  # LONE
+     ),
+     dict(
+         title="after Ke1-d2",
+@@ -400,6 +445,8 @@ LEAVES = [
+         # d8, empty and outside it: one safe rook check; e1, e2 and e3 are
+         # weak
+         danger={"w": dict(checks=[0, 0, 1, 0], weak=3, defenders=0, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={})},
++        mopup=("b", 2, 6, 0),  # S124: d2 centre 0 + 2; d2 to f8 2 + 6 = 8, kings 6
++        cells={"w": None, "b": None},  # LONE
+     ),
+     dict(
+         title="after Ke1-f1",
+@@ -421,6 +468,8 @@ LEAVES = [
+         # S122: of f1's rook check squares e8 reaches e1, in the ring, and
+         # f8, its own king: no safe check; e1 and e2 are weak
+         danger={"w": dict(checks=[0, 0, 0, 0], weak=2, defenders=0, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={})},
++        mopup=("b", 4, 7, 0),  # S124: f1 centre 1 + 3; f1 to f8 7, kings 7
++        cells={"w": None, "b": None},  # LONE
+     ),
+     dict(
+         title="after Ke1-f2",
+@@ -442,10 +491,12 @@ LEAVES = [
+         # S122: of f2's rook check squares e8 reaches e2, in the ring, and
+         # f8, its own king: no safe check; e1, e2 and e3 are weak
+         danger={"w": dict(checks=[0, 0, 0, 0], weak=3, defenders=0, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={})},
++        mopup=("b", 3, 8, 0),  # S124: f2 centre 1 + 2; f2 to f8 6, kings 8
++        cells={"w": None, "b": None},  # LONE
+     ),
+ ]
+ 
+-QUIESCE_IN_CHECK = -521  # test_search.cpp
++QUIESCE_IN_CHECK = -710  # test_search.cpp
+ # "a quiet evasion is a legal answer to a check", on the shipped weights
+ 
+ 
+@@ -533,9 +584,25 @@ def score(case, w, margin):
+             pawn_mg += count * w[name + "_mg"][cell]
+             pawn_eg += count * w[name + "_eg"][cell]
+ 
+-    positional = trunc_div(
+-        (psqt_mg + pawn_mg) * phase + (psqt_eg + pawn_eg) * endgame, MAX
+-    )
++    # S124: mop-up joins the same pair, signed for the side with men, and the
++    # factor scales E1, the material and the pair's endgame half, inside the
++    # one division: (F X + (f - F) E1 (24 - phase)) / (24 F), the cell the one
++    # E1's sign picks, none at E1 = 0
++    mop_mg = mop_eg = 0
++    if case["mopup"] is not None:
++        side, centre, kings, corner = case["mopup"]
++        sign = 1 if side == "w" else -1
++        for i, count in enumerate((centre, kings, corner)):
++            mop_mg += sign * count * w["mopup_mg"][i]
++            mop_eg += sign * count * w["mopup_eg"][i]
++    x = (psqt_mg + pawn_mg + mop_mg) * phase + (psqt_eg + pawn_eg + mop_eg) * endgame
++    e1 = material + psqt_eg + pawn_eg + mop_eg
++    cell = None if e1 == 0 else case["cells"]["w" if e1 > 0 else "b"]
++    if cell is None:
++        positional = trunc_div(x, MAX)
++    else:
++        F = 128
++        positional = trunc_div(F * x + (w["endgame_scale"][cell] - F) * e1 * endgame, MAX * F)
+     tempo = trunc_div(w["tempo_mg"] * phase + w["tempo_eg"] * endgame, MAX)
+     cheap = stm * (material + positional) + tempo
+ 
+@@ -611,6 +678,8 @@ def score(case, w, margin):
+     return dict(
+         evaluate=cheap + expensive,
+         cheap=cheap,
++        cell=cell,
++        e1=e1,
+         positional=positional,
+         tempo=tempo,
+         mobility=mobility,
+@@ -639,7 +708,7 @@ def main():
+             else:
+                 checks.append("%s %d (was %d)" % (name, got, shipped))
+         print(
+-            "%-22s %-34s positional %5d tempo %4d mobility %4d safety %5d"
++            "%-22s %-34s positional %5d tempo %4d mobility %4d safety %5d  E1 %5d cell %s"
+             % (
+                 case["title"],
+                 ", ".join(checks),
+@@ -647,6 +716,8 @@ def main():
+                 parts["tempo"],
+                 parts["mobility"],
+                 parts["safety"],
++                parts["e1"],
++                "-" if parts["cell"] is None else parts["cell"],
+             )
+         )
+     print()
+diff --git a/src/evaluation.cpp b/src/evaluation.cpp
+index 17f0210c9480167ba91e40c644a10903b9e511dc..4c17b429b2a44e1dd3f96c982131c8fe09b64d15 100644
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -1874,10 +1874,15 @@ static void trace_accumulators(const board_t* board)
+ // the screen and mop-up by SPSA on conversion (DEC-084, DEC-350 (4)).
+ // The factors are written as tools/tuner emits them, ENDGAME_SCALE_ONE's 128
+ // each, cell by endgame_cell_t.
++//
++// What ships in S124's bisection part A is mop-up alone, the family's H0
++// having credited no part: P1's SPSA on conversion after 150 iterations, the
++// corner's middlegame half frozen at zero (DEC-358 kept it), pasted as fitted
++// and not refit. Every cell stays at F, as landed.
+ constexpr int endgame_scale[ENDGAME_CELL_COUNT] = {
+     128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128};
+-constexpr int mopup_mg[MOPUP_FEATURE_COUNT] = {0, 0, 0};
+-constexpr int mopup_eg[MOPUP_FEATURE_COUNT] = {0, 0, 0};
++constexpr int mopup_mg[MOPUP_FEATURE_COUNT] = {96, 149, 0};
++constexpr int mopup_eg[MOPUP_FEATURE_COUNT] = {15, 13, 6};
+ constexpr std::array<score_t, MOPUP_FEATURE_COUNT> mopup_score =
+     pack_scores(mopup_mg, mopup_eg);
+ 
+diff --git a/tests/test_eval_positions.hpp b/tests/test_eval_positions.hpp
+index 3fb693605be10bd380ae4f83a5733230872ff47a..6129e18e4e517fae7ba67479aa5bf1a8132e34c3 100644
+--- a/tests/test_eval_positions.hpp
++++ b/tests/test_eval_positions.hpp
+@@ -425,7 +425,11 @@ inline const std::vector<std::string> positions = {
+     // comment (its BASE_ROWS, asserted against this comment's first line),
+     // re-checks every row below, and must pick exactly these pairs in this
+     // order. Re-derive by its header whenever the counts or the shipped
+-    // constants move what it reads (DEC-142).
++    // constants move what it reads (DEC-142). At S124's part A, mop-up alone
++    // live, the corner pair "8/8/8/2N1K3/2B5/4k3/8/8 b" and its mirror are no
++    // longer eligible, and the rule takes "K7/8/8/1N2k3/8/7B/8/8 w" from the
++    // corpus for the corner; the other eight pairs reproduce
++    // (adocs/data/S124_partA_goldens.txt).
+     // S124 coverage, closes mopup_mg[0] mopup_eg[0] mopup_mg[1] mopup_eg[1]
+     "4k3/r7/8/8/8/8/4K3/8 w - - 0 2",
+     "8/4k3/8/8/8/8/R7/4K3 b - - 0 2",
+@@ -433,8 +437,8 @@ inline const std::vector<std::string> positions = {
+     "1r2k3/N7/8/8/8/8/4K3/8 w - - 1 2",
+     "8/4k3/8/8/8/8/n7/1R2K3 b - - 1 2",
+     // S124 coverage, closes mopup_mg[2] mopup_eg[2]
+-    "8/8/8/2N1K3/2B5/4k3/8/8 b - - 6 55",
+-    "8/8/4K3/2b5/2n1k3/8/8/8 w - - 6 55",
++    "K7/8/8/1N2k3/8/7B/8/8 w - - 1 65",
++    "8/8/7b/8/1n2K3/8/8/k7 b - - 1 65",
+     // S124 coverage, closes endgame_scale[5]
+     "8/2p5/8/2P3K1/3P4/7r/8/5k2 w - - 0 70",
+     "5K2/8/7R/3p4/2p3k1/8/2P5/8 b - - 0 70",
+diff --git a/tests/test_evaluation.cpp b/tests/test_evaluation.cpp
+index 9eab8b1d41be7d428a027b5b58c025c8fc5557f5..a50914427a344f54a2046a999cc3359259ab8138 100644
+--- a/tests/test_evaluation.cpp
++++ b/tests/test_evaluation.cpp
+@@ -3,6 +3,7 @@
+ #include <algorithm>
+ #include <array>
+ #include <cctype>
++#include <cmath>
+ #include <cstdint>
+ #include <cstdlib>
+ #include <cstring>
+@@ -317,6 +318,105 @@ TEST_SUITE("evaluation: score")
+     }
+   }
+ 
++  // S124's mop-up, live in part A of its bisection: the shipped weights reach
++  // evaluate_cheap(), signed for the side with men. Each pair moves the lone
++  // king and nothing else, the same side to move, so stage one's pair moves by
++  // that king's table entry and mop-up's share alone -- no pawn is on the
++  // board, LONE picks no cell, and material and tempo are the same -- and the
++  // expectation is computed here from endgame_family_counts() and the shipped
++  // arrays, not read off a run. Two truncating divisions separate the
++  // measured difference from that real number by under 2. The precondition
++  // is that mop-up's share outruns them: at 4 or more it does, and then a
++  // mop-up left out, or signed for the lone king, reads at least 2 from the
++  // expectation and fails. Each pair is played for both colours, so a sign
++  // read White-relative where it should be the side with men's fails on one
++  // of them. The KBN pair moves the corner count too.
++  TEST_CASE_FIXTURE(eval_fixture_t,
++                    "mop-up is live at the shipped weights, signed for the "
++                    "side with men")
++  {
++    struct case_t
++    {
++      std::string from;
++      std::string to;
++      int side;  // the side with men
++      std::string title;
++    };
++
++    // clang-format off
++    const std::vector<case_t> cases = {
++      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", "8/8/8/4k3/8/8/8/3RK3 w - - 0 1", WHITE, "KRvK, e8 to e5"},
++      {"3rk3/8/8/8/8/8/8/4K3 b - - 0 1", "3rk3/8/8/8/4K3/8/8/8 b - - 0 1", BLACK, "KvKR, e1 to e4"},
++      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", "8/8/8/4k3/8/8/8/3QK3 w - - 0 1", WHITE, "KQvK, e8 to e5"},
++      {"3qk3/8/8/8/8/8/8/4K3 b - - 0 1", "3qk3/8/8/8/4K3/8/8/8 b - - 0 1", BLACK, "KvKQ, e1 to e4"},
++      {"8/8/8/8/8/4K3/6k1/2NB4 w - - 0 1", "8/8/8/4k3/8/4K3/8/2NB4 w - - 0 1", WHITE, "KBNvK, g2 to e5"},
++      {"2nb4/6K1/4k3/8/8/8/8/8 b - - 0 1", "2nb4/8/4k3/8/4K3/8/8/8 b - - 0 1", BLACK, "KvKBN, g7 to e4"},
++    };
++    // clang-format on
++
++    for (const case_t& test : cases) {
++      const int lone = 1 - test.side;
++      int squares[2];
++      int counts[2][MOPUP_FEATURE_COUNT];
++      int white_relative[2];
++      int phase = 0;
++
++      for (int i = 0; i < 2; ++i) {
++        REQUIRE_MESSAGE(load_FEN(i == 0 ? test.from : test.to, &game),
++                        test.title);
++        endgame_family_t family;
++        endgame_family_counts(&game.board, &family);
++        for (int f = 0; f < MOPUP_FEATURE_COUNT; ++f) {
++          counts[i][f] = family.mopup[test.side][f];
++          REQUIRE_MESSAGE(family.mopup[lone][f] == 0, test.title);
++        }
++        squares[i] = get_lsb_index(
++            game.board.bitboards[(lone == WHITE) ? W_KING : B_KING]);
++        const int stm = (game.board.active_color == WHITE) ? 1 : -1;
++        white_relative[i] = stm * evaluate_cheap(&game.board);
++        phase = game_phase(&game.board);
++      }
++
++      // The lone king's table entry, mirrored and negated for Black as the
++      // accumulators read it, and mop-up's share, signed for the side with men.
++      const int lone_sign = (lone == WHITE) ? 1 : -1;
++      const int men_sign = (test.side == WHITE) ? 1 : -1;
++      auto table = [&](const int (&psqt)[6][64], int square) {
++        return psqt[W_KING][(lone == WHITE) ? square : (square ^ 56)];
++      };
++      const int psqt_mg_delta =
++          lone_sign * (table(psqt_mg, squares[1]) - table(psqt_mg, squares[0]));
++      const int psqt_eg_delta =
++          lone_sign * (table(psqt_eg, squares[1]) - table(psqt_eg, squares[0]));
++      int mopup_mg_delta = 0;
++      int mopup_eg_delta = 0;
++      bool moved = false;
++      for (int f = 0; f < MOPUP_FEATURE_COUNT; ++f) {
++        const int delta = counts[1][f] - counts[0][f];
++        moved = moved || (delta != 0);
++        mopup_mg_delta += men_sign * delta * mopup_mg[f];
++        mopup_eg_delta += men_sign * delta * mopup_eg[f];
++      }
++
++      const auto tapered = [&](int mg, int eg) {
++        return (static_cast<double>(mg) * phase +
++                static_cast<double>(eg) * (GAME_PHASE_MAX - phase)) /
++               GAME_PHASE_MAX;
++      };
++      const double expected = tapered(psqt_mg_delta + mopup_mg_delta,
++                                      psqt_eg_delta + mopup_eg_delta);
++      const double share = tapered(mopup_mg_delta, mopup_eg_delta);
++
++      // The preconditions: the pair moves a mop-up count, and its share
++      // outruns the two truncations.
++      REQUIRE_MESSAGE(moved, test.title);
++      REQUIRE_MESSAGE(std::abs(share) >= 4.0, test.title);
++
++      const int measured = white_relative[1] - white_relative[0];
++      CHECK_MESSAGE(std::abs(measured - expected) < 2.0, test.title);
++    }
++  }
++
+   // ANCHOR: pinned to today's numbers. Every value here is material plus what
+   // the positional terms make of the one square the piece is standing on, so
+   // editing any constant they read moves them and this test is what makes that
+@@ -407,6 +507,13 @@ TEST_SUITE("evaluation: score")
+   // Re-derived by the script on the pasted header after it reproduced all ten
+   // at the landing (adocs/data/S122_goldens.txt).
+   //
++  // S124's mop-up, part A of its bisection, the family's cells at F as
++  // landed, moved two: the rook on d1, 585 to 820, and the queen on d1, 1023
++  // to 1358. Black's king stands alone on e8 against two and four phase units
++  // and no pawn, mop-up's domain, its centre count 3 and the kings' 7. The
++  // script models the family since S124's phase 2b and reproduced all ten at
++  // 7214ce5's weights first (adocs/data/S124_partA_goldens.txt).
++  //
+   // Symmetry and ordering say nothing about what a piece is actually worth:
+   // every one of these values can be changed without moving any other
+   // assertion in this file, and a wrong one costs games rather than crashes.
+@@ -433,8 +540,8 @@ TEST_SUITE("evaluation: score")
+       {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 107, "pawn on e2"},
+       {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 283, "knight on b1"},
+       {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 353, "bishop on c1"},
+-      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 585, "rook on d1"},
+-      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 1023, "queen on d1"},
++      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 820, "rook on d1"},
++      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 1358, "queen on d1"},
+       {"4k3/8/8/8/8/8/8/4K3 w - - 0 1",     0, "bare kings cancel"},
+     };
+     // clang-format on
+diff --git a/tests/test_mate_carry.cpp b/tests/test_mate_carry.cpp
+index ee5da9b68fcd735b071b3bc1ebd1c067744e691e..bb829c1bd8094ff0dcacfcf5ab6ee69fe0384648 100644
+--- a/tests/test_mate_carry.cpp
++++ b/tests/test_mate_carry.cpp
+@@ -411,7 +411,7 @@ static bool line_ends_in_mate(const std::string& fen,
+ // adocs/data/S135_sweep_s170.txt adocs/data/S296_sweep_s170.txt
+ // adocs/data/S121_sweep_s170.txt adocs/data/S123_sweep_s170.txt
+ // adocs/data/S125_sweep_s170.txt adocs/data/S101_sweep_s170.txt
+-// adocs/data/S122_sweep_s170.txt
++// adocs/data/S122_sweep_s170.txt adocs/data/S124_partA_sweep_s170.txt
+ // (the rule, the grid list and the worst cells are tabled below).
+ // Moves legitimately on: a
+ // re-sweep of the budgets, which is a Zobrist redraw (DEC-154); a change to
+@@ -445,7 +445,7 @@ static bool line_ends_in_mate(const std::string& fen,
+ //       adocs/data/S135_sweep_s170.txt adocs/data/S296_sweep_s170.txt
+ //       adocs/data/S121_sweep_s170.txt adocs/data/S123_sweep_s170.txt
+ //       adocs/data/S125_sweep_s170.txt adocs/data/S101_sweep_s170.txt
+-//       adocs/data/S122_sweep_s170.txt
++//       adocs/data/S122_sweep_s170.txt adocs/data/S124_partA_sweep_s170.txt
+ //
+ // which is the script DEC-142 requires beside a golden. Never read one off a
+ // failing run.
+@@ -509,7 +509,12 @@ static bool line_ends_in_mate(const std::string& fen,
+ // mate lines and 14 short): it moves no ceiling, and the budgets it re-derived,
+ // A, C and F, are in the TSV's header. D reports no mate line at stride 1 in
+ // any of its cells, so its row keeps `nodes 1000000` and it is silent there;
+-// the majority, 5 of 6, holds.
++// the majority, 5 of 6, holds. **S124's part A's is the thirteenth**
++// (`adocs/data/S124_partA_sweep_s170.txt`, S124's mop-up alone, P1's six with
++// every cell at F, uncommitted on `7214ce5`, 108 cells, 1553 mate lines and 11
++// short): it moves no ceiling and no budget, and D again reports no mate line
++// at stride 1. The family's own grid (`adocs/data/S124_sweep_s170.txt`, F1,
++// F2 and mop-up together, H0) is in no command.
+ //
+ //   case                       ceiling  worst cell, at the case's own stride
+ //   A_mate8_shallow                  2  1000000 on the S286 grid, 2 of 6;
+diff --git a/tests/test_mate_pv.cpp b/tests/test_mate_pv.cpp
+index dd65cdc6ddc8ef64d8edc2138d401aac1f32e1b8..eba41db39c74c76e68e4c0af3b5553077dc6cf4b 100644
+--- a/tests/test_mate_pv.cpp
++++ b/tests/test_mate_pv.cpp
+@@ -415,22 +415,28 @@ TEST_SUITE("mate PV completeness")
+   // (adocs/data/S294_mw02_reach.txt) -- so MW02 survived the whole fast
+   // suite. This cell reaches it on a cold table.
+   //
+-  // GOLDEN (DEC-142): the cell -- the position, line 244 of
+-  // adocs/data/S145_mined_set.tsv (game 4411), at `go nodes 150000` on a cold
+-  // table at Hash 16 -- the middle of the run of budgets, 130000 to 170000,
+-  // where the shipped build prints a line that reaches its mate and the build
+-  // with MW02 applied prints the aborted line short. Since S122, whose king
+-  // safety family at DEC-353's fit, with LAZY_EVAL_MARGIN 275, left line 162's
+-  // cell ending in an iteration with no line, so the rule takes this position
+-  // (3 of 318 positions separate; adocs/data/S122_goldens.txt; the oracle
+-  // reads it #+7, its line ending in mate). Line 162 (game 4593) at
+-  // `go nodes 190000`, run 140000 to 240000, since S101,
+-  // whose threat family left line 114's cell ending in an iteration with no
+-  // line and opened this run, so the rule takes this position (4 of 318
+-  // positions separate; adocs/data/S101_goldens.txt). S125's pawn structure
+-  // family had left line 101's run at 30000..60000 and opened line 114's,
+-  // 150000..360000, at `go nodes 250000` (4 of 318;
+-  // adocs/data/S125_goldens.txt). S123's passed pawn family had
++  // GOLDEN (DEC-142): the cell -- the position, line 101 of
++  // adocs/data/S145_mined_set.tsv (game 3499), at `go nodes 40000` on a cold
++  // table at Hash 16 -- in the run of budgets, 30000 to 60000, where the
++  // shipped build prints a line that reaches its mate and the build with MW02
++  // applied prints the aborted line short. Since S124's part A, mop-up alone,
++  // which left line 244's cell, a rook and king against a lone king, with no
++  // completed iteration scoring a mate (`completed->mate_found` red at
++  // 150000), so the rule takes this position (2 of 318 positions separate;
++  // the oracle reads it #+4, its line ending in mate;
++  // adocs/data/S124_partA_goldens.txt). Line 244 (game 4411) at `go nodes
++  // 150000`, run 130000 to 170000, since S122, whose king safety family at
++  // DEC-353's fit, with LAZY_EVAL_MARGIN 275, left line 162's cell ending in
++  // an iteration with no line, so the rule takes this position (3 of 318
++  // positions separate; adocs/data/S122_goldens.txt; the oracle reads it #+7,
++  // its line ending in mate). Line 162 (game 4593) at `go nodes 190000`, run
++  // 140000 to 240000, since S101, whose threat family left line 114's cell
++  // ending in an iteration with no line and opened this run, so the rule
++  // takes this position (4 of 318 positions separate;
++  // adocs/data/S101_goldens.txt). S125's pawn structure family had left line
++  // 101's run at 30000..60000 and opened line 114's, 150000..360000, at `go
++  // nodes 250000` (4 of 318; adocs/data/S125_goldens.txt). S123's passed pawn
++  // family had
+   // moved line 101's run back from S121's 40000..70000 (3 of 318;
+   // adocs/data/S123_goldens.txt), the budget 50000 -> 40000 at line 101 (game
+   // 3499); S121's mobility table had moved it from
+@@ -440,7 +446,8 @@ TEST_SUITE("mate PV completeness")
+   // (adocs/data/S296_goldens.txt).
+   // Re-derive: adocs/data/S294_fallback_cell.py, the four stages in its
+   // header (sweep both builds over the mined set, then `pick`).
+-  // Margin: 20000 nodes below and 20000 above (50000 each way at S101).
++  // Margin: 10000 nodes below and 20000 above (20000 each way at S122, 50000
++  // at S101).
+   // Moves legitimately
+   // on: any change that moves the tree, and a change to complete_mate_pv() or
+   // to the reporting layer's aborted path, S202's ground. Re-derived by the
+@@ -463,7 +470,8 @@ TEST_SUITE("mate PV completeness")
+     uci_init();
+     initialize_game_const_data(&replay);
+ 
+-    const std::string fen = "2k5/5K2/3R4/8/8/8/8/8 w - - 3 104";
++    const std::string fen =
++        "4r1k1/R2b3p/1B1p2p1/P2PpP2/7Q/3q1PP1/6PK/8 w - - 2 36";
+ 
+     {
+       stdout_capture_t capture;
+@@ -475,7 +483,7 @@ TEST_SUITE("mate PV completeness")
+     std::vector<std::string> lines;
+     {
+       stdout_capture_t capture;
+-      uci_process_line("go nodes 150000");
++      uci_process_line("go nodes 40000");
+       uci_wait_for_search();
+       lines = capture.lines();
+     }
+diff --git a/tests/test_search.cpp b/tests/test_search.cpp
+index c6c15b53547e37daaebd5d3dfa2135f8a290704e..838a5c0f381a9b6d57b1566998f166e9ffdbc147 100644
+--- a/tests/test_search.cpp
++++ b/tests/test_search.cpp
+@@ -40,7 +40,7 @@ static pawn_correction_t reference_table;
+ // "4k3/8/8/8/8/8/8/3RK3 w - - 0 1", White to move, at the shipped weights. Nine
+ // cases in this file assert one or both, so they are named once here and a
+ // refit edits these two lines rather than eleven. A third line moves with them:
+-// the written-out 303 of "a stand pat that is itself a bound is still capped",
++// the written-out 538 of "a stand pat that is itself a bound is still capped",
+ // which is this pair's cheap score less LAZY_EVAL_MARGIN (S192).
+ // Re-derive: python3 adocs/data/S192_anchors.py, case "rook on d1", which
+ // computes both from src/evaluation.cpp's specification rather than from the
+@@ -53,9 +53,12 @@ static pawn_correction_t reference_table;
+ // (adocs/data/S121_goldens.txt). S122's king safety family moved the first
+ // again, 590 to 585, and LAZY_EVAL_MARGIN 184 to 275 the third, 394 to 303;
+ // king safety is stage two too, so the cheap score holds
+-// (adocs/data/S122_goldens.txt).
+-static constexpr int QUIET_ROOK_EVAL = 585;
+-static constexpr int QUIET_ROOK_EVAL_CHEAP = 578;
++// (adocs/data/S122_goldens.txt). S124's mop-up, part A of its bisection,
++// moved both, 585 to 820 and 578 to 813, and the third with them, 303 to 538:
++// Black's king stands alone on e8 against the rook, mop-up's domain, and
++// mop-up is stage one (adocs/data/S124_partA_goldens.txt).
++static constexpr int QUIET_ROOK_EVAL = 820;
++static constexpr int QUIET_ROOK_EVAL_CHEAP = 813;
+ 
+ 
+ struct search_fixture_t
+@@ -1488,7 +1491,8 @@ TEST_SUITE("search: quiescence")
+     // 567; S083's refit on S082's pool to 585 and 580; S135's piece placement
+     // fit to 583 and 578, the rook on the open d file; S121's mobility table
+     // the first to 590, the rook's own cell; S122's king safety family the
+-    // first to 585, the two weak squares the rook makes of d7 and d8. Both are
++    // first to 585, the two weak squares the rook makes of d7 and d8; S124's
++    // mop-up both, to 820 and 813, Black's king alone on e8. Both are
+     // the file-scope goldens above.
+     REQUIRE_EQ(static_score, QUIET_ROOK_EVAL);
+     REQUIRE_EQ(cheap_score, QUIET_ROOK_EVAL_CHEAP);
+@@ -1587,7 +1591,7 @@ TEST_SUITE("search: quiescence")
+   // a capture. A quiescence that only ever looks at captures finds no move
+   // here and calls a perfectly ordinary position a mate.
+   //
+-  // GOLDEN (DEC-142): -521, quiescence() of "4rk2/8/8/8/8/8/8/4K3 w - - 0 1" in
++  // GOLDEN (DEC-142): -710, quiescence() of "4rk2/8/8/8/8/8/8/4K3 w - - 0 1" in
+   // check -- a one-ply negamax, the best of four leaves' -evaluate(), not an
+   // evaluation call.
+   // Re-derive: python3 adocs/data/S192_anchors.py, LEAVES and QUIESCE_IN_CHECK.
+@@ -1634,8 +1638,12 @@ TEST_SUITE("search: quiescence")
+     // leaf's White king has the rook's e-file squares in its zone as weak
+     // squares, and from d1 and d2 a safe rook check on d8. The leaves are now
+     // -552, -521, -585 and -545, Ke1-d2 the best by 24, each still the king
+-    // move standing pat (adocs/data/S122_goldens.txt).
+-    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -521);
++    // move standing pat (adocs/data/S122_goldens.txt). S124's mop-up moved it
++    // to -710: in each leaf White's king stands alone against Black's rook,
++    // and the leaves are -739, -710, -842 and -805, Ke1-d2 the best by 29,
++    // each still the king move standing pat
++    // (adocs/data/S124_partA_goldens.txt).
++    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -710);
+   }
+ 
+   // No legal reply to a check is mate, and quiescence has to say so on its
+@@ -2797,9 +2805,9 @@ TEST_SUITE("search: quiescence transposition entries")
+ 
+     // Now an entry for this position carrying a static evaluation that is not
+     // this position's. The stored *score* is different again and has to be
+-    // inert twice over, so that anything but 585 coming back has to have come
++    // inert twice over, so that anything but 820 coming back has to have come
+     // from the eval field: a lower bound of -9999 does not answer the node
+-    // against a beta of 10000, and it may not raise a stand pat of 585 either.
++    // against a beta of 10000, and it may not raise a stand pat of 820 either.
+     //
+     // It was an upper bound of -9999 until S130, which is inert on the first
+     // count and not on the second: an upper bound below the static score is
+@@ -3089,7 +3097,7 @@ TEST_SUITE("search: quiescence transposition entries")
+ 
+ 
+   // Every case above searches a window wide enough that the lazy shortcut
+-  // cannot fire, so `static_eval` is the exact 585 in all of them and the
++  // cannot fire, so `static_eval` is the exact 820 in all of them and the
+   // substitution is only ever measured against a static score. It is not
+   // always one: where the probe carries no eval and the cheap score is already
+   // a margin clear of the window, evaluate_lazy() returns `cheap +/-
+@@ -3108,7 +3116,7 @@ TEST_SUITE("search: quiescence transposition entries")
+ 
+     static std::atomic_bool never_stop = false;
+ 
+-    // Narrow, and on the beta side: cheap is 578, so 578 - 275 = 303 is
++    // Narrow, and on the beta side: cheap is 813, so 813 - 275 = 538 is
+     // already clear of a beta of 100 and the shortcut fires with a lower
+     // bound. That is the whole point of the window -- every case above uses
+     // (-10000, 10000), where neither test in evaluate_lazy() can pass.
+@@ -3143,11 +3151,12 @@ TEST_SUITE("search: quiescence transposition entries")
+     REQUIRE_EQ(evaluate_cheap(&game.board), QUIET_ROOK_EVAL_CHEAP);
+     REQUIRE_EQ(lazy, QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN);
+ 
+-    // GOLDEN (DEC-142): 303, the same number written out, so the line above
++    // GOLDEN (DEC-142): 538, the same number written out, so the line above
+     // cannot pass by both sides moving together -- an assertion spelled only in
+     // the symbols it is about asserts nothing (S028).
+-    // Re-derive: QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN, today 578 - 275
+-    // (394, 578 - 184, until S122's margin moved it);
++    // Re-derive: QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN, today 813 - 275
++    // (303, 578 - 275, until S124's mop-up moved the cheap score;
++    // 394, 578 - 184, until S122's margin moved it);
+     // the first from python3 adocs/data/S192_anchors.py, case "rook on d1", the
+     // second from src/search_params.hpp.
+     // Moves legitimately on: a refit, and **also** an SPSA run or any step that
+@@ -3156,20 +3165,20 @@ TEST_SUITE("search: quiescence transposition entries")
+     // stays.
+     // Margin: exact. Property beside it: the REQUIRE_FALSE(exact) above, which
+     // says the shortcut fired at all and carries no number.
+-    REQUIRE_EQ(lazy, 303);
++    REQUIRE_EQ(lazy, 538);
+     REQUIRE_NE(lazy, evaluate(&game.board));
+     REQUIRE(PLANTED > ALPHA);
+     REQUIRE(PLANTED < lazy);
+     REQUIRE(PLANTED >= BETA);
+ 
+     // Precondition: with nothing planted the node stands pat on the bound
+-    // itself, so anything other than 303 below came from the entry.
++    // itself, so anything other than 538 below came from the entry.
+     tt_reset(&tt);
+     tt_new_search(&tt);
+     REQUIRE_EQ(run(), lazy);
+ 
+     // An upper bound of 200 says the value is at most 200, which is less than
+-    // the 303 the shortcut established as a lower bound on the static score --
++    // the 538 the shortcut established as a lower bound on the static score --
+     // the two claims are about different things and both hold, the entry's
+     // being the tighter one. So the cap applies to a stand pat that is itself
+     // a bound, exactly as it applies to a static score.
+@@ -3187,7 +3196,7 @@ TEST_SUITE("search: quiescence transposition entries")
+     // 200 is still at or above beta, so the node fails high and stores a lower
+     // bound. It is sound on this path for the same reason as on the static
+     // one, and the reason is worth stating because `static_eval` is not exact
+-    // here: the shortcut certified `value >= 303`, the cap only lowered the
++    // here: the shortcut certified `value >= 538`, the cap only lowered the
+     // number to 200, and `value >= 200` follows. The eval field stays empty --
+     // no exact static score was ever computed at this node, and S094's
+     // semantics say only an exact one may be stored.
+@@ -3251,7 +3260,7 @@ TEST_SUITE("search: quiescence transposition entries")
+ 
+     // Now an entry for this position carrying a static evaluation that is not
+     // this position's. Stored at TT_DEPTH_QS, which a depth 1 node may not cut
+-    // on, so anything but 585 - margin coming back has to have come from the
++    // on, so anything but 820 - margin coming back has to have come from the
+     // eval field.
+     //
+     // **S234 made the entry's score load-bearing here and the plant moved with
+@@ -5696,9 +5705,11 @@ TEST_SUITE("search: draws")
+     // S135's piece placement fit to -597 (White's rook on the open a file), and
+     // S121's mobility table to -603 (the rook's cell), and S122's king safety
+     // family, DEC-353's 1245 fit, to -573: a2 gives two safe rook checks on h7,
+-    // from a7 and h2 (adocs/data/S122_goldens.txt).
++    // from a7 and h2 (adocs/data/S122_goldens.txt), and S124's mop-up to
++    // -706: Black's king stands alone on h7 against the rook, centre count 5
++    // and the kings' 1 (adocs/data/S124_partA_goldens.txt).
+     //
+-    // GOLDEN (DEC-142): -573, evaluate() with Black to move a rook down, after
++    // GOLDEN (DEC-142): -706, evaluate() with Black to move a rook down, after
+     // the three moves above. It is the precondition, not the property: what the
+     // case asserts is that a draw score beats it.
+     // Re-derive: python3 adocs/data/S192_anchors.py, case
+@@ -5707,7 +5718,7 @@ TEST_SUITE("search: draws")
+     // below zero, so a refit that moves it changes nothing else here.
+     // Property beside it: the repetition assertion below, which compares
+     // against 0 and not against this value.
+-    REQUIRE_EQ(evaluate(&game.board), -573);
++    REQUIRE_EQ(evaluate(&game.board), -706);
+ 
+     static std::atomic_bool never_stop = false;
+     never_stop = false;

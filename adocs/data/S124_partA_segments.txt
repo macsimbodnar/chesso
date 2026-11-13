@@ -1,0 +1,226 @@
+# S124 part A: DEC-362's checks (3) and (4) on the run stopped for the owner's shutdown and resumed, and the
+# inspection's quarters and machine readings. 2026-11-13, by the Opus 5.5 subagent recording part A's H0. Counts
+# games, scores and node rates; no chess judgement.
+#
+# INPUTS, read only, all in chesso_S124_partA_sprt_2026-11-13.tar.xz in the owner's archive: the run's games.pgn (both
+# segments appended, .tuning/sprt_s124_20261112_060554/), fastchess's saved state at the stop (config.json, sha256
+# 8b8ec2c42b89fb78..., kept as .tuning/coord/S124/partA_resume/config.json) and the same file as the resumed run left
+# it (sha256 2d66190039c1b5b4..., kept as partA_resume/config_final.json), and both consoles. Every command ran from the
+# main checkout's root.
+#
+# READING.
+#   (3) holds. The state at the stop: W 3257 + L 3162 + D 5969 = 12388 = 2 x 6194 pairs, exact, no game in flight
+#       counted; its pentanomial sums to the same pairs. Everything in it but the statistics is the final state's (the
+#       engines, both binaries' paths, the book, seed 20261112060554, bounds, 20950 rounds). The first report after the
+#       resume (resumed console, line 35) reads 12396 games, above the saved 12388, the same two names and the same
+#       bounds (-2.94, 2.94) [0.00, 5.00]. The PGN's first 77409849 bytes (12390 games) read sha256 3b677b6d0fa08c4f...,
+#       the PGN at the stop: the resume only appended.
+#   (4) holds. Segment 1 +2.66 Elo, se 2.12 (6194 pairs); segment 2 -3.20, se 2.15 (6186 pairs); the difference +5.87,
+#       se 3.01, z +1.95, inside 2.58. Nodes per second, segment 1 -> 2: the candidate 1911.5 -> 1933.7 knps (+1.16 %),
+#       the reference 1920.8 -> 1937.6 (+0.87 %), both inside 3 %. S101's abort rule on the pooled run: 0 forfeits of
+#       24763 a side (tools/forfeit_report.py --max-pct 1.0, exit 0); terminations 15625 adjudication and 9138 normal,
+#       none outside fastchess.sh's expected set, so the census its SPRT-RUN-INVALID reads would have passed (segment
+#       1's wrapper died at the stop before its census and segment 2 ran fastchess directly, so it is read here); no
+#       crash, disconnect or illegal move line in either console.
+#   HOW THE SEGMENTS ARE CUT, and the pair written twice. A game's segment is its GameStartTime's date; segment 1 is
+#       file positions 1 to 12390, segment 2 12391 to 24763. fastchess counts a pair when both its games end, so a
+#       segment counts the complete pairs inside it. That accounting reproduces fastchess's own figures exactly: segment
+#       1 is the state at the stop, pentanomial and W/L/D, and segment 2 is the final state less it. What the PGN holds
+#       beside those: game 12382 was in flight at the stop and never finished; the resume restarted at game 12389,
+#       fastchess numbering from the 12388 counted games, so games 12389, 12390 and 12391 are written twice, each on its
+#       first copy's opening. Round 6195 (games 12389 and 12390) is complete in both segments and counted in both: its
+#       first copy is in the state at the stop (the 8 games after the last report at 12380 are rounds 6192 to 6195, W 3
+#       L 1 D 4, the state less that report). Game 12391's first copy is a half pair and counted nowhere. So 24763 games
+#       are written and 24760 counted, the three not counted being game 12381 (its partner 12382 never finished),
+#       segment 1's game 12391 (its partner 12392 in flight at the stop, both played again after the resume) and game
+#       24761 (its partner in flight at the verdict). The copies the brief and status.md name to drop -- "the last two
+#       games written before 2026-11-13", meant as the first 12389 and 12390 -- are file positions 12387 and 12388, not
+#       the last two written (those are 12389 and 12390, games 12391 and 12386); and dropping them would make segment 1
+#       differ from the saved state. Read that way anyway, segment 1 less round 6195 reads +2.66, se 2.12, z +1.95
+#       against segment 2: no figure moves.
+#   SEGMENT 1'S DIP, recorded. In ten-minute bins of GameStartTime every bin of the run reads the
+#       candidate between 1888 and 1945 knps but three: 2026-11-12 09:50 to 10:20, the candidate 1833, 1781 and 1865
+#       knps against the reference's 1845, 1785 and 1871, both sides down alike by up to 7 %, 1061 games started in it.
+#       Something shared the machine then; the kernel journal holds no entry over either window, and at error level
+#       only the desktop's user space (cosmic-panel, -greeter, -session at 09:54 and 10:08). Another project's session
+#       committed in its own repository on this machine at 09:56:51 and 09:57:53 (its reflog); that it was the load is
+#       inferred. (4)'s clause reads per segment and holds; within the segment the two sides slowed together. Whether
+#       S101's MACHINE clause ("another load starts on it") reaches a load seen only afterwards is the coordinator's.
+#   THE DIP'S SENSITIVITY READING, at the coordinator's request; not a second verdict, the pre-registered verdict being
+#       the pooled run's (DEC-063). The window is [2026-11-12 09:50:00, 10:20:00) by GameStartTime, the three
+#       ten-minute bins that read below every other bin of the run; 1061 games started in it, all in segment 1. Inside
+#       it the candidate read 1826.4 knps and the reference 1833.9, outside it 1926.8 and 1933.4: both down 5.2 %, the
+#       candidate's rate the reference's -0.41 % inside and -0.34 % outside. Dropping every complete pair with a game
+#       started in the window removes 531 pairs (rounds 3946 to 4476, 1062 games). What is left, 11849 pairs: 23698
+#       games, W 6127 L 6138 D 11433, Ptnml [674, 2865, 4782, 2854, 674], Elo -0.16 +/- 3.03, nElo -0.24 +/- 4.42,
+#       LLR -2.69 at {0, 5} nElo. The dropped pairs alone read Elo -2.62 +/- 13.33 (nElo -4.10 +/- 20.90), z -0.35
+#       against what is left. The kept pairs' LLR sits short of the -2.94 bound mostly by their count: the pooled
+#       proportions scaled to 11849 pairs read -2.84, and the slightly higher mean of what is left the rest. The LLR
+#       is fastchess's own normalized model ported from its source at the played build; the port gives every one of
+#       the 1239 reports in the two consoles to its two printed decimals, and -2.9643 on all pairs.
+
+$ python3 -I adocs/data/S124_partA_segments.py .tuning/sprt_s124_20261112_060554/games.pgn .tuning/coord/S124/partA_resume/config.json .tuning/coord/S124/partA_resume/config_final.json .tuning/s124a_sprt.console .tuning/s124a_sprt_resume1.console
+games in the PGN: 24763
+segment 1: 12390 games, file positions 1 to 12390, started 2026-11-12T06:05:54 +0100 to 2026-11-12T11:58:47 +0100
+segment 2: 12373 games, file positions 12391 to 24763, started 2026-11-13T00:03:07 +0100 to 2026-11-13T05:53:37 +0100
+games in neither: 0
+segment 1's last end 2026-11-12T11:59:07 +0100; segment 2's last end 2026-11-13T05:53:54 +0100
+game numbers written twice: 12389 (file positions 12387/12401, segments 1/2), 12390 (file positions 12388/12394, segments 1/2), 12391 (file positions 12389/12392, segments 1/2)
+game numbers 1 to 24761 absent from the PGN: [12382]
+segment 1: 6194 complete pairs (12388 games), half pairs not counted: game 12381 (round 6191, file position 12380, 11:58:27), game 12391 (round 6196, file position 12389, 11:58:47)
+segment 2: 6186 complete pairs (12372 games), half pairs not counted: game 24761 (round 12381, file position 24762, 05:53:37)
+segment 1 ptnml [324, 1481, 2517, 1520, 352], W L D (3257, 3162, 5969); the state at the stop [324, 1481, 2517, 1520, 352], W L D (3257, 3162, 5969): equal
+segment 2 ptnml [372, 1519, 2487, 1467, 341], W L D (3134, 3248, 5990); final state less the stop's [372, 1519, 2487, 1467, 341], W L D (3134, 3248, 5990): equal
+pooled ptnml [696, 3000, 5004, 2987, 693]; the final state [696, 3000, 5004, 2987, 693]: equal
+segment 1: 6194 pairs, s 0.50383 (sd per pair 0.2399), Elo +2.66 se 2.12 (95 % +/- 4.15), nElo +3.93 se 3.12 (95 % +/- 6.12)
+segment 2: 6186 pairs, s 0.49539 (sd per pair 0.2428), Elo -3.20 se 2.15 (95 % +/- 4.21), nElo -4.66 se 3.12 (95 % +/- 6.12)
+pooled   : 12380 pairs, s 0.49962 (sd per pair 0.2414), Elo -0.27 se 1.51 (95 % +/- 2.95), nElo -0.39 se 2.21 (95 % +/- 4.33)
+segments 1 vs 2: Elo difference +5.87, se of the difference 3.01, z +1.95, |z| <= 2.58
+segments 1 vs 2: same in score per game, difference +0.00844, se 0.00434, z +1.95
+segment 1 less round(s) [6195]: 6193 pairs, s 0.50383 (sd per pair 0.2399), Elo +2.66 se 2.12 (95 % +/- 4.15), nElo +3.93 se 3.12 (95 % +/- 6.12)
+variant vs segment 2: Elo difference +5.87, se of the difference 3.02, z +1.95, |z| <= 2.58
+variant vs segment 2: same in score per game, difference +0.00844, se 0.00434, z +1.95
+nps cand: segment 1 1911.5 knps, segment 2 1933.7 knps, +1.16 % (within 3 %)
+nps ref: segment 1 1920.8 knps, segment 2 1937.6 knps, +0.87 % (within 3 %)
+terminations: {'adjudication': 15625, 'normal': 9138}
+verdict of (4)'s first two clauses: hold
+
+THE DIP, a sensitivity reading
+the LLR port against fastchess's own reports: 1239 checked, 0 differ at two decimals
+the port on the pooled pentanomial [696, 3000, 5004, 2987, 693]: LLR -2.9643 (fastchess printed -2.96)
+ten-minute bins of GameStartTime, 09:00 to 10:59 (every other bin of the run reads the candidate between 1888 and 1945 knps):
+  09:00  354 games  cand 1917 knps  ref 1928 knps
+  09:10  351 games  cand 1933 knps  ref 1944 knps
+  09:20  358 games  cand 1902 knps  ref 1914 knps
+  09:30  360 games  cand 1920 knps  ref 1934 knps
+  09:40  347 games  cand 1920 knps  ref 1927 knps
+  09:50  355 games  cand 1833 knps  ref 1845 knps
+  10:00  351 games  cand 1781 knps  ref 1785 knps
+  10:10  355 games  cand 1865 knps  ref 1871 knps
+  10:20  358 games  cand 1888 knps  ref 1899 knps
+  10:30  345 games  cand 1926 knps  ref 1933 knps
+  10:40  344 games  cand 1929 knps  ref 1939 knps
+  10:50  361 games  cand 1917 knps  ref 1927 knps
+the window [2026-11-12 09:50:00, 10:20:00) by GameStartTime: 1061 games started in it, all in segment 1
+nps cand: inside the window 1826.4 knps (1061 games), outside it 1926.8 knps (23702 games), -5.21 %
+nps ref: inside the window 1833.9 knps (1061 games), outside it 1933.4 knps (23702 games), -5.15 %
+inside the window the candidate's rate is the reference's -0.41 %; outside it -0.34 %
+pairs dropped: 531 (rounds 3946 to 4476), every one in segment 1; 11849 pairs kept of 12380
+the dropped pairs alone: 1062 games, W L D (264, 272, 526), ptnml [22, 135, 222, 133, 19]
+  Elo -2.62 +/- 13.33, nElo -4.10 +/- 20.90 (95 %), LLR at {0, 5} nElo -0.29
+what is left: 23698 games, W L D (6127, 6138, 11433), ptnml [674, 2865, 4782, 2854, 674]
+  Elo -0.16 +/- 3.03, nElo -0.24 +/- 4.42 (95 %), LLR at {0, 5} nElo -2.69
+the dropped pairs vs what is left: Elo difference -2.46, se of the difference 6.97, z -0.35, |z| <= 2.58
+the dropped pairs vs what is left: same in score per game, difference -0.00353, se 0.01003, z -0.35
+the pooled proportions scaled to 11849 pairs: LLR -2.84 (the count alone, no change of mean)
+(exit 0)
+
+$ ~/.venv/chess/bin/python -I adocs/data/S121_sprt_mate_pvs.py quarters .tuning/sprt_s124_20261112_060554/games.pgn
+quarter 1: games 1 to 6190 of 24763 (6190), Elo +5.6 +/- 6.2
+quarter 2: games 6191 to 12381 of 24763 (6191), Elo -0.4 +/- 6.2
+quarter 3: games 12382 to 18572 of 24763 (6191), Elo +0.1 +/- 6.2
+quarter 4: games 18573 to 24763 of 24763 (6191), Elo -6.4 +/- 6.2
+run Elo -0.28 over 24763 games; chi-square 7.22 on 3 df, p 0.07
+(exit 0)
+
+# Beside it, not a committed tool: each side's nodes per second by the same quarters, the family's side check
+# (.tuning/coord/S124/nps_quarters.py, its rule the one S124_partA_segments.py reads per segment).
+$ python3 -I .tuning/coord/S124/nps_quarters.py .tuning/sprt_s124_20261112_060554/games.pgn
+quarter 1: games 1 to 6190 (6190), cand 1919 knps, ref 1928 knps; started 06:05:54 to 09:01:57
+quarter 2: games 6191 to 12381 (6191), cand 1904 knps, ref 1914 knps; started 09:01:57 to 11:58:27
+quarter 3: games 12383 to 18570 (6191), cand 1932 knps, ref 1937 knps; started 11:58:33 to 02:57:49
+quarter 4: games 18571 to 24761 (6191), cand 1935 knps, ref 1938 knps; started 02:57:52 to 05:53:37
+(exit 0)
+
+# Ten-minute bins, S124_partA_segments.py's read() and nps() over GameStartTime's first 15 characters
+# (.tuning/coord/S124/partA_record/bins.py, not committed; read in the header's last paragraph).
+$ python3 -I .tuning/coord/S124/partA_record/bins.py .tuning/sprt_s124_20261112_060554/games.pgn 15
+2026-11-12T06:0   154 games  cand 1906 knps  ref 1915 knps
+2026-11-12T06:1   345 games  cand 1921 knps  ref 1931 knps
+2026-11-12T06:2   356 games  cand 1911 knps  ref 1921 knps
+2026-11-12T06:3   352 games  cand 1911 knps  ref 1923 knps
+2026-11-12T06:4   342 games  cand 1932 knps  ref 1940 knps
+2026-11-12T06:5   357 games  cand 1901 knps  ref 1910 knps
+2026-11-12T07:0   347 games  cand 1924 knps  ref 1930 knps
+2026-11-12T07:1   356 games  cand 1901 knps  ref 1909 knps
+2026-11-12T07:2   356 games  cand 1912 knps  ref 1920 knps
+2026-11-12T07:3   356 games  cand 1912 knps  ref 1924 knps
+2026-11-12T07:4   344 games  cand 1944 knps  ref 1950 knps
+2026-11-12T07:5   358 games  cand 1905 knps  ref 1916 knps
+2026-11-12T08:0   350 games  cand 1933 knps  ref 1936 knps
+2026-11-12T08:1   346 games  cand 1932 knps  ref 1943 knps
+2026-11-12T08:2   351 games  cand 1916 knps  ref 1925 knps
+2026-11-12T08:3   352 games  cand 1913 knps  ref 1929 knps
+2026-11-12T08:4   352 games  cand 1916 knps  ref 1924 knps
+2026-11-12T08:5   346 games  cand 1934 knps  ref 1943 knps
+2026-11-12T09:0   354 games  cand 1917 knps  ref 1928 knps
+2026-11-12T09:1   351 games  cand 1933 knps  ref 1944 knps
+2026-11-12T09:2   358 games  cand 1902 knps  ref 1914 knps
+2026-11-12T09:3   360 games  cand 1920 knps  ref 1934 knps
+2026-11-12T09:4   347 games  cand 1920 knps  ref 1927 knps
+2026-11-12T09:5   355 games  cand 1833 knps  ref 1845 knps
+2026-11-12T10:0   351 games  cand 1781 knps  ref 1785 knps
+2026-11-12T10:1   355 games  cand 1865 knps  ref 1871 knps
+2026-11-12T10:2   358 games  cand 1888 knps  ref 1899 knps
+2026-11-12T10:3   345 games  cand 1926 knps  ref 1933 knps
+2026-11-12T10:4   344 games  cand 1929 knps  ref 1939 knps
+2026-11-12T10:5   361 games  cand 1917 knps  ref 1927 knps
+2026-11-12T11:0   347 games  cand 1918 knps  ref 1930 knps
+2026-11-12T11:1   348 games  cand 1932 knps  ref 1941 knps
+2026-11-12T11:2   342 games  cand 1922 knps  ref 1940 knps
+2026-11-12T11:3   351 games  cand 1928 knps  ref 1934 knps
+2026-11-12T11:4   346 games  cand 1931 knps  ref 1937 knps
+2026-11-12T11:5   297 games  cand 1927 knps  ref 1932 knps
+2026-11-13T00:0   250 games  cand 1915 knps  ref 1916 knps
+2026-11-13T00:1   358 games  cand 1923 knps  ref 1929 knps
+2026-11-13T00:2   360 games  cand 1926 knps  ref 1926 knps
+2026-11-13T00:3   355 games  cand 1930 knps  ref 1934 knps
+2026-11-13T00:4   352 games  cand 1932 knps  ref 1935 knps
+2026-11-13T00:5   344 games  cand 1933 knps  ref 1939 knps
+2026-11-13T01:0   355 games  cand 1934 knps  ref 1942 knps
+2026-11-13T01:1   361 games  cand 1924 knps  ref 1930 knps
+2026-11-13T01:2   352 games  cand 1936 knps  ref 1940 knps
+2026-11-13T01:3   359 games  cand 1926 knps  ref 1929 knps
+2026-11-13T01:4   359 games  cand 1939 knps  ref 1941 knps
+2026-11-13T01:5   343 games  cand 1939 knps  ref 1940 knps
+2026-11-13T02:0   351 games  cand 1936 knps  ref 1944 knps
+2026-11-13T02:1   351 games  cand 1940 knps  ref 1942 knps
+2026-11-13T02:2   354 games  cand 1928 knps  ref 1936 knps
+2026-11-13T02:3   348 games  cand 1941 knps  ref 1945 knps
+2026-11-13T02:4   355 games  cand 1936 knps  ref 1945 knps
+2026-11-13T02:5   353 games  cand 1941 knps  ref 1947 knps
+2026-11-13T03:0   354 games  cand 1940 knps  ref 1948 knps
+2026-11-13T03:1   356 games  cand 1929 knps  ref 1931 knps
+2026-11-13T03:2   348 games  cand 1933 knps  ref 1939 knps
+2026-11-13T03:3   342 games  cand 1939 knps  ref 1939 knps
+2026-11-13T03:4   352 games  cand 1931 knps  ref 1938 knps
+2026-11-13T03:5   362 games  cand 1914 knps  ref 1919 knps
+2026-11-13T04:0   354 games  cand 1934 knps  ref 1940 knps
+2026-11-13T04:1   342 games  cand 1942 knps  ref 1941 knps
+2026-11-13T04:2   345 games  cand 1939 knps  ref 1942 knps
+2026-11-13T04:3   362 games  cand 1929 knps  ref 1933 knps
+2026-11-13T04:4   353 games  cand 1939 knps  ref 1937 knps
+2026-11-13T04:5   361 games  cand 1930 knps  ref 1929 knps
+2026-11-13T05:0   347 games  cand 1943 knps  ref 1942 knps
+2026-11-13T05:1   343 games  cand 1945 knps  ref 1955 knps
+2026-11-13T05:2   356 games  cand 1936 knps  ref 1933 knps
+2026-11-13T05:3   346 games  cand 1944 knps  ref 1948 knps
+2026-11-13T05:4   364 games  cand 1924 knps  ref 1933 knps
+2026-11-13T05:5   126 games  cand 1944 knps  ref 1947 knps
+(exit 0)
+
+$ python3 tools/forfeit_report.py --max-pct 1.0 .tuning/sprt_s124_20261112_060554/games.pgn
+  cand-7214ce5+361ef1a30802 24763 games, 0 forfeits, 0.00 %
+  ref-7214ce5      24763 games, 0 forfeits, 0.00 %
+(exit 0)
+
+$ grep -h '^\[Termination' .tuning/sprt_s124_20261112_060554/games.pgn | sort | uniq -c
+  15625 [Termination "adjudication"]
+   9138 [Termination "normal"]
+
+$ grep -inE "disconnect|crash|illegal|stall|timeout|error|exception" .tuning/s124a_sprt.console .tuning/s124a_sprt_resume1.console | wc -l
+0
+
+$ journalctl -k --since "2026-11-12 06:05:00" --until "2026-11-12 11:59:30"; journalctl -k --since "2026-11-13 00:03:00" --until "2026-11-13 05:54:30"
+-- No entries --
+-- No entries --

@@ -1,7 +1,7 @@
 id:         S124
 goal:       the endgame half of the score is scaled toward a draw by what is actually on the board, and won lone-king and specialised endgames are scored so the stronger side converts them
 accepts:    an SPRT verdict, recorded whatever it is; the factor scales **only the endgame half** of the tapered score and not the whole score; each case -- strong-side pawn count, opposite-coloured bishops, and the mop-up and specialised-endgame cases this family gains (DEC-258) -- is screened separately before the family's one SPRT (DEC-259), and a case the corpus barely holds is screened on a tool-labelled position set instead (tablebase WDL or Stockfish through python-chess, never the agent's reading, CHESS rule), because the surveyed record shows several such cases measuring zero and being removed again; mop-up is shown to convert: won lone-king positions, labelled won by a tablebase, are mated by the engine in self-play at a fixed node budget within a move bound stated before the run; every constant is fitted (DEC-084); the existing insufficient-material draw detection is not duplicated by this and the step says how the two divide
-touches:    src/evaluation.cpp, src/evaluation.hpp, src/eval_tables.hpp, src/eval_trace.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tools/tuner_layout.hpp, tools/tuner_optimiser.hpp, tools/tuner.cpp, tools/feature_audit.cpp, tools/audit_design.hpp, tools/truncation_scan.cpp, tools/eval_spread.cpp, tests/CMakeLists.txt, tests/test_evaluation.cpp, tests/test_eval_positions.hpp, tests/test_endgame_positions.hpp, tests/test_eval_model.cpp, tests/test_eval_trace.cpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, tests/test_tuner_box.sh, tests/test_audit_design.cpp, tests/test_walked_counts.hpp, adocs/data/S101_gradient_rows.cpp, adocs/data/S310_adagrad_step.cpp, adocs/data/S122_screen.py, adocs/data/S083_truncation_pick.py, DEV_MANUAL.md, tests/test_search.cpp, tests/test_mate_pv.cpp, adocs/data/S192_anchors.py, adocs/data/S123_coverage_rows.cpp, adocs/data/S125_coverage_rows.cpp, adocs/data/S101_coverage_rows.cpp, .tuning/verify_fit.py
+touches:    src/evaluation.cpp, src/evaluation.hpp, src/eval_tables.hpp, src/eval_trace.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tools/tuner_layout.hpp, tools/tuner_optimiser.hpp, tools/tuner.cpp, tools/feature_audit.cpp, tools/audit_design.hpp, tools/truncation_scan.cpp, tools/eval_spread.cpp, tests/CMakeLists.txt, tests/test_evaluation.cpp, tests/test_eval_positions.hpp, tests/test_endgame_positions.hpp, tests/test_eval_model.cpp, tests/test_eval_trace.cpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, tests/test_tuner_box.sh, tests/test_audit_design.cpp, tests/test_walked_counts.hpp, adocs/data/S101_gradient_rows.cpp, adocs/data/S310_adagrad_step.cpp, adocs/data/S122_screen.py, adocs/data/S083_truncation_pick.py, DEV_MANUAL.md, tests/test_search.cpp, tests/test_mate_pv.cpp, adocs/data/S192_anchors.py, adocs/data/S123_coverage_rows.cpp, adocs/data/S125_coverage_rows.cpp, adocs/data/S101_coverage_rows.cpp, .tuning/verify_fit.py, tests/test_mate_carry.cpp, tests/test_mate_breadth.cpp, adocs/data/S170_cases.tsv
 excludes:   tablebases, which are S129; the 50-move decay, which is a separate small term in the reserve; the complexity term, which is S266
 decisions:  DEC-071, DEC-084, DEC-258, DEC-259
 closes:
@@ -2631,3 +2631,367 @@ refuses. The script itself was not run. `build/` is no older than its sources an
   but a part's run wants its own name. Not changed, the header being the pre-registration's.
 - `S124_partA_goldens.txt` and this section sit on the main tree while part A's tree is not committed; part A's grid
   file and the rest of the part land with its verdict.
+
+## 2026-11-13: part A, H0
+
+One Opus 5.5 subagent, briefed by the coordinator: the record on the main tree at `e6ef283`, left unstaged for the
+coordinator, and part B's tree (the next section). No match, fit or timing.
+
+`adocs/data/S124_sprt.sh` as pinned for part A by the coordinator (the file written 2026-11-12 06:05:46; it lands as
+`adocs/data/S124_partA_sprt.sh`) was launched 06:05:54 from `../chesso-s124p2`. Its working tree (mop-up alone, bench
+4586026) played its HEAD `7214ce5` (the family at its identity, bench 4707943) **in two segments under DEC-362**, and
+ended `SPRT-RUN-DONE rc=0`:
+
+```
+SPRT | cand 7214ce5+361ef1a30802 vs ref 7214ce5, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | -0.27 +/- 2.95, nElo -0.39 +/- 4.33
+LLR | -2.96 (-2.94, 2.94) -> H0
+Games | N: 24760 W: 6391 L: 6410 D: 11959, Ptnml [696, 3000, 5004, 2987, 693]
+Wall | 11 h 44 m, 2110.0 games/h, forfeits 0
+Log | adocs/data/S124_partA_sprt.log
+```
+
+`Wall` is the two segments' fastchess `Total Time` summed, 05:53:15 + 05:50:50 = 11:44:05, and its rate N over that
+(S296's rule): segment 1 alone 2104.1 games an hour, segment 2 2115.9.
+
+### The two segments (DEC-362 (5))
+
+- **Segment 1**, 2026-11-12 06:05:54 to 11:59:07, console `.tuning/s124a_sprt.console`. **Stopped at 11:59:07 by
+  SIGINT to fastchess on the owner's command, the workstation being turned off for the day**, a reason that is not the
+  run's reading. fastchess saved its state and exited; the wrapper's `SPRT-RUN-FAILED: exited 1` is that stop. Total
+  time 05:53:15. The saved state, `config.json` sha256 `8b8ec2c42b89fb78d0308d16e0686c98d97b0a6c232e32f9c72430289e23ab8e`:
+  12388 games, W 3257 L 3162 D 5969, 6194 pairs. The last report, at 12380 games: Elo +2.61 +/- 4.15, LLR 0.69.
+- **Segment 2**, resumed 2026-11-13 00:03 by `fastchess -config file=config.json` in `../chesso-s124p2`, ended 05:53:54,
+  console `.tuning/s124a_sprt_resume1.console`. Total time 05:50:50. The state it left, sha256 `2d66190039c1b5b4...`
+  (`.tuning/coord/S124/partA_resume/config_final.json`).
+- One out directory, both segments appended: `.tuning/sprt_s124_20261112_060554/` (`games.pgn`, 24763 games, sha256
+  `23ac53f954e5af11...`; `fastchess.log`; `candidate.diff`, blob `361ef1a30802`). The PGN's first 77409849 bytes are
+  the PGN at the stop (sha256 `3b677b6d0fa08c4f...`) and `fastchess.log`'s first bytes the copy kept at the stop: the
+  resume only appended.
+
+### DEC-362's checks (`adocs/data/S124_partA_segments.txt`, `S124_partA_segments.py`)
+
+- **(1)** The pin did not move: the run's state carries the same seed (20261112060554), book, bounds, control and cap,
+  and the two states differ in their statistics alone.
+- **(2)** The coordinator's, read after the boot: kernel `7.2.15-76070215-generic`, fastchess alpha 1.8.1
+  20260720-daa3ea2, the book, both binaries and the saved state at their recorded sha256 (`adocs/status.md`, 2026-11-13
+  00:05). Read again here: the reference `26f526638ee4e05b...`, the candidate's kept copy and `/tmp`'s
+  `a5b6bc74cb1855b8...`, the state `8b8ec2c42b89fb78...`.
+- **(3) holds.** W + L + D = 12388 = 2 x 6194 pairs, exact; the pentanomial sums to the same pairs. The first report
+  after the resume read 12396 games, above the saved count, with the same two names and the same bounds.
+- **(4) holds.** Each segment's Elo from its own complete pairs: segment 1 **+2.66, se 2.12** (6194 pairs), segment 2
+  **-3.20, se 2.15** (6186 pairs); the difference +5.87, se 3.01, **z +1.95**, inside 2.58. Each side's nodes per
+  second from the PGN's move comments, segment 1 to 2: the candidate 1911.5 -> 1933.7 knps (**+1.16 %**), the
+  reference 1920.8 -> 1937.6 (**+0.87 %**), both inside 3 %. S101's abort rule on the pooled run: 0 forfeits of 24763
+  a side; terminations 15625 adjudication and 9138 normal, none outside `fastchess.sh`'s expected set (its
+  `SPRT-RUN-INVALID` census never ran, segment 1's wrapper having died at the stop and segment 2 running fastchess
+  directly, so it is read here); no crash, disconnect or illegal move line in either console.
+- **(5)** This section and the commit's body.
+
+**How the PGN reproduces fastchess's figures, and the pair written twice.** A game's segment is its `GameStartTime`'s
+date, and a segment counts the complete pairs inside it, as fastchess counts. That reproduces fastchess exactly:
+segment 1's pentanomial and W/L/D are the state at the stop, segment 2's the final state less it, and the two pooled
+the final report. Game 12382 was in flight at the stop and never finished. fastchess resumed numbering from its 12388
+counted games, at game 12389, although those 12388 are not games 1 to 12388: games 12389, 12390 and 12391 are written
+twice, each copy on the same opening. **Round 6195 (games 12389 and 12390) is complete in both segments and counted in
+both**: its first copy is in the saved state (the state less the report at 12380 is rounds 6192 to 6195, W 3 L 1 D 4).
+Game 12391's first copy is a half pair, counted nowhere. **So 24763 games are written and 24760 counted**: not counted
+are game 12381 (its partner never finished), segment 1's game 12391 (its partner in flight at the stop, both played
+again) and game 24761 (its partner in flight at the verdict). Two of the three are the stop's, not the verdict's.
+
+The brief and `status.md` said to drop the first copies, "the last two games written before 2026-11-13", and to take
+segment 1 as the first 12388 games of the file. Neither holds as written: the first copies of 12389 and 12390 are file
+positions 12387 and 12388 (the last two written are games 12391 and 12386), and they are in the state, so dropping
+them makes segment 1 differ from it. The reading above keeps fastchess's accounting; read the brief's way anyway
+(segment 1 less round 6195, a DD pair), segment 1 reads +2.66, se 2.12, z +1.95: no figure moves.
+
+### The inspection, before the verdict was read as the record
+
+- **Banner** (segment 1's console): `landing-check: every scale factor at F and mop-up at zero`; candidate `7214ce5
+  2026-11-11 + uncommitted changes`, `diff .../sprt_s124_20261112_060554/candidate.diff blob 361ef1a30802`, reference
+  `7214ce5 2026-11-11`, `arch native tune off`, padding on both, 8+0.08, hash 16, 12 of 12 cores, `noob_3moves.epd`,
+  seed 20261112060554, `elo0=0 elo1=5 alpha=0.05 beta=0.05`, cap 20950 rounds and 41900 games, out
+  `.tuning/sprt_s124_20261112_060554`. No `relay`, `A/A CALIBRATION` or load-guard line. `id name`s
+  `cand-7214ce5+361ef1a30802 Chesso 7214ce5-dirty native` and `ref-7214ce5 Chesso 7214ce5 native`; `Started game 1 of
+  41900`. All as the pin says. The pin's sentence dates itself "2026-11-12 06:10, before a game of part A is played";
+  the file was written 06:05:46 and its blob is in the run's `candidate.diff` (06:05:54), so the text predates the
+  first game and only its stated minute is late.
+- **Binaries.**
+  - The reference `../chesso-s124p2/.ref-builds/7214ce5/build/src/chesso` benches **4707943**, written 2026-11-12
+    03:10:58 and not since.
+  - The candidate: fastchess played `/tmp/chesso-candidate.DIcYIH` in both segments (segment 2 from the kept copy,
+    restored after the boot). The kept copy `.tuning/coord/S124/partA_resume/chesso-candidate.DIcYIH`, `/tmp`'s file
+    and the worktree's `build/src/chesso` (read 2026-11-13 before part B rebuilt it) are byte-equal, sha256
+    `a5b6bc74cb1855b8...`; it benches **4586026**.
+  - `git -C ../chesso-s124p2 diff HEAD --binary --full-index`, read before part B reshaped the tree, equals the run's
+    `candidate.diff` byte for byte; the staged diff equals `.tuning/coord/S124/S124_partA_cached.diff` (sha256
+    `484ac455...`).
+- **Crashes, disconnects, illegal moves**: none in either console or in `fastchess.log`, whose three entries are the
+  warnings below.
+- **Forfeits**: `tools/forfeit_report.py --max-pct 1.0` reads 0 of 24763 for each engine, exit 0.
+- **Console warnings**: no PV-past-repetition block in either console; **3 `Incomplete mating PV`**, all the
+  reference's (below).
+- **Quarters** (`S121_sprt_mate_pvs.py quarters`, over all 24763 games written): **+5.6, -0.4, +0.1, -6.4**, each +/-
+  6.2; chi-square 7.22 on 3 degrees of freedom, p 0.07. Each side's nodes per second by the same quarters (the side
+  check): the candidate 1919, 1904, 1932, 1935 knps, the reference 1928, 1914, 1937, 1938. Quarters 1 and 2 are segment
+  1, 3 and 4 segment 2. The spread is recorded, not attributed: a run stopped at a bound is selected for a stretch that
+  moved toward it (DEC-063).
+- **Segment 1's dip.** In ten-minute bins every bin of the run reads the candidate between 1888 and 1945 knps but
+  three: 2026-11-12 09:50 to 10:20, where the candidate reads 1833, 1781 and 1865 and the reference 1845, 1785 and
+  1871, both down alike by up to 7 %, 1061 games started in it. Something shared the machine then; at error level the
+  journal holds the desktop's user space at 09:54 and 10:08, and another project's session committed in its own
+  repository on this machine at 09:56 (its reflog); that it was the load is inferred. DEC-362 (4) reads per segment and
+  holds. **Whether S101's MACHINE clause ("another load starts on it") reaches a load found only afterwards is the
+  coordinator's to rule**; nothing here voids the run on it.
+- **The dip's sensitivity reading**, asked for by the coordinator; a reading, not a second verdict, the pre-registered
+  verdict being the pooled run's (DEC-063). Inside the window [09:50:00, 10:20:00) the candidate read 1826.4 knps and
+  the reference 1833.9, outside it 1926.8 and 1933.4, the candidate's rate the reference's -0.41 % and -0.34 %. Every
+  complete pair with a game started inside goes, 531 pairs (1062 games): what is left, 23698 games, W 6127 L 6138 D
+  11433, Ptnml [674, 2865, 4782, 2854, 674], reads Elo -0.16 +/- 3.03, nElo -0.24 +/- 4.42 and LLR -2.69 at `{0, 5}`,
+  short of the -2.94 bound mostly by its count (the pooled proportions at 11849 pairs read -2.84); the dropped pairs
+  alone read Elo -2.62 +/- 13.33, z -0.35 against the rest. The LLR is fastchess's normalized model ported from its
+  source at the played build, checked first: it gives all 1239 reports of the two consoles to their printed decimals
+  and -2.9643 on every pair (`S124_partA_segments.py`).
+- **Kernel journal**, 2026-11-12 06:05 to 11:59:30 (boot `39e9c73a`) and 2026-11-13 00:03 to 05:54:30 (boot
+  `405a369c`): no kernel entry in either. At error level only user space: in segment 1 `cosmic-notifications` (06:07,
+  08:49, 10:05, 10:10), the desktop's panel, greeter, session and `bluetoothd` (09:54, 10:08, 10:25, 11:58) and
+  `cosmic-comp` (09:57, 11:58); in
+  segment 2 two `cosmic-notifications` lines at 00:04:55. No machine check, OOM, thermal or suspend line.
+
+The run stands, the coordinator's ruling on the dip aside.
+
+### The three `Incomplete mating PV` warnings (`adocs/data/S124_partA_sprt_mate_pvs.txt`)
+
+S296's, S121's and the family's method by their committed scripts, run unchanged from the main checkout; the oracle
+DEC-319 (3)'s, Stockfish at 5000000 nodes through python-chess in `TOOLCHAIN.md`'s safe form.
+
+- **All three are the reference's**, two searches in two games, none the candidate's: game 6829 (segment 1), depth 1,
+  6 nodes, and game 22079 (segment 2), depths 5 and 6; the reference Black and winning on adjudication in both.
+- **No printed distance is shorter than the oracle's**: game 6829 mate 5 against the oracle's mate 5 (`ok`); game 22079
+  mate 11 and mate 14 against mate 8 (`longer`); each side the oracle's. DEC-320's deeper reading does not arise.
+- Each line is legal and shorter than its distance (1 of 9, 5 of 21, 6 of 27 plies): DEC-122's short-line class, S296's
+  shallow-iteration shape; the entry is inferred, not traced.
+- Not reproduced: cold at the warning's depth both binaries print cp lines and no mate, and play the game's move; warm,
+  the game replayed at the PGN's node counts through the reference prints only complete mate lines.
+- Rates: the reference 1.21 lines and 0.81 searches per 10000 games, 2 games of 24760; the candidate 0. Pooled over the
+  thirteen earlier runs (the family's and the twelve its record pooled): 14 games in 231720 side-games, 0.60 per 10000;
+  one side's 24760 games expect 1.50, and 2 or more has Poisson probability 0.44. A count, recorded, not a finding.
+
+### The verdict, by the pre-registration
+
+**The H0 row executes.** At 8+0.08 mop-up alone is not shown to gain: H0's 0 nElo is preferred to H1's 5 at alpha =
+beta = 0.05.
+
+- **Mop-up is recorded as zero at this control and stays at zero.** Nothing was committed, so nothing reverts: no file
+  under `src/` or `tests/`, no golden data file and no golden's script of part A is carried (the sort below).
+  `achesso`'s `mopup_mg` and `mopup_eg` stay `{0, 0, 0}` as landed, bench 4707943. The measured paste stays
+  reproducible as `adocs/data/S124_partA_candidate.diff` (blob `361ef1a30802`, DEC-254).
+- **The stopping run's Elo is biased (DEC-063) and is not the effect size**: -0.27 +/- 2.95 at a stop in 24760 games,
+  near the 25591 the pre-registration expected with the truth on a bound.
+- **The owner's stops on part A did not fire** (part A's section), and are moot on H0. Part A's three reds
+  (first-mate, "removing a piece moves the score", the planted bounds) are moot with it.
+- **Part B follows** against what has landed, which is nothing: REF stays `7214ce5` (the next section).
+- **Whether mop-up ships anyway for its conversions is the owner's** (the question below).
+
+**What H0 leaves unmeasured.** Mop-up's conversions behind the harness's two-sided resignation at 400 cp, which P1's
+test read and this pair did not; mop-up at any other control; mop-up with the cells, which the family measured
+together and read H0.
+
+### The owner's question on mop-up (DEC-265's form), for the coordinator to carry
+
+**Does mop-up ship anyway, its SPRT recorded as zero, for the conversions P1 measured?**
+
+**Why it is needed.** Part A's pre-registered H0 row records mop-up as zero at 8+0.08 and leaves whether it ships for
+its conversions (P1, DEC-358) to the owner. The agents cannot settle it: the two readings measure different things and
+the rules let either decide. MEASUREMENT says a play-altering change is decided by SPRT, and also that "a verdict of zero
+is recorded as zero, and the feature may still be kept with the reason stated". What each instrument sees:
+- **P1** (`adocs/data/S124_p1_*`), over 984 fresh won lone-king starts, labelled won by the tables at a zeroed clock,
+  self-played at 100000 nodes a move under the laws with a 100-ply bound: head converts 759, mop-up 862; head alone 10,
+  mop-up alone 113, exact one-sided p 1.545e-23, no class the other way. KRvK 157 -> 199 of 200, KRBvK 191 -> 200, KRNvK
+  189 -> 200, KQvK 200 -> 200, KBNvK 22 -> 63 of 184, KBBvK (in sample) 102 -> 126 of 126; 21.6 plies to mate on
+  average.
+- **The SPRT** sees mop-up only where a game reaches its domain under the harness's resignation: `fastchess.sh` ends a
+  game at 400 cp held three moves by both sides (S212), and KRvK rows read |E1| about 620, so most lone-king endings are
+  adjudicated before mop-up plays a move in them. What it measured is the price paid everywhere else: nElo -0.39 +/- 4.33.
+- **The cost**: +0.970 % instructions on `bench` and +0.931 % on `bench 16` (`S124_cost_masks.sh`), every stage-one
+  evaluation paying mop-up's domain test. Mop-up's held-out loss on the games' labels reads -0.0000681, worse.
+
+**What each answer implies.**
+- **(a) Ship mop-up as P1 fitted it** (`mopup_mg {96, 149, 0}`, `mopup_eg {15, 13, 6}`), the H0 recorded as zero and the
+  reason stated as conversion. Changes: one agent rebases part A's tree onto `achesso` and repairs its three fixture reds
+  by the options the family's "Reds left" lists; the anchors move (585 -> 820 and the rest), bench 4707943 -> 4586026,
+  `specs.md`'s row. Costs: about one agent session and the +0.97 % above, in every search. Risks: a loss in play inside
+  the SPRT's interval (its lower end -4.72 nElo) is not excluded; and parts B and C are then measured against a REF that
+  carries mop-up, so part B's tree, built now on `7214ce5`, is rebuilt on the new REF before its run (THE PARTS table
+  allows REF to carry mop-up). Leaves unmeasured: conversion in games the harness lets play out.
+- **(b) Do not ship; mop-up stays at zero, as landed.** Changes: nothing; part B plays as built. Costs: none. Risks: the
+  engine keeps failing to convert some won lone-king endings when nobody adjudicates (head converts 759 of 984 starts,
+  KBNvK 22 of 184); S129, three to five man tablebase probing, would answer every class P1 tested, but it is conditional
+  ("if an independent description exists") and twelfth in the Open list. Leaves unmeasured: the same.
+- **(c) Measure conversion in play before deciding**: an SPRT of mop-up alone with the resignation adjudication off, or a
+  longer control. Changes: a new pre-registration; a harness change owes a 1000-game A/A first (DEC-143, about 30
+  minutes). Costs: up to about 20 h at the cap, before or after part B. Risks: a test chosen after H0 is read; it is a
+  different question (conversion in play), stated as one. Leaves unmeasured: nothing of the above, at that control.
+
+**Recommendation: (b).** The project ships what an SPRT shows, the SPRT read the in-harness gain as zero with a measured
+cost, and the conversions it cannot see are what S129 would answer exactly; if the owner values conversion where no
+tablebase plays, (c) measures it rather than (a) assuming it.
+
+### The trim, the diff and the archive
+
+- **`adocs/data/S124_partA_sprt.log`**: both consoles through one `tools/trim_console.py --summary`, segment 1 (29770
+  lines), one plain line `=== DEC-362 BREAK: ...` saying where the stop and the resume fall, then segment 2 (29734
+  lines); 59510 lines, 4760757 bytes. No block to drop in either console, so the log is the two consoles byte for byte
+  (`cmp` on each part) plus that line and the foot. The warnings sit at its lines 16410, 53038 and 53042. The gate's
+  check (`tools/gate.sh`, DEC-220) greps the log for any `Results of cand-7214ce5+361ef1a30802 vs ref-7214ce5` line and
+  finds 1239, the two segments' reports under the same names; `tools/ledger.py` reads the commit's block and never the
+  log, and its repeated-verdict key (cand, ref, log) differs from the family's. No tool needed a change.
+- **`adocs/data/S124_partA_candidate.diff`**: the run's `candidate.diff`, 78302 bytes, `cmp` equal; `git hash-object`
+  gives `361ef1a30802d02003187f96225f46a6084e6a53`, the banner's blob.
+- **`chesso_S124_partA_sprt_2026-11-13.tar.xz`** in the owner's archive (DEC-235), 36594456 bytes, sha256
+  `1678aa5f19a0c2c147baf7ba30105650ce32e37edd619c9d86550f988c8ad221`: both consoles, the out directory (PGN,
+  `fastchess.log`, `candidate.diff`) and `.tuning/coord/S124/partA_resume/` (the state at the stop, the final state,
+  the console and `fastchess.log` as kept at the stop, the candidate binary, both sums files), 12 files. Built under
+  `.tuning/`, `xz -t` and the listing read, every file extracted and `cmp` equal to its original, the sidecar naming
+  the bare file; both moved in, `sha256sum -c` read from inside the folder, no conflict copy. The originals stay in
+  `.tuning/`.
+
+### What lands with the record, and what does not
+
+Part A's tree held 10 staged files and the pin. Each is sorted by one test: is it true on `achesso`, where mop-up sits at
+zero?
+
+| file | | why |
+|---|---|---|
+| `S124_sprt.sh` as pinned for part A | lands as `S124_partA_sprt.sh` | as played, its blob the one in `S124_partA_candidate.diff`; the family's `S124_sprt.sh` stays |
+| `S124_partA_sweep_s170.txt` | lands, labelled | part A's grid, a reading of its tree; in no `--ceilings` command on `achesso` |
+| `src/evaluation.cpp` | not | the paste |
+| `tests/test_eval_positions.hpp`, `test_evaluation.cpp`, `test_mate_carry.cpp`, `test_mate_pv.cpp`, `test_search.cpp` | not | part A's goldens, its mop-up case and its grid in the ceilings command |
+| `S192_anchors.py` | not | a golden's script carrying part A's anchors; part B's tree carries the model with REF's anchors |
+| `S124_phase1_plants.patch` | not | its context holds part A's arrays; part B regenerated it |
+
+New with the record: `S124_partA_sprt.log`, `S124_partA_candidate.diff`, `S124_partA_segments.py`,
+`S124_partA_segments.txt` and `S124_partA_sprt_mate_pvs.txt`, with `adocs/data/README.md`'s rows. `MANUAL.md` and
+`DEV_MANUAL.md` were read: nothing that ships moved, so neither changes.
+
+### Findings beyond the record, not fixed
+
+- **fastchess's resume numbers from its counted games, not from the games played**: a pair the state already holds is
+  played again and counted twice, and a pair in flight at the stop is lost (round 6191 here). Harmless at one pair in
+  12380, and recorded so the next resume expects it: segment 1's last pairs are not the first N games of the PGN.
+- **The resume path skips `fastchess.sh`'s crash and disconnect census**, so its `SPRT-RUN-INVALID` never ran on either
+  segment; it is read by hand above. A resume step for the harness (DEC-362's consequences) would carry it.
+- The pin's sentence states 06:10 for a text written at 06:05:46 (above).
+
+## 2026-11-13: part B, the candidate
+
+The same subagent. Part B of the bisection: F1's three cells alone, the screen's decided F1 fit, not refit, mop-up at
+zero since part A read H0, F3's cells and every other cell at F, `{0, 5}` against `7214ce5`. REF stays `7214ce5`: the
+script's guards want REF's `src/` byte for byte the screened tree's plus what has landed, and nothing has. Every reading
+with its command is in `adocs/data/S124_partB_goldens.txt`. No fit, match, SPRT or timing.
+
+### The tree
+
+- **Part A's tree saved first**, under `.tuning/coord/S124/`: `S124_partA_final_cached.diff` equals
+  `S124_partA_cached.diff` (sha256 `484ac455...`), `S124_partA_final_wt_head_full.diff` equals the run's
+  `candidate.diff` (blob `361ef1a30802`), `S124_partA_final_wt_head.diff` beside them, and a tree object of the staged
+  index, `partA_tree.sha` (`d5b3c042...`), no ref pointing at it. fastchess's final `config.json` moved to
+  `partA_resume/config_final.json` (sha256 `2d661900...`, `SHA256SUMS_final`). No stash, no history touched.
+- **Reshaped, not fresh**, as part A was: part A's `src/`, `tests/` and plants patch restored to REF, its grid dropped
+  (checked equal to the main tree's copy first), `S192_anchors.py` and `S124_sprt.sh` kept and edited for part B.
+- **The paste.** `.tuning/apply_fit.py` over `.tuning/s124/screen/fits/f1/full/r2/fit.hpp` (sha256 `7cdb056b...`, K
+  1.2647, the `decided` file's round), then `clang-format` 22 on `src/evaluation.cpp`, since the paste writes every
+  array on one line: the only line that differs from REF is `endgame_scale`'s values, **{46, 0, 128, 128, 128, 128,
+  128, 128, 128, 20, 128, 128, 128}**, with a comment paragraph over it saying what ships, part A's form. The main
+  tree's `.tuning/verify_fit.py` (1190) reads every parameter the fit's before and after; the worktree's copy, at REF,
+  still compares 1171 and would not have seen the cells.
+- **Staged, 10 files, sha256 `26484f5e6d6d5ef7...`** (`.tuning/coord/S124/S124_partB_cached.diff`):
+  `src/evaluation.cpp`; `tests/test_mate_breadth.cpp`, `test_mate_carry.cpp`, `test_search.cpp`,
+  `test_tuner_gradient.cpp`; `adocs/data/S170_cases.tsv`, the new `S124_partB_sweep_s170.txt`, `S192_anchors.py` (the
+  family's model, REF's anchors), `S124_phase1_plants.patch` (regenerated by context) and `S124_sprt.sh` (part B's
+  draft). Nothing unstaged, nothing untracked.
+- **`chesso bench` 4707943 in `build/`, `build-tune/` and `build-debug/`, REF's**: the three cells move no node of
+  `bench`. `tools/search_bench.py` at 9 and 12 reads the parent's streams node for node. The cells are live: at depth
+  1 a lone bishop each on opposite colours reads 31 against REF's 56, and with a pawn more 50 against 173 (the engine's
+  own scores, quoted as data).
+
+### Every golden, each by its script
+
+| golden | 7214ce5 | part B | script |
+|---|---|---|---|
+| `EXACT_FLOOR` | 157; 166 / 156 | **165**: 166 shipping, 157 weakened, so 157 no longer separates `RfpMinPly` 1 (the gate there green at 157); one below shipping, DEC-313 (1)'s rule, a rise inside DEC-299's guard; at 165 the gate is red at 157 | `S156_mined_floor_sweep.py` via `S136_overlay_run.py`, the test file overlaid too |
+| `MATE_IN_THREE_FLOOR` | 11; 12 / 11 | **unmoved**: 12 / 11, S083's shape; `red` red on mate-in-two exactness | `S154_floor_margin_sweep.py` |
+| `short_line_ceiling` | 2, 13, 4, 1, 3, 3 | **unmoved** with part B's grid (108 cells, 1526 mate lines, 21 short; alone 0, 3, 3, 0, 3, 1); the grid added to the command, the thirteenth | `S203_case_sweep.sh --ceilings` |
+| S170 budgets | C 100000, D 1000000 | **C 500000, D 4000000**, the rest unmoved; DEC-299's guard met, so applied, the TSV's header saying so; six of six cases now report a mate line, four before; the case takes 33.6 s against 16.1 | `S170_pick_budgets.sh` |
+| `CLAMP_PUSH` | +40 | **+50**: six rows bound, every row 38.29 from the kink, finite differences 8.26e-8; +40 reads 3e-7, past the rule's 2e-7; the clamp case green at 8.26e-8 | `S083_tuner_preconditions.cpp clamp` |
+| `mate_probcut_hides` | S101's row at 10, mate in 6 | **re-mined**: S121's row `8/8/1P6/P7/5k2/4p2P/2r5/6K1 b - - 0 60` at **10, mate in 4**, the cheaper of the two runs of one (71457 nodes against S101's row's 120315); Stockfish `#+4` for Black, its line ending in mate, the label `S097_candidates.tsv` held; red under B04 at `REQUIRE( result.mate_found )`, green shipped | `S277_mine_mate_row.py`, guard mode; `S296_oracle.py`; B04 on the export |
+| piece anchors, `QUIET_ROOK_EVAL` and `_CHEAP`, the lazy bound, quiet evasion, repetition | 585, 1023; 585, 578; 303; -521; -573 | **unmoved**, 10 of 10 at REF's weights and at part B's: every case is LONE but Re8, whose E1 -88 picks Black's candidate, no cell | `S192_anchors.py`, the family's model |
+| S121's, S123's, S125's, S101's, S124's coverage blocks | 19, 4, 2, 6, 9 pairs | **reproduce**, pair for pair | their programs over S083's corpus |
+| DEC-316's pair; DEC-356's pair; the gradient case | | **reproduce**; the case 8.60555e-7 at 984, green | `S101_gradient_rows.cpp`; `S124_factor_gradient_rows.cpp`; `test_tuner_gradient` |
+| `ADAGRAD_HOLD_STEP`; the gauge walk | 3, onset 6 | **3**, onset 7; every plain shift clears 0.01 | `S310_adagrad_step.cpp`; `S083_tuner_preconditions.cpp walk` |
+| `truncation_positions`; `cell_truncation_positions` | | **unmoved** (105 past 2.8, the four the pick takes); **unmoved**, the forced scan's one row at 2.906576 | `truncation_scan`, `S083_truncation_pick.py`; the plants script's forced build |
+| `capture_mates`; the killer fence | 8, 8, 10, 12; 9 | **unmoved**, the seven sweeps part A's byte for byte; part B's killer counts the parent's | `S230_mine_r01_row.py depths`; `S122_killer_slots.cpp`, S149's guard |
+| the aborted-line cell | line 244 at 150000 | **unmoved**: the rule takes line 244 at 150000, run 130000..170000, 3 of 318 separate | `S294_fallback_cell.py`, MW02 on the export |
+| first-mate; `DRIVE_DEPTH`; node budget; ply-2; the extra ply's row; `LATE_CAPTURE_*`; `ALPHA` | | **unmoved**: 9 and 9; 4; 11588 inside [7270, 32512]; 6; mate 4 at 7 to 12; LQ02 7, LQ03 3; -2108 inside -2182..-2001 | `S188_repair_goldens.py`; `S192_node_budget.py`; `S083s_rfp_ply2.py`; `S230_mine_r01_row.py`; `S261_mine_late_capture.py`; `S121_alpha_window.cpp` |
+| `LazyEvalMargin` | 275 | **unmoved**: 275 at K_0 1.2171, F1's 1.2647 and the family's 1.3270, the clamp 0.153 % | `tools/margin_census`, `S122_screen.py clamp` |
+| defender reading | 88/104 | 88/104, the parent's | `S165_nmp_defender_sweep.py` |
+
+`DEV_MANUAL.md`'s DEC-142 rows for the four that moved are not edited in the part's tree: they follow its landing, if
+it lands, as part A's would have.
+
+### The owner's stops (DEC-344 (9)): none fires
+
+- **`EXACT_FLOOR` under 157**: no. The shipping count is 166; the floor is re-derived up, 157 -> 165 (above). A
+  falling floor would have been the owner's; a rise is inside DEC-299's guard, as S296's was. **The coordinator may
+  prefer to put the rise to the owner, the floor having been the owner's at DEC-343**: reverting the one line puts 157
+  back, green, and leaves `RfpMinPly` 1 unseparated by it, `MATE_IN_THREE_FLOOR` not separating either (12 / 11).
+- **`MATE_IN_THREE_FLOOR` under 11**: no, 12 shipping.
+- **A mate-carry ceiling rising by more than 2**: no ceiling rises.
+- **A recurrence on `test_tuner_gradient`'s bound**: no, 8.61e-7 at 984 and both pairs reproducing.
+
+### Phase 1's and phase 2a's plants
+
+- **Phase 1** (`S124_phase1_plants.sh` on a scratch copy, its patch regenerated by context, every added and removed
+  line the landed patch's): plant 0 green in every run, every plant red by its own check, as at the family's candidate.
+  With cells off F, "the trace reconstructs evaluate() exactly" on the `plants` build sees plants 1, 2 and 3 by itself;
+  plant 4 still needs the forced-cell case. `chesso_engine` and `chesso_engine_trace` agree on all 6226944 rows
+  unplanted and on plant 11; plant 12 differs on 840136. `test_tuner_box.sh` green unplanted, red on 13 and 14.
+- **Phase 2a** (`S124_phase2_plants.sh`, patch unchanged): **as at the family's candidate, blind on plants 1 to 3.**
+  `test_audit_design`'s derivative case is red at its precondition (`scales_at_identity` at the shipped weights) on
+  every run, plant 0 included, and `feature_audit` computes no identity ("S124's scale factors are off F at these
+  weights"). Plant 4 is red by the seed case and plant 5 by the refusal case. The family's finding and its options
+  (a) and (b) stand; part B adds no third.
+
+### Reds, both builds
+
+`ctest -L fast -j6`, `CLANG_FORMAT_MAJOR=22`: **60 of 61 in `build/` and in `build-tune/`**, the same one red:
+`test_audit_design` "the audit's local form is the smooth score's derivative at the shipped weights", `REQUIRE(
+audit_design::scales_at_identity(shipped.data()) )`, the family's "Reds left" 4, not changed. Green at part B that were
+red at the family: the first-mate case, "removing a piece moves the score", the planted bounds (mop-up's three, mop-up
+being at zero), the en passant precondition (its cell, P=0 d>=2, stays at F in F1), `test_datagen_repetition` and the
+gradient case. All three builds without a warning; `./clang-format.sh --check` clean.
+
+### The script and the dry run
+
+`adocs/data/S124_sprt.sh` in the part's tree: `part="B"`, `ref="7214ce5"` as pinned, and the coordinator's bracketed
+block back with part B's draft inside it, every `<...>` the coordinator's; nothing else of the header moves. `bash -n`
+clean. A dry copy (the block removed, the `exec` an echo) on the staged tree prints `landing-check: every scale factor
+at F and mop-up at zero` and `DRY-RUN-WOULD-EXEC env -u CAND ... REF=7214ce5 ... SPRT_ROUNDS=20950 ... ./fastchess.sh`;
+no guard refuses. The guards were not re-planted for part B (phase 2b planted part A and part B against the full
+candidate). The script itself was not run. `build/` is no older than its sources and benches 4707943; `build-debug/`
+is built, Debug, and benches 4707943.
+
+### Not done, and findings
+
+- DEC-141's second tier on part B's tree (the Debug self-play, `tools/gate_extra.sh`) and the cost's reading are the
+  coordinator's.
+- **If the owner ships mop-up on part A's question**, REF moves and part B's tree is rebuilt on it before its run;
+  every reading above is then re-read.
+- The worktree's `.tuning/verify_fit.py` is REF's, 1171 parameters, blind to S124's 19; `achesso`'s 1190 copy was used.
+  A part reshaped from REF meets this again.
+- `S170_pick_budgets.sh`'s D, silent at stride 1 on part A's grid, answers 4000000 on part B's, and `test_mate_carry`
+  doubles its time to 33.6 s under the 60 s Release timeout.
+- `S124_partB_goldens.txt` and this section sit on the main tree while part B's tree is not committed; part B's grid
+  and the rest of the part land with its verdict.
+- `touches:` widened by parts A and B: `tests/test_mate_carry.cpp` (each part's grid in the ceilings command),
+  `tests/test_mate_breadth.cpp` and `adocs/data/S170_cases.tsv` (part B's floor and budgets).
